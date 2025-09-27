@@ -1,0 +1,18 @@
+Adele Password: PIAMIS199429
+Dave Password: PIAMIS344471
+
+MY TASK: all actions must be audit in database
+
+Completed Task:
+✅ UI for Audit Logs Panel
+✅ Adding new user was successfully audit in database
+✅ Updating user status to Active/Inactive was successfully audit in database
+✅ Updating user Email was successfully audit in database
+✅ Resetting user password was successfully audit in database
+✅ Updating user role was successfully audit in database
+
+
+Where I paused?
+- Search and Filter Audit Logs
+
+note: I add cp_ID as PK and PersonnelID as UK in clinicpersonnel table
