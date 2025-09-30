@@ -445,7 +445,7 @@ require_once '../Functions/Queries.php';
                             <div class="relative">
                                 <i class='bx bx-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400'></i>
                                 <input id="searchInput1" type="text" placeholder="Search by ID or Name..."
-                                onkeyup="filterStudentCards()" autofocus
+                                onkeyup="filterStudentCards()"
                                 class="pl-10 pr-10 py-2 border rounded-lg w-72 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                 <i id="clearSearch1" class='bx bx-brush-alt absolute right-3 top-1/2 -translate-y-1/2 text-gray-700 cursor-pointer hidden'
                                 onclick="clearSearch1()"></i>
@@ -457,6 +457,13 @@ require_once '../Functions/Queries.php';
                                 class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
                                 <i class='bx bx-plus text-lg'></i> <p class="hidden sm:flex">Add New Student</p>
                             </button>
+                            
+                            <!-- quick scan -->
+                            <div class="relative">
+                                <i class='bx bx-qr-scan absolute left-3 top-1/2 -translate-y-1/2 text-gray-400'></i>
+                                <input id="scannerInput" type="text" placeholder="Quick Scan!" autofocus onkeyup="quickScan(event)"
+                                class="pl-10 pr-10 py-2 border rounded-lg w-52 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            </div>
 
                             <!-- Entries Filter -->
                             <div class="flex items-center gap-2 text-sm text-gray-900 p-2 bg-gray-200 rounded-lg px-4">
@@ -795,6 +802,28 @@ require_once '../Functions/Queries.php';
         };
     });
 
+    let scanTimer;
+    let lastScanned = '';
+
+    function quickScan(event) {
+        // Clear any existing timer
+        clearTimeout(scanTimer);
+        
+        // Set a new timer (300ms after last input)
+        scanTimer = setTimeout(() => {
+            const scannedValue = event.target.value.trim();
+            
+            // Only process if we have a value and it's different from the last scan
+            if (scannedValue && scannedValue !== lastScanned) {
+                lastScanned = scannedValue;
+                openCheckInModal(scannedValue);
+                
+                // Clear the input after processing
+                event.target.value = '';
+            }
+        }, 300);
+    }
+    
     // Handle View Record button click
     function viewStudentRecord(studentId) {
         openModal('RecordModal');
@@ -1248,7 +1277,7 @@ require_once '../Functions/Queries.php';
                     document.getElementById('CheckInStudentName').textContent = `${student.FirstName || ''} ${student.LastName || ''}`.trim();
                     // Update the hidden input value
                     document.getElementById('CheckInStudentIdHidden').value = studentId;
-                    document.getElementById('CheckInStaffIdHidden').value = <?php echo $_SESSION['User_ID']; ?>;
+                    document.getElementById('CheckInStaffIdHidden').value = "<?php echo $_SESSION['User_ID']; ?>";
                     
                     
                     

@@ -1,9 +1,7 @@
 Adele Password: PIAMIS199429
 Dave Password: PIAMIS344471
 
-try kung na push
-
-MY TASK: all actions must be audit in database
+TASK 1: Audit Logs Section
 
 Completed Task:
 ✅ UI for Audit Logs Panel
@@ -18,3 +16,12 @@ Where I paused?
 - Search and Filter Audit Logs
 
 note: I add cp_ID as PK and PersonnelID as UK in clinicpersonnel table
+
+
+TASK 2: Patient Section
+
+✅  Quick Scan for Checkin 
+- Adding new student was successfully audit in database
+- Checkin was successfully audit in database
+- Updating student info was successfully audit in database
+- Updating student Record status was successfully audit in database
