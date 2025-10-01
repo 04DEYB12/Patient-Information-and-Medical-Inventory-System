@@ -1,4 +1,8 @@
-// Auto append @gmail.com if no domain in email input and validate format
+/*
+    WHAT THIS FILE DOES
+    - autoAppendDomain() : Auto append @gmail.com if no domain in email input and validate format.
+*/
+
 function autoAppendDomain(input) {
     const errorElement = input.nextElementSibling?.querySelector('.error-text') || 
                         document.getElementById(input.getAttribute('aria-describedby') || '');

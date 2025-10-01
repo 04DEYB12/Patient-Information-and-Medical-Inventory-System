@@ -1,7 +1,7 @@
 Adele Password: PIAMIS199429
 Dave Password: PIAMIS344471
 
-TASK 1: Audit Logs Section
+------------------ TASK 1: Audit Logs Section ------------------
 
 Completed Task:
 ✅ UI for Audit Logs Panel
@@ -18,16 +18,23 @@ Where I paused?
 note: I add cp_ID as PK and PersonnelID as UK in clinicpersonnel table
 
 
-TASK 2: Patient Section
+------------------ TASK 2: Patient Section ------------------
 
+Completed Task:
 ✅  Quick Scan for Checkin 
 - Adding new student was successfully audit in database
 - Checkin was successfully audit in database
 - Updating student info was successfully audit in database
 - Updating student Record status was successfully audit in database
 
-TASK 3: Log-in Form
+------------------ TASK 3: Log-in Form ------------------
+
+Completed Task:
 ✅ Auto append @gmail.com if no domain in email input
+✅ Validation Error Message
+✅ Sending OTP by email in forgot password
+- Verifying OTP
+- Changing new password
 
 Where I paused?
-- Validation Error Message
+- n/a

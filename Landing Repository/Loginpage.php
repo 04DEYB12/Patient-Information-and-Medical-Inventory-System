@@ -1,45 +1,6 @@
 <?php
 session_start();
 include 'Connection.php'; 
-
-if ($_SERVER['REQUEST_METHOD'] == "POST") {
-  $Login_email = $_POST['Login_email'];
-  $Login_password = $_POST['Login_password'];
-
-  if(!empty($Login_email) && !empty($Login_password)) {
-    $query = "SELECT * FROM clinicpersonnel cp JOIN userrole ur ON cp.RoleID = ur.RoleID WHERE cp.EmailAddress = ? LIMIT 1";
-    $stmt = $con->prepare($query);
-    $stmt->bind_param("s", $Login_email);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    if ($result && $result->num_rows > 0) {
-      $user_data = $result->fetch_assoc();
-      // Verify hashed password
-      if (password_verify($Login_password, $user_data['PasswordHash'])  || $Login_password == $user_data['PasswordHash']  ) {
-        if($user_data['Status'] == 'Active') {
-          $_SESSION['User_ID'] = $user_data['PersonnelID'];
-          $_SESSION['role'] = $user_data['RoleName'];
-
-          session_regenerate_id(true);
-          header("Location: ../PIAIMS Repository/Dashboard.php");
-          
-          exit();
-        }else {
-          echo "<script>document.getElementById('Validation_ErrorMessage').textContent = 'Account Status is Inactive!'; document.getElementById('Validation_ErrorMessage').style.display = 'block';</script>";
-        }
-        
-      }else{
-        echo "<script>document.getElementById('Validation_ErrorMessage').textContent = 'Incorrect Password!'; document.getElementById('Validation_ErrorMessage').style.display = 'block';</script>";
-      }
-    }else{
-      echo "<script>document.getElementById('Validation_ErrorMessage').textContent = 'Account Not Found!'; document.getElementById('Validation_ErrorMessage').style.display = 'block';</script>";
-    }  
-  }else {
-    echo "<script>document.getElementById('Validation_ErrorMessage').textContent = 'Please fill in all fields!'; document.getElementById('Validation_ErrorMessage').style.display = 'block';</script>";
-    exit();
-  }
-}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -280,10 +241,22 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
   }
   /* Error text under inputs */
   .error-text {
-    color: red;
-    font-size: 13px;
-    margin-top: 4px;
-    user-select: none;
+    color: #d32f2f;
+    background-color: #ffebee;
+    font-size: 14px;
+    margin: 8px 0;
+    padding: 10px 15px;
+    border-radius: 4px;
+    border-left: 4px solid #d32f2f;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+  }
+  
+  .error-text:before {
+    content: '⚠️';
+    font-size: 16px;
   }
   /* Modal buttons */
   .modal .btn {
@@ -321,11 +294,10 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
   <!-- Login Container -->
   <div class="container" role="main" aria-label="Login form">
-  <form action="#" method="POST">
     <a href="LandingPage.php" style="text-decoration: none; color: darkgreen;"><i class='bx bx-left-arrow-alt' style="color: darkgreen; font-size: 2rem; font-weight: normal;"></i></a>
     <h2>Login</h2>
     
-    <div id="Validation_ErrorMessage" class="error-text" style="display:none;"></div>
+    <div id="Validation_ErrorMessage" class="error-text" style="display:none;" role="alert" aria-live="assertive"></div>
 
     <div class="input-group">
       <label for="login-email">Email</label>
@@ -335,7 +307,6 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         placeholder="example@gmail.com"
         oninput="autoAppendDomain(this)"
         aria-describedby="login-email-desc"
-        name="Login_email"
       />
       <div id="login-email-desc" class="error-text" style="display:none;"></div>
     </div>
@@ -348,7 +319,6 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         placeholder="Enter password"
         autocomplete="current-password"
         aria-describedby="login-pass-desc"
-        name="Login_password"
       />
       <div class="password-row">
         <label class="show-pass-container" for="show-password">
@@ -360,8 +330,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
       <div id="login-pass-desc" class="error-text" style="display:none;"></div>
     </div>
 
-    <button class="btn" id="loginBtn" type="submit">Login</button>
-  </form>
+    <button class="btn" id="loginBtn" type="button" onclick="Login()">Login</button>
   </div>
 
   <!-- Modals -->
@@ -382,7 +351,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         />
         <div id="forgot-email-error" class="error-text" style="display:none;"></div>
       </div>
-      <button class="btn" id="sendOtpBtn">Send OTP</button>
+      <button class="btn" id="sendOtpBtn" type="button" onclick="SendOtp()">Send OTP</button>
       <div class="loading-container" id="loadingEmail">
         <div class="spinner"></div>
         <div class="loading-text">Sending OTP...</div>
@@ -452,7 +421,82 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
   </div>
 
 <script>
+
+  function Login() {
+    const formData = new FormData();
+    formData.append('action', 'login');
+    formData.append('email', document.getElementById('login-email').value);
+    formData.append('password', document.getElementById('login-password').value);
+
+    fetch('../Functions/UserFunctions.php', {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Refresh the user list to show updated Role
+            alert('Login successfully!');
+            window.location.href = data.redirect;
+        } else {
+          document.getElementById('Validation_ErrorMessage').textContent = 'Error: ' + (data.error || 'Failed to login');
+          document.getElementById('Validation_ErrorMessage').style.display = 'block';
+        }
+    })
+    .catch(error => {
+        console.error('Error logging in:', error);
+        alert('An error occurred while logging in: ' + error.message);
+    });
+  }
   
+  function SendOtp() {
+    const formData = new FormData();
+    const sendOtpBtn = document.getElementById('sendOtpBtn');
+    const errorDiv = document.getElementById('forgot-email-error');
+    const email = document.getElementById('forgot-email').value.trim();
+    
+    // Validate email
+    if (!email) {
+        errorDiv.textContent = 'Please enter your email address';
+        errorDiv.style.display = 'block';
+        return;
+    }
+    
+    // Show loading state
+    sendOtpBtn.disabled = true;
+    sendOtpBtn.innerHTML = 'Sending...';
+    errorDiv.style.display = 'none';
+
+    formData.append('action', 'send_otp');
+    formData.append('email', email);
+
+    fetch('../Functions/UserFunctions.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message and switch to OTP modal
+            showModal(modalOtp);
+            closeModal(modalEmail);
+        } else {
+            errorDiv.textContent = data.error || 'Failed to send OTP';
+            errorDiv.style.display = 'block';
+        }
+    })
+    .catch(error => {
+        console.error('Error sending OTP:', error);
+        console.log('Error response:', error.response);
+        errorDiv.textContent = 'An error occurred while sending OTP. Please try again.';
+        errorDiv.style.display = 'block';
+    })
+    .finally(() => {
+        // Reset button state
+        sendOtpBtn.disabled = false;
+        sendOtpBtn.innerHTML = 'Send OTP';
+    });
+  }
 
   // Show/hide password toggle
   document.getElementById("show-password").addEventListener("change", function() {
@@ -511,27 +555,6 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
     const loading = modal.querySelector(".loading-container");
     if (loading) loading.classList.remove("active");
   }
-
-  // Send OTP button click (simulate async)
-  document.getElementById("sendOtpBtn").addEventListener("click", () => {
-    const emailInput = document.getElementById("forgot-email");
-    const errorDiv = document.getElementById("forgot-email-error");
-    errorDiv.style.display = "none";
-
-    if (!validateEmail(emailInput.value.trim())) {
-      errorDiv.textContent = "Please enter a valid email.";
-      errorDiv.style.display = "block";
-      return;
-    }
-    showLoading(modalEmail);
-
-    // Simulate sending OTP (2s delay)
-    setTimeout(() => {
-      hideLoading(modalEmail);
-      closeModal(modalEmail);
-      showModal(modalOtp);
-    }, 2000);
-  });
 
   // OTP input auto-focus next
   const otpInputs = modalOtp.querySelectorAll(".otp");

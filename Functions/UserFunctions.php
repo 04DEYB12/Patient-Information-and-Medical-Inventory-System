@@ -135,6 +135,114 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
     
     try {
         switch ($action) {
+            case 'login': // ------------------------------- Login --------------------------------
+                $email = $_POST['email'];
+                $password = $_POST['password'];
+                
+                if(empty($email) || empty($password)) {
+                    sendJsonResponse(['success' => false, 'error' => 'Please fill in all fields!']);
+                    break;
+                }
+            
+                $query = "SELECT * FROM clinicpersonnel cp JOIN userrole ur ON cp.RoleID = ur.RoleID WHERE cp.EmailAddress = ? LIMIT 1";
+                $stmt = $con->prepare($query);
+                $stmt->bind_param("s", $email);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                
+                if ($result && $result->num_rows > 0) {
+                    $user_data = $result->fetch_assoc();
+                    if (password_verify($password, $user_data['PasswordHash'])) {
+                        if($user_data['Status'] == 'Active') {
+                            $_SESSION['User_ID'] = $user_data['PersonnelID'];
+                            $_SESSION['role'] = $user_data['RoleName'];
+                            session_regenerate_id(true);
+                            
+                            sendJsonResponse([
+                                'success' => true,
+                                'redirect' => '../PIAIMS Repository/Dashboard.php',
+                                'message' => 'Login successful!'
+                            ]);
+                        } else { sendJsonResponse(['success' => false, 'error' => 'Account is inactive!']); }
+                    } else { sendJsonResponse(['success' => false, 'error' => 'Incorrect password!']); }
+                } else { sendJsonResponse(['success' => false, 'error' => 'Account not found!']); }
+                break;
+            case 'send_otp': // ------------------------------- Send OTP --------------------------------
+                $email = $_POST['email'];
+                
+                $stmt = $con->prepare("SELECT PersonnelID FROM clinicpersonnel WHERE EmailAddress = ? LIMIT 1");
+                $stmt->bind_param("s", $email);
+                $stmt->execute();
+                
+                if ($stmt->get_result()->num_rows === 0) {
+                    sendJsonResponse(['success' => false, 'error' => 'No Account Associated with this Email!']); break;
+                }
+                
+                
+                // Check recent OTP requests (limit to 3 per 5 minutes)
+                $checkAttempts = $con->prepare("
+                    SELECT COUNT(*) as attempt_count, MAX(created_at) as last_attempt 
+                    FROM otp_request 
+                    WHERE email = ? AND created_at > DATE_SUB(NOW(), INTERVAL 5 MINUTE)
+                ");
+                $checkAttempts->bind_param("s", $email);
+                $checkAttempts->execute();
+                $result = $checkAttempts->get_result();
+                $data = $result->fetch_assoc();
+
+                if ($data['attempt_count'] >= 3) {
+                    $lastAttempt = new DateTime($data['last_attempt']);
+                    $nextAllowed = $lastAttempt->add(new DateInterval('PT5M'));
+                    $now = new DateTime();
+                    
+                    if ($now < $nextAllowed) {
+                        $remaining = $now->diff($nextAllowed)->format('%i minutes %s seconds');
+                        sendJsonResponse(['success' => false, 'error' => "You've reached the maximum of 3 OTP requests. Please try again in $remaining."]);
+                        break;
+                    }
+                }
+                
+                // Generate 6-digit OTP
+                $number = rand(100000, 999999);
+                $otp = password_hash($number, PASSWORD_DEFAULT);
+
+                // Store OTP
+                $insert = $con->prepare("INSERT INTO otp_request (email, otp_code, created_at) VALUES (?, ?, NOW())");
+                $insert->bind_param("ss", $email, $otp);
+                $insert->execute();
+                
+                // Send email
+                require '../phpmailer/src/Exception.php';
+                require '../phpmailer/src/PHPMailer.php';
+                require '../phpmailer/src/SMTP.php';
+                $mail = new PHPMailer(true);
+
+                try {
+                    $mail->isSMTP();
+                    $mail->Host = 'smtp.gmail.com';
+                    $mail->SMTPAuth = true;
+                    $mail->Username = 'davemalaran2004@gmail.com';
+                    $mail->Password = 'tgjtrujoubpihahl'; 
+                    $mail->SMTPSecure = 'ssl';
+                    $mail->Port = 465;
+
+                    $mail->setFrom('davemalaran2004@gmail.com', 'Patient Information & Medical Inventory System');
+                    $mail->addAddress($email);
+                    $mail->isHTML(true);
+
+                    $mail->Subject = "Your OTP for Password Reset";
+                    $mail->Body = "Hello,<br><br>Your OTP code is: <b>$number</b><br><br>This code is valid for the next 10 minutes.";
+
+                    if (!$mail->send()) {
+                        sendJsonResponse(['success' => false, 'error' => 'Failed to send OTP. Please try again.']);
+                    } else {
+                        sendJsonResponse(['success' => true, 'message' => 'OTP sent successfully to your email.']);
+                    }
+                } catch (Exception $e) {
+                    sendJsonResponse(['success' => false, 'error' => 'OTP could not be sent.']);
+                }
+                
+                break;
             case 'addUser': // ------------------------------- Add User --------------------------------
                 $firstName = mysqli_real_escape_string($con, $_POST['firstName']);
                 $lastName = mysqli_real_escape_string($con, $_POST['lastName']);
