@@ -26,13 +26,17 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
           
           exit();
         }else {
-          echo "<script>alert('Account Status is Inactive!'); window.location.href = 'Loginpage.php';</script>";
+          echo "<script>document.getElementById('Validation_ErrorMessage').textContent = 'Account Status is Inactive!'; document.getElementById('Validation_ErrorMessage').style.display = 'block';</script>";
         }
         
+      }else{
+        echo "<script>document.getElementById('Validation_ErrorMessage').textContent = 'Incorrect Password!'; document.getElementById('Validation_ErrorMessage').style.display = 'block';</script>";
       }
-    }
+    }else{
+      echo "<script>document.getElementById('Validation_ErrorMessage').textContent = 'Account Not Found!'; document.getElementById('Validation_ErrorMessage').style.display = 'block';</script>";
+    }  
   }else {
-    echo "<script>alert('Please fill in all fields!'); window.location.href = 'Loginpage.php';</script>";
+    echo "<script>document.getElementById('Validation_ErrorMessage').textContent = 'Please fill in all fields!'; document.getElementById('Validation_ErrorMessage').style.display = 'block';</script>";
     exit();
   }
 }
@@ -45,6 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
   <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
   <title>PIAIMS | Login Page</title>
   <link rel="icon" type="image/x-icon" href="../Images/webbackg.png">
+  <script src="../Functions/scripts.js"></script>
 <style>
   /* General Styles */
   body {
@@ -319,13 +324,16 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
   <form action="#" method="POST">
     <a href="LandingPage.php" style="text-decoration: none; color: darkgreen;"><i class='bx bx-left-arrow-alt' style="color: darkgreen; font-size: 2rem; font-weight: normal;"></i></a>
     <h2>Login</h2>
+    
+    <div id="Validation_ErrorMessage" class="error-text" style="display:none;"></div>
 
     <div class="input-group">
       <label for="login-email">Email</label>
       <input
-        type="email"
+        type="text"
         id="login-email"
         placeholder="example@gmail.com"
+        oninput="autoAppendDomain(this)"
         aria-describedby="login-email-desc"
         name="Login_email"
       />
@@ -365,7 +373,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
       <div class="input-group">
         <label for="forgot-email">Enter your email</label>
         <input
-          type="email"
+          type="text"
           id="forgot-email"
           placeholder="example@gmail.com"
           oninput="autoAppendDomain(this)"
@@ -444,13 +452,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
   </div>
 
 <script>
-  // Auto append @gmail.com if no domain in email input
-  function autoAppendDomain(input) {
-    const val = input.value.trim();
-    if (val && !val.includes("@")) {
-      input.value = val + "@gmail.com";
-    }
-  }
+  
 
   // Show/hide password toggle
   document.getElementById("show-password").addEventListener("change", function() {

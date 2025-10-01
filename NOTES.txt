@@ -25,3 +25,9 @@ TASK 2: Patient Section
 - Checkin was successfully audit in database
 - Updating student info was successfully audit in database
 - Updating student Record status was successfully audit in database
+
+TASK 3: Log-in Form
+✅ Auto append @gmail.com if no domain in email input
+
+Where I paused?
+- Validation Error Message
