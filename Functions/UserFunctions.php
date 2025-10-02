@@ -243,6 +243,70 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
                 }
                 
                 break;
+            case 'verify_otp': // ------------------------------- Verify OTP --------------------------------
+                $email = $_POST['email'];
+                $otp = $_POST['otp'];
+                
+                if(empty($email) || empty($otp)) {
+                    sendJsonResponse(['success' => false, 'error' => 'Please fill in all fields!']);
+                    break;
+                }
+                
+                // Check OTP (valid, unused, within 10 minutes)
+                $query = "SELECT * FROM otp_request WHERE email = ? AND is_used = 0 
+                        AND created_at >= (NOW() - INTERVAL 10 MINUTE) 
+                        ORDER BY created_at DESC";
+
+                $stmt = $con->prepare($query);
+                $stmt->bind_param("s", $email);
+                $stmt->execute();
+                $result = $stmt->get_result();
+
+                $otpMatched = false;
+                $otpData = null;
+
+                // Loop through results to find a matching OTP
+                while ($row = $result->fetch_assoc()) {
+                    if (password_verify($otp, $row['otp_code'])) {
+                        $otpMatched = true;
+                        $otpData = $row;
+                        break;
+                    }
+                }
+
+                if (!$otpMatched) {
+                    sendJsonResponse(['success' => false, 'error' => 'Invalid or Expired OTP!']);
+                    break;
+                }
+                
+                // Mark OTP as used
+                $updateQuery = "UPDATE otp_request SET is_used = 1 WHERE id = ?";
+                $updateStmt = $con->prepare($updateQuery);
+                $updateStmt->bind_param("i", $otpData['id']);
+                $updateStmt->execute();
+                sendJsonResponse(['success' => true, 'message' => 'OTP verified successfully']);
+                
+                break;
+            case 'change_password': // ------------------------- Change Password -----------------------------------
+                $email = $_POST['email'];
+                $newPassword = $_POST['new_password'];
+                $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+                
+                date_default_timezone_set('Asia/Manila');
+                $PasswordChangeDT = date('Y-m-d H:i:s');
+                date_default_timezone_set(date_default_timezone_get());
+            
+                try {
+                    $update = $con->prepare("UPDATE clinicpersonnel SET PasswordHash = ?, PasswordChangeDT = ? WHERE EmailAddress = ?");
+                    $update->bind_param("sss", $hashedPassword, $PasswordChangeDT, $email);
+                    if (!$update->execute()) {
+                        throw new Exception($update->error);
+                    }
+                    sendJsonResponse(['success' => true, 'message' => 'Password changed successfully']);
+                } catch (Exception $e) {
+                    sendJsonResponse(['success' => false, 'error' => 'Failed to update password: ' . $e->getMessage()]);
+                }
+                break;
             case 'addUser': // ------------------------------- Add User --------------------------------
                 $firstName = mysqli_real_escape_string($con, $_POST['firstName']);
                 $lastName = mysqli_real_escape_string($con, $_POST['lastName']);

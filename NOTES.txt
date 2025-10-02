@@ -33,8 +33,5 @@ Completed Task:
 ✅ Auto append @gmail.com if no domain in email input
 ✅ Validation Error Message
 ✅ Sending OTP by email in forgot password
-- Verifying OTP
-- Changing new password
-
-Where I paused?
-- n/a
+✅ Verifying OTP
+✅ Changing new password

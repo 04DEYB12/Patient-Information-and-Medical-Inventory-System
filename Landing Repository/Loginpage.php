@@ -352,10 +352,6 @@ include 'Connection.php';
         <div id="forgot-email-error" class="error-text" style="display:none;"></div>
       </div>
       <button class="btn" id="sendOtpBtn" type="button" onclick="SendOtp()">Send OTP</button>
-      <div class="loading-container" id="loadingEmail">
-        <div class="spinner"></div>
-        <div class="loading-text">Sending OTP...</div>
-      </div>
     </div>
   </div>
 
@@ -374,11 +370,7 @@ include 'Connection.php';
         <input type="text" maxlength="1" class="otp" inputmode="numeric" pattern="[0-9]*" aria-label="OTP digit 6" />
       </div>
       <div id="otp-error" class="error-text" style="display:none; margin-top:8px;"></div>
-      <button class="btn" id="verifyOtpBtn" style="margin-top: 20px;">Verify OTP</button>
-      <div class="loading-container" id="loadingOtp">
-        <div class="spinner"></div>
-        <div class="loading-text">Verifying OTP...</div>
-      </div>
+      <button class="btn" id="verifyOtpBtn" style="margin-top: 20px;" onclick="VerifyOtp()">Verify OTP</button>
     </div>
   </div>
 
@@ -395,9 +387,7 @@ include 'Connection.php';
           id="new-password"
           placeholder="Enter new password"
           autocomplete="new-password"
-          aria-describedby="new-pass-error"
         />
-        <div id="new-pass-error" class="error-text" style="display:none;"></div>
       </div>
 
       <div class="input-group">
@@ -412,15 +402,20 @@ include 'Connection.php';
         <div id="confirm-pass-error" class="error-text" style="display:none;"></div>
       </div>
 
-      <button class="btn" id="changePassBtn">Change Password</button>
-      <div class="loading-container" id="loadingChangePass">
-        <div class="spinner"></div>
-        <div class="loading-text">Updating password...</div>
-      </div>
+      <button class="btn" id="changePassBtn" onclick="ChangePassword()">Change Password</button>
     </div>
   </div>
 
 <script>
+  // Modal handling
+  const modalEmail = document.getElementById("modal-email");
+  const modalOtp = document.getElementById("modal-otp");
+  const modalChange = document.getElementById("modal-change-password");
+
+  const forgotPassBtn = document.getElementById("forgotPassBtn");
+  const closeEmailModal = document.getElementById("closeEmailModal");
+  const closeOtpModal = document.getElementById("closeOtpModal");
+  const closeChangeModal = document.getElementById("closeChangeModal");
 
   function Login() {
     const formData = new FormData();
@@ -498,21 +493,108 @@ include 'Connection.php';
     });
   }
 
+  function VerifyOtp() {
+    const formData = new FormData();
+    const errorMessage = document.getElementById('otp-error');
+    const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+    formData.append('action', 'verify_otp');
+    formData.append('email', document.getElementById('forgot-email').value);
+    
+    const otpInputs = document.querySelectorAll('.otp');
+    const otpValue = Array.from(otpInputs).map(input => input.value).join('');
+    formData.append('otp', otpValue);
+    
+    // Show loading state
+    verifyOtpBtn.disabled = true;
+    verifyOtpBtn.innerHTML = 'Verifying...';
+    errorMessage.style.display = 'none';
+
+    fetch('../Functions/UserFunctions.php', {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message and switch to OTP modal
+            showModal(modalChange);
+            closeModal(modalOtp);
+        } else {
+            errorMessage.textContent = data.error || 'Failed to verify OTP';
+            errorMessage.style.display = 'block';
+        }
+    })
+    .catch(error => {
+        console.error('Error verifying OTP:', error);
+        console.log('Error response:', error.response);
+        errorMessage.textContent = 'An error occurred while verifying OTP. Please try again.';
+        errorMessage.style.display = 'block';
+    })
+    .finally(() => {
+        // Reset button state
+        verifyOtpBtn.disabled = false;
+        verifyOtpBtn.innerHTML = 'Verify OTP';
+    });
+  }
+
+  function ChangePassword(){
+    const newPass = document.getElementById('new-password').value;
+    const confirmPass = document.getElementById('confirm-password').value;
+    const confirmPassError = document.getElementById('confirm-pass-error');
+    const changePassBtn = document.getElementById('changePassBtn');
+    
+    if(newPass !== confirmPass){
+      confirmPassError.textContent = 'Passwords do not match';
+      confirmPassError.style.display = 'block';
+      return;
+    }
+    
+    // Show loading state
+    changePassBtn.disabled = true;
+    changePassBtn.innerHTML = 'Changing Password...';
+    confirmPassError.style.display = 'none';
+
+    
+    const formData = new FormData();
+    formData.append('action', 'change_password');
+    formData.append('email', document.getElementById('forgot-email').value);
+    formData.append('new_password', newPass);
+    
+    fetch('../Functions/UserFunctions.php', {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message and switch to OTP modal
+            alert(data.message);
+            window.location.href = '../Landing Repository/Loginpage.php';
+        } else {
+            errorMessage.textContent = data.error || 'Failed to Change Password';
+            errorMessage.style.display = 'block';
+        }
+    })
+    .catch(error => {
+        console.error('Error verifying OTP:', error);
+        console.log('Error response:', error.response);
+        errorMessage.textContent = 'An error occurred while changing password. Please try again.';
+        errorMessage.style.display = 'block';
+    })
+    .finally(() => {
+        // Reset button state
+        changePassBtn.disabled = false;
+        changePassBtn.innerHTML = 'Change Password';
+    });
+    
+  }
+
   // Show/hide password toggle
   document.getElementById("show-password").addEventListener("change", function() {
     const passInput = document.getElementById("login-password");
     passInput.type = this.checked ? "text" : "password";
   });
 
-  // Modal handling
-  const modalEmail = document.getElementById("modal-email");
-  const modalOtp = document.getElementById("modal-otp");
-  const modalChange = document.getElementById("modal-change-password");
-
-  const forgotPassBtn = document.getElementById("forgotPassBtn");
-  const closeEmailModal = document.getElementById("closeEmailModal");
-  const closeOtpModal = document.getElementById("closeOtpModal");
-  const closeChangeModal = document.getElementById("closeChangeModal");
 
   // Open Forgot Password modal
   forgotPassBtn.addEventListener("click", e => {
@@ -541,20 +623,6 @@ include 'Connection.php';
     modal.classList.remove("active");
     clearModalInputs(modal);
   }
-  function clearModalInputs(modal) {
-    modal.querySelectorAll("input").forEach(i => i.value = "");
-    modal.querySelectorAll(".error-text").forEach(e => e.style.display = "none");
-    hideLoading(modal);
-  }
-  // Show/hide loading inside modal
-  function showLoading(modal) {
-    const loading = modal.querySelector(".loading-container");
-    if (loading) loading.classList.add("active");
-  }
-  function hideLoading(modal) {
-    const loading = modal.querySelector(".loading-container");
-    if (loading) loading.classList.remove("active");
-  }
 
   // OTP input auto-focus next
   const otpInputs = modalOtp.querySelectorAll(".otp");
@@ -571,65 +639,6 @@ include 'Connection.php';
       }
     });
   });
-
-  // Verify OTP button click (simulate async)
-  document.getElementById("verifyOtpBtn").addEventListener("click", () => {
-    const otpError = document.getElementById("otp-error");
-    otpError.style.display = "none";
-
-    const otpCode = Array.from(otpInputs).map(i => i.value).join("");
-    if (otpCode.length < 6) {
-      otpError.textContent = "Please enter the 6-digit OTP.";
-      otpError.style.display = "block";
-      return;
-    }
-    showLoading(modalOtp);
-
-    // Simulate OTP verification delay (2s)
-    setTimeout(() => {
-      hideLoading(modalOtp);
-      // For demonstration, accept any OTP
-      closeModal(modalOtp);
-      showModal(modalChange);
-    }, 2000);
-  });
-
-  // Change Password button click
-  document.getElementById("changePassBtn").addEventListener("click", () => {
-    const newPass = document.getElementById("new-password");
-    const confirmPass = document.getElementById("confirm-password");
-
-    const newPassError = document.getElementById("new-pass-error");
-    const confirmPassError = document.getElementById("confirm-pass-error");
-
-    newPassError.style.display = "none";
-    confirmPassError.style.display = "none";
-
-    if (newPass.value.length < 6) {
-      newPassError.textContent = "Password must be at least 6 characters.";
-      newPassError.style.display = "block";
-      return;
-    }
-    if (newPass.value !== confirmPass.value) {
-      confirmPassError.textContent = "Passwords do not match.";
-      confirmPassError.style.display = "block";
-      return;
-    }
-    showLoading(modalChange);
-
-    // Simulate password update delay (2s)
-    setTimeout(() => {
-      hideLoading(modalChange);
-      closeModal(modalChange);
-      alert("Password changed successfully!");
-    }, 2000);
-  });
-
-  // Basic email validation
-  function validateEmail(email) {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email.toLowerCase());
-  }
 </script>
 
 </body>

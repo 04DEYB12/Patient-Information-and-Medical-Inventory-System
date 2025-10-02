@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 27, 2025 at 09:32 AM
+-- Generation Time: Oct 02, 2025 at 12:09 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -83,7 +83,7 @@ CREATE TABLE `clinicpersonnel` (
 
 INSERT INTO `clinicpersonnel` (`cp_ID`, `PersonnelID`, `FirstName`, `LastName`, `MiddleName`, `RoleID`, `ContactNumber`, `Address`, `Office`, `EmailAddress`, `PasswordHash`, `PasswordChangeDT`, `HireDate`, `Status`) VALUES
 (4, 'PIAMIS0001', 'Adella', 'Malaran', 'Olaguir', 1, '09557893659', '', '', 'malaranadella@gmail.com', '$2y$10$u0Yzl5nQ.JP5YEQcg24CZeEKdyn2YcfUuQShONmuqSSTFcO.eomLm', NULL, '2025-09-26', 'Active'),
-(17, 'PIAMIS0002', 'Dave', 'Malaran', 'Olaguir', 2, '09557893659', '', '', 'malarandave041204@gmail.com', '$2y$10$cdiYMLdAczIG218t.gwNwO6U2vTbXYq7Kz9LL19C2Z3ZzD1STKCO.', NULL, '2025-09-26', 'Active');
+(17, 'PIAMIS0002', 'Dave', 'Malaran', 'Olaguir', 2, '09557893659', '', '', 'malarandave041204@gmail.com', '$2y$10$t4OsrWnqU2Jgfur9itRA4uBhi8TC5I69Nm24pTrzjgWzzDT3oe5Uq', '2025-10-02 18:07:17', '2025-09-26', 'Active');
 
 -- --------------------------------------------------------
 
@@ -175,6 +175,31 @@ INSERT INTO `medicine_usage` (`usage_id`, `med_id`, `quantity_used`, `usage_date
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `otp_request`
+--
+
+CREATE TABLE `otp_request` (
+  `id` int(11) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `otp_code` varchar(250) NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `is_used` tinyint(1) NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `otp_request`
+--
+
+INSERT INTO `otp_request` (`id`, `email`, `otp_code`, `created_at`, `is_used`) VALUES
+(1, 'malarandave041204@gmail.com', '$2y$10$SFrgioi9O1hOFLighEieze4lB5AWdb1iLBbbbXFn7sPEx7cHECYTG', '2025-10-02 17:53:00', 1),
+(2, 'malarandave041204@gmail.com', '$2y$10$MHjzzLZUAuFK9DwvT/i1cuM67CKgdDNyqNUDAzi1ay9ikq4xf3DHu', '2025-10-02 17:56:50', 0),
+(3, 'malarandave041204@gmail.com', '$2y$10$bFvlEv5SuDm3PjZQpq901up97hjp.60mlALVYxAYTTZsO1V6Zn33S', '2025-10-02 17:59:27', 1),
+(4, 'malarandave041204@gmail.com', '$2y$10$YAoXoK/KWfe4KLi6jzXV7ODm6mfAPjLxC4ucXRO.uIoDwW4YsOt8y', '2025-10-02 18:03:06', 1),
+(5, 'malarandave041204@gmail.com', '$2y$10$ge98zMNyqnNEw5ed00P38erbM9vII2xj3.aSATZ4JWZ5bsslAiWUG', '2025-10-02 18:06:12', 1);
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `student`
 --
 
@@ -233,7 +258,7 @@ CREATE TABLE `studentcheckins` (
   `Reason` text NOT NULL,
   `Status` enum('Pending','In Progress','Completed','Referred') DEFAULT 'Pending',
   `Outcome` text DEFAULT NULL,
-  `StaffID` int(11) NOT NULL,
+  `StaffID` varchar(50) NOT NULL,
   `CreatedAt` timestamp NOT NULL DEFAULT current_timestamp(),
   `UpdatedAt` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -243,12 +268,14 @@ CREATE TABLE `studentcheckins` (
 --
 
 INSERT INTO `studentcheckins` (`ID`, `StudentID`, `DateTime`, `Reason`, `Status`, `Outcome`, `StaffID`, `CreatedAt`, `UpdatedAt`) VALUES
-(1, 'GC-220071', '2025-09-16 21:18:00', 'Stomach ache', 'Completed', 'Pinauwi ko na. natae na eh', 1, '2025-09-16 13:20:17', '2025-09-16 13:23:00'),
-(2, 'GC-220723', '2025-09-16 21:20:00', 'Fever', 'In Progress', NULL, 1, '2025-09-16 13:20:37', '2025-09-16 13:20:37'),
-(3, 'GC-220708', '2025-09-16 21:20:00', 'Cough', 'In Progress', NULL, 1, '2025-09-16 13:20:44', '2025-09-16 13:20:44'),
-(4, 'GC-226395', '2025-09-16 21:20:00', 'Fever', 'In Progress', NULL, 1, '2025-09-16 13:21:08', '2025-09-16 13:21:08'),
-(5, 'GC-214536', '2025-09-16 21:21:00', 'Dizziness', 'In Progress', NULL, 1, '2025-09-16 13:21:58', '2025-09-16 13:22:49'),
-(6, 'GC-220071', '2025-09-16 21:22:00', 'Dizziness', 'In Progress', NULL, 1, '2025-09-16 13:23:15', '2025-09-16 13:23:15');
+(1, 'GC-220071', '2025-09-16 21:18:00', 'Stomach ache', 'Completed', 'Pinauwi ko na. natae na eh', '1', '2025-09-16 13:20:17', '2025-09-16 13:23:00'),
+(2, 'GC-220723', '2025-09-16 21:20:00', 'Fever', 'In Progress', NULL, '1', '2025-09-16 13:20:37', '2025-09-16 13:20:37'),
+(3, 'GC-220708', '2025-09-16 21:20:00', 'Cough', 'In Progress', NULL, '1', '2025-09-16 13:20:44', '2025-09-16 13:20:44'),
+(4, 'GC-226395', '2025-09-16 21:20:00', 'Fever', 'In Progress', NULL, '1', '2025-09-16 13:21:08', '2025-09-16 13:21:08'),
+(5, 'GC-214536', '2025-09-16 21:21:00', 'Dizziness', 'In Progress', NULL, '1', '2025-09-16 13:21:58', '2025-09-16 13:22:49'),
+(6, 'GC-220071', '2025-09-16 21:22:00', 'Dizziness', 'In Progress', NULL, '1', '2025-09-16 13:23:15', '2025-09-16 13:23:15'),
+(7, 'GC-220723', '2025-09-30 14:23:00', 'dddd', 'In Progress', NULL, 'PIAMIS0001', '2025-09-30 06:24:04', '2025-09-30 06:24:04'),
+(8, 'GC-220708', '2025-09-30 14:44:00', 'dawdawdw', 'In Progress', NULL, 'PIAMIS0001', '2025-09-30 06:44:19', '2025-09-30 06:44:19');
 
 -- --------------------------------------------------------
 
@@ -289,6 +316,12 @@ ALTER TABLE `clinicpersonnel`
   ADD KEY `RoleID` (`RoleID`);
 
 --
+-- Indexes for table `otp_request`
+--
+ALTER TABLE `otp_request`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- Indexes for table `student`
 --
 ALTER TABLE `student`
@@ -325,6 +358,12 @@ ALTER TABLE `clinicpersonnel`
   MODIFY `cp_ID` int(250) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
+-- AUTO_INCREMENT for table `otp_request`
+--
+ALTER TABLE `otp_request`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
 -- AUTO_INCREMENT for table `student`
 --
 ALTER TABLE `student`
@@ -334,7 +373,7 @@ ALTER TABLE `student`
 -- AUTO_INCREMENT for table `studentcheckins`
 --
 ALTER TABLE `studentcheckins`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `userrole`
