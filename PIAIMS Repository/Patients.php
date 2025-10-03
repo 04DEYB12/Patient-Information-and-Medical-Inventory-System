@@ -35,7 +35,7 @@ require_once '../Functions/Queries.php';
             width: 100%;
             height: 100%;
             overflow: auto;
-            background-color: rgba(0,0,0,0.5);
+            background-color: rgba(0,0,0,0.5);;
         }
 
         .modal-content {
@@ -501,7 +501,10 @@ require_once '../Functions/Queries.php';
                                         $student_id = $student_row['School_ID'];
                                         $student_section = $student_row['Section'];
                                         $student_email = $student_row['StudentEmailAddress'];
-                                        $student_year = $student_row['GradeLevel'];
+                                        $student_year = $student_row['GradeLevel']; 
+                                        $student_status = $student_row['Status'];
+                                        $color = $student_status === 'Active' ? 'green' : 'slate';
+                                        $text_color = $student_status === 'Active' ? 'green' : 'red';
 
                                         echo "
                                         <div class='flex mt-2 flex-col w-full max-w-[360px] h-[260px] flex-row items-center justify-between rounded-lg shadow-sm hover:shadow-md transition bg-white border-[1px] border-gray-300 shadow-lg patient-card rounded-xl'
@@ -513,20 +516,23 @@ require_once '../Functions/Queries.php';
                                                 </div>
                                                 <div>
                                                     <h3 class='font-semibold text-white'>{$student_name}</h3>
-                                                    <p class='text-sm text-white'>Student</p>
+                                                    <div style='display: flex; align-items: center; gap: 8px; margin-top: 4px;'>
+                                                        <p class='text-sm text-white'>Student</p>
+                                                        <p class='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-".$text_color."-100 text-".$text_color."-800 '>{$student_status}</p>
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div class='flex flex-row gap-2'>
-                                                <button onclick=\"openCheckInModal('{$student_id}')\" title='Check In'
-                                                    class='px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm flex items-center gap-1'>
+                                                <button onclick=\"openCheckInModal('{$student_id}')\" title='Check In' ".($student_status === 'Active' ? '' : 'style="cursor: not-allowed;" disabled')."
+                                                    class='px-3 py-2 bg-".$color."-600 text-white rounded-lg hover:bg-".$color."-700 text-sm flex items-center gap-1'>
                                                     <i class=\"bx bx-user-check\"></i> Check in
                                                 </button>
-                                                <button onclick=\"openViewModal('{$student_id}')\" title='View Profile'
+                                                <button onclick=\"openViewModal('{$student_id}')\" title='View Profile' 
                                                     class='px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm flex items-center gap-1'>
                                                     <i class=\"bx bx-user\"></i>Profile
                                                 </button>
-                                                    <button onclick=\"viewStudentRecord('{$student_id}')\" title='View Record'
-                                                    class='px-3 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 text-sm flex items-center gap-1'>
+                                                    <button onclick=\"viewStudentRecord('{$student_id}')\" title='View Record' 
+                                                    class='px-3 py-2 bg-teal-700 text-white rounded-lg hover:bg-teal-800 text-sm flex items-center gap-1'>
                                                     <i class=\"bx bxs-report\"></i>Record
                                                 </button>
                                             </div>
@@ -802,9 +808,10 @@ require_once '../Functions/Queries.php';
         };
     });
 
+    // 🔎 Quick Scan
     let scanTimer;
     let lastScanned = '';
-
+    
     function quickScan(event) {
         // Clear any existing timer
         clearTimeout(scanTimer);
@@ -1181,7 +1188,25 @@ require_once '../Functions/Queries.php';
                     const student = data.student;
                     // Update the hidden input value
                     document.getElementById('schoolIDInput').value = student.School_ID;
+                    document.getElementById('student_SchoolID').value = student.School_ID;
+                    document.getElementById('currentStatus').value = student.Status;
                     
+                    const statusBtn = document.getElementById('statusStudentBtn');
+                    let spanval = "";
+                    if (student.Status === 'Active') {
+                        statusBtn.classList.remove('bg-red-100', 'text-red-800');
+                        statusBtn.classList.add('bg-green-100', 'text-green-800');
+                        spanval = "<span class='w-2 h-2 rounded-full bg-green-500 mr-1.5'></span>";
+                        document.getElementById('profileLocked').style.display = 'none';
+                        document.getElementById('profileButtons').style.display = 'flex';
+                    } else {
+                        statusBtn.classList.remove('bg-green-100', 'text-green-800');
+                        statusBtn.classList.add('bg-red-100', 'text-red-800');
+                        spanval = "<span class='w-2 h-2 rounded-full bg-red-500 mr-1.5'></span>";
+                        document.getElementById('profileLocked').style.display = 'block';
+                        document.getElementById('profileButtons').style.display = 'none';
+                    }
+                    statusBtn.innerHTML = `${spanval} ${student.Status}`;                   
                     // Update header
                     const firstInitial = student.FirstName ? student.FirstName[0] : '';
                     const lastInitial = student.LastName ? student.LastName[0] : '';
@@ -1436,6 +1461,55 @@ require_once '../Functions/Queries.php';
                     alert('Failed to load student data. Please try again.');
                     closeModal('EditRecordModal');
                 });
+    }
+    
+    // Update account status
+    function updateStatus(SchoolID, currentStatus) {
+        const newStatus = currentStatus === 'Active' ? 'Inactive' : 'Active';
+        
+        if (confirm(`Are you sure you want to ${currentStatus === 'Active' ? 'deactivate' : 'activate'} this student?`)) {
+            const formData = new FormData();
+            formData.append('action', 'updateStudentStatus');
+            formData.append('schoolID', SchoolID);
+            formData.append('newStatus', newStatus);
+            
+            fetch('../Functions/patientFunctions.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update the UI to reflect the new status
+                    const statusBtn = document.getElementById('statusStudentBtn');
+                    const statusSpan = statusBtn.querySelector('span');
+                    
+                    // Toggle classes based on new status
+                    if (newStatus === 'Active') {
+                        statusBtn.classList.remove('bg-red-100', 'text-red-800');
+                        statusBtn.classList.add('bg-green-100', 'text-green-800');
+                        statusSpan.className = 'w-2 h-2 rounded-full bg-green-500 mr-1.5';
+                    } else {
+                        statusBtn.classList.remove('bg-green-100', 'text-green-800');
+                        statusBtn.classList.add('bg-red-100', 'text-red-800');
+                        statusSpan.className = 'w-2 h-2 rounded-full bg-red-500 mr-1.5';
+                    }
+                    
+                    // Update the button text and hidden field
+                    statusBtn.innerHTML = `${statusSpan.outerHTML} ${newStatus}`;
+                    document.getElementById('currentStatus').value = newStatus;
+                    
+                    alert(data.message);
+                    window.location.reload();
+                } else {
+                    throw new Error(data.error || 'Failed to update status');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error updating status: ' + error.message);
+            });
+        }
     }
 </script>
     

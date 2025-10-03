@@ -19,21 +19,39 @@
                         </div>
                     </div>
 
-                    <div class="form-group" style="margin-bottom: 1.5rem;">
-                        <label for="checkInDateTime" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151;">Date & Time</label>
-                        <input type="datetime-local" id="checkInDateTime" name="checkInDateTime" readonly
-                            style="width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 0.375rem; cursor: not-allowed;"
-                            value="<?php 
-                                date_default_timezone_set('Asia/Manila');
-                                echo date('Y-m-d\TH:i');
-                            ?>">
+                    <div class="form-group" style="margin-bottom: 1.5rem; display: flex; gap: 1rem; align-items: flex-start; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 250px;">
+                            <label for="checkInDateTime" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151;">Date & Time</label>
+                            <input type="datetime-local" id="checkInDateTime" name="checkInDateTime" readonly
+                                style="width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 0.375rem; cursor: not-allowed;"
+                                value="<?php 
+                                    date_default_timezone_set('Asia/Manila');
+                                    echo date('Y-m-d\TH:i');
+                                ?>">
+                        </div>
+                        <div style="flex: 1; min-width: 250px;">
+                            <label for="reasonForVisit" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151;">Reason for Visit</label>
+                            <select id="reasonForVisit" name="reasonForVisit" required
+                                style="width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 0.375rem; cursor: pointer;">
+                                <option value="" disabled selected>Select a reason</option>
+                                <option value="Fever">Fever</option>
+                                <option value="Cough / Cold">Cough / Cold</option>
+                                <option value="Headache">Headache</option>
+                                <option value="Stomach Ache">Stomach Ache</option>
+                                <option value="Wound / Injury">Wound / Injury</option>
+                                <option value="Dizziness">Dizziness</option>
+                                <option value="Toothache">Toothache</option>
+                                <option value="Others">Others</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div class="form-group" style="margin-bottom: 1.5rem;">
-                        <label for="reasonForVisit" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151;">Reason for Visit</label>
-                        <textarea id="reasonForVisit" name="reasonForVisit" rows="3" required
+                        <label for="notes" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151;">Notes</label>
+                        <textarea id="notes" name="notes" rows="3" required
                             style="width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 0.375rem; resize: vertical;"
-                            placeholder="Please describe the reason for the visit"></textarea>
+                            placeholder="Add notes if any">
+                        </textarea>
                     </div>
                     
                     <input type="hidden" name="action" value="Checkin">

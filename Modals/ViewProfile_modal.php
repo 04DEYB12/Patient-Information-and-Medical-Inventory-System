@@ -12,15 +12,25 @@
                 <div id="studentProfileContent">
                     <div class="profile-header" style="display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid #e5e7eb;">
                         <div class="flex gap-4 items-center justify-start">
+                            <input type="hidden" id="student_SchoolID">
+                            <input type="hidden" id="currentStatus">
+                            
                             <div class="avatar" style="width: 80px; height: 80px; background-color: #3b82f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: 600;" id="studentAvatar">
                                 JD
                             </div>
                             <div>
                                 <h3 style="font-size: 1.5rem; font-weight: 600; margin: 0 0 0.25rem 0;" id="studentName">Loading...</h3>
-                                <p style="margin: 0; color: #6b7280;" id="studentBasicInfo">ID: Loading...</p>
+                                <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                                    <p style="margin: 0; color: #6b7280;" id="studentBasicInfo">ID: Loading...</p>
+                                    <button type="button" id="statusStudentBtn" onclick="updateStatus(document.getElementById('student_SchoolID').value, document.getElementById('currentStatus').value)" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 hover:bg-green-200 transition-colors duration-200"></button>
+                                </div>
                             </div>
                         </div>
-                        <div class="flex gap-4 items-center justify-center">
+                        <div id="profileLocked" class="flex items-center gap-2 px-3 py-1.5 bg-red-50 text-red-700 rounded-lg border border-red-200 text-sm" style="display: none;">
+                            <i class='bx bxs-lock-alt text-red-500'></i>
+                            <span>Profile Locked - Inactive account</span>
+                        </div>
+                        <div id="profileButtons" class="flex gap-4 items-center justify-center">
                             <button type="button" id="editStudentBtn" class="btn btn-primary w-[80px] flex items-center justify-center font-normal">
                                 <i class="fas fa-edit"></i> Edit
                             </button>

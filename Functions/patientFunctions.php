@@ -507,5 +507,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 throw new Exception('Failed to update Check-in record: ' . mysqli_error($con));
             }
             break;
+        case 'updateStudentStatus': // --------------------------------------- UPDATE STUDENT STATUS ---------------------------------------
+            $schoolId = $_POST['schoolID'];
+            $newStatus = $_POST['newStatus'];
+            
+            // Update user status in database
+            $query = "UPDATE student SET Status = ? WHERE School_ID = ?";
+            $stmt = mysqli_prepare($con, $query);
+            
+            if ($stmt === false) {
+                throw new Exception('Failed to prepare statement: ' . mysqli_error($con));
+            }
+            
+            mysqli_stmt_bind_param($stmt, 'ss', $newStatus, $schoolId);
+            
+            if (mysqli_stmt_execute($stmt)) {
+                sendJsonResponse([
+                    'success' => true,
+                    'message' => 'Student status updated successfully!'
+                ]);
+            } else {
+                throw new Exception('Failed to update student status: ' . mysqli_error($con));
+            }
+            break;
     }    
 }
