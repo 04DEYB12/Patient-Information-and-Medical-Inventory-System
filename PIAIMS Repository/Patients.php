@@ -590,7 +590,6 @@ require_once '../Functions/Queries.php';
         document.getElementById('clearSearch1').style.display = 'none';
     }
     
-    
     // Clear Search Button
     document.getElementById('searchInput1').addEventListener('input', function() {
         const clearBtn = document.getElementById('clearSearch1');
@@ -1303,9 +1302,6 @@ require_once '../Functions/Queries.php';
                     // Update the hidden input value
                     document.getElementById('CheckInStudentIdHidden').value = studentId;
                     document.getElementById('CheckInStaffIdHidden').value = "<?php echo $_SESSION['User_ID']; ?>";
-                    
-                    
-                    
                 } else {
                     alert('Failed to load student data: ' + (data.message || 'Unknown error'));
                     closeModal('checkInModal');
@@ -1316,8 +1312,6 @@ require_once '../Functions/Queries.php';
                 alert('Failed to load student data. Please try again.');
                 closeModal('checkInModal');
             });
-        
-        
     }
     
     // Function to open view modal with student ID

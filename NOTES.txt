@@ -1,7 +1,7 @@
 
 📌 ACCOUNT PASSWORDS
-Adele : PIAMIS199429
-Dave : Dave147532689
+Adele : PIAMIS199429 - Admin
+Dave : Dave147532689 - Staff
 
 📌 NOTE!!: I add cp_ID as PK and PersonnelID as UK in clinicpersonnel table
 
@@ -31,14 +31,11 @@ Completed Task:
 Completed Task:
 ✅ Adding student account status (toggle to Inactive and Active, Disable profile editing, Disable Check-in)
 ✅ Quick Scan for Checkin
-- Revision for Checkin (Add dropdown for reason. textarea for notes)
+✅ Revision for Checkin (Add dropdown for reason. textarea for notes)
 - Adding new student was successfully audit in database
-- Checkin was successfully audit in database
+✅ Checkin was successfully audit in database
 - Updating student info was successfully audit in database
 - Updating student Record status was successfully audit in database
-
-Where I paused?
-- Re-layouting Check-in Modal
 
 
 ------------------ TASK 4: Log-in Form ------------------
@@ -54,4 +51,8 @@ Completed Task:
 ------------------ TASK 5: My Profile Section ------------------
 
 Completed Task:
-- N/A
+- Edit Email (Logic and UI)
+- Edit Phone Number (Logic and UI)
+- Edit Home Address (Logic and UI)
+- Edit Office (Logic and UI)
+- Enhance Password Management (Change Password, Validation)

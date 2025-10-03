@@ -19,6 +19,25 @@ function sendJsonResponse($data, $statusCode = 200) {
     exit();
 }
 
+// Audit Function
+function audit($user_id, $action_type, $table_name, $record_id, $action_details) {
+    global $con;
+    
+    $query = "INSERT INTO audit_trail (user_id, action_type, table_name, record_id, action_details) 
+                VALUES (?, ?, ?, ?, ?)";
+    
+    $stmt = $con->prepare($query);
+    if ($stmt === false) {
+        error_log('Failed to prepare audit trail statement: ' . $con->error);
+    } else {
+        $stmt->bind_param('sssss', $user_id, $action_type, $table_name, $record_id, $action_details);
+        if (!$stmt->execute()) {
+            error_log('Failed to execute audit trail statement: ' . $stmt->error);
+        }
+        $stmt->close();
+    }
+}
+
 // Handle GET requests for student data
 if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['action'])) {
     switch ($_GET['action']) {
@@ -466,19 +485,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
         case 'Checkin': // --------------------------------------- CHECKIN ---------------------------------------
             $studentId = $_POST['CheckInStudentId'];
-            $reasonForVisit = $_POST['reasonForVisit'];
-            $checkInDateTime = $_POST['checkInDateTime'];
             $staffId = $_POST['CheckInStaffId'];
+            $checkInDateTime = $_POST['CheckInDateTime'];
+            $reasonForVisit = $_POST['reasonForVisit'];
+            $notes = $_POST['notes'];
             $status = "In Progress";
             
-            $query = "INSERT INTO studentcheckins (StudentID, DateTime, Reason,Status, StaffID) VALUES (?, ?, ?, ?, ?)";
+            $query = "INSERT INTO studentcheckins (StudentID, DateTime, Reason, Notes, Status, StaffID) VALUES (?, ?, ?, ?, ?, ?)";
             $stmt = $con->prepare($query);
-            $stmt->bind_param("sssss", $studentId, $checkInDateTime, $reasonForVisit, $status, $staffId);
+            $stmt->bind_param("ssssss", $studentId, $checkInDateTime, $reasonForVisit, $notes, $status, $staffId);
             
             if ($stmt->execute()) {
-                echo "<script>alert('Check-in successful!'); window.location.href = '../PIAIMS Repository/Patients.php';</script>";
+                $user_id = $staffId;
+                $actionType = 'CREATE';
+                $tableName = 'studentcheckins';
+                $recordId = $studentId;
+                $actionDetails = "New check-in added: $studentId";
+                
+                audit($user_id, $actionType, $tableName, $recordId, $actionDetails);
+                sendJsonResponse(['success' => true,'message' => 'Check-in successful!']);
             } else {
-                echo "Error: " . $query . "<br>" . $con->error;
+                sendJsonResponse(['success' => false,'message' => 'Error: ' . $query . "<br>" . $con->error]);
             }
             $stmt->close();
             break;
