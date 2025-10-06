@@ -1,261 +1,338 @@
 <?php
 session_start();
+// The connection script should define $con (mysqli object)
 include '../Landing Repository/Connection.php';
 
+// --- Global Setup and Authentication ---
+
+// Check if $con is available and a valid mysqli object
+if (!isset($con) || $con->connect_error) {
+    // Refactored to use a simple error message
+    die("Database connection failed: " . ($con->connect_error ?? 'Connection object not set.'));
+}
+
+// Redirect if user not logged in
 if (!isset($_SESSION['User_ID'])) {
     echo "<script>alert('Please login first!'); window.location.href = 'Loginpage.php';</script>";
     exit();
 }
 
+// Get required session data
 $user_id = $_SESSION['User_ID'];
-require_once '../Functions/Queries.php';
+// Assuming Admin is a placeholder if actual user role/name isn't in session
+$admin_name = 'Admin'; 
+// Use a more descriptive session variable if available
+$disposed_by_user = htmlspecialchars($_SESSION['username'] ?? $admin_name); 
 
-if (!isset($con)) {
-    die("Database connection is not available.");
+// Include external queries, assuming they don't contain handler functions
+require_once '../Functions/Queries.php'; 
+
+
+// --- Audit Trail Logging Function ---
+
+// New Audit Trail Logging Function
+function log_audit_trail($con, $user_id, $action_type, $table_name, $record_id, $action_details) {
+    $stmt = $con->prepare("INSERT INTO audit_trail (user_id, action_type, table_name, record_id, action_details) VALUES (?, ?, ?, ?, ?)");
+    if (!$stmt) {
+        error_log("Audit trail prepare failed: " . $con->error);
+        return false;
+    }
+    
+    // Ensure $record_id is a string as per your audit_trail table structure (varchar)
+    $record_id_str = strval($record_id); 
+    
+    $stmt->bind_param("sssss", $user_id, $action_type, $table_name, $record_id_str, $action_details);
+    
+    if (!$stmt->execute()) {
+        error_log("Audit trail execute failed: " . $stmt->error);
+        return false;
+    }
+    $stmt->close();
+    return true;
 }
 
-$admin_name = 'Admin'; 
-
-// --- Handle Add Medicine Form Submission ---
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_medicine_submit'])) {
-    $is_ajax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+// Helper function to handle JSON/redirect responses
+function send_response($is_ajax, $status, $message, $redirect_page = 'Inventory.php') {
     if ($is_ajax) {
         header('Content-Type: application/json');
-    }
-
-    $med_name = $con->real_escape_string($_POST['med_name']);
-    $med_description = $con->real_escape_string($_POST['med_description']);
-    $med_quantity = (int)$_POST['med_quantity'];
-    $med_type = $con->real_escape_string($_POST['med_type']);
-    $med_expiry = $con->real_escape_string($_POST['med_expiry']);
-    $added_by = $admin_name;
-
-    try {
-        if ($med_quantity <= 0) {
-            throw new Exception("Quantity must be greater than zero.");
-        }
-
-        $stmt = $con->prepare("INSERT INTO medicine (name, description, quantity, type, expiry_date, added_by) VALUES (?, ?, ?, ?, ?, ?)");
-        if (!$stmt) {
-            throw new Exception("Prepare statement failed: " . $con->error);
-        }
-        $stmt->bind_param("ssisss", $med_name, $med_description, $med_quantity, $med_type, $med_expiry, $added_by);
-
-        if ($stmt->execute()) {
-            if ($is_ajax) {
-                echo json_encode(['status' => 'success', 'message' => 'Medicine added successfully!']);
-            } else {
-                echo "<script>alert('Medicine added successfully!'); window.location.href = 'Inventory.php';</script>";
-            }
-        } else {
-            throw new Exception("Execute statement failed: " . $stmt->error);
-        }
-        $stmt->close();
-    } catch (Exception $e) {
-        if ($is_ajax) {
-            echo json_encode(['status' => 'error', 'message' => 'Error: ' . $e->getMessage()]);
-        } else {
-            echo "<script>alert('Error: " . $e->getMessage() . "'); window.location.href = 'Inventory.php';</script>";
-        }
+        echo json_encode(['status' => $status, 'message' => $message]);
+    } else {
+        // Use addslashes for clean alert messages
+        echo "<script>alert('" . addslashes($message) . "'); window.location.href = '{$redirect_page}';</script>";
     }
     exit;
 }
 
+// Determine if the request is AJAX
+$is_ajax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+
+
+// --- Handle Dispose Form Submission ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['med_id'], $_POST['quantity'], $_POST['type'])) {
+    $med_id = filter_var($_POST['med_id'], FILTER_VALIDATE_INT);
+    $quantity_to_dispose = filter_var($_POST['quantity'], FILTER_VALIDATE_INT);
+    $reason_status = trim($_POST['type']);
+    $reason_details = trim($_POST['reason'] ?? '');
+    $disposed_by = $_POST['disposed_by'] ?? 'System';
+
+    if ($med_id === false || $quantity_to_dispose === false || $quantity_to_dispose <= 0) {
+        send_response($is_ajax, 'error', 'Invalid medicine disposal request.');
+    }
+
+    $con->begin_transaction();
+
+    try {
+        // 1. Get current stock and lock the row
+        $stmt_select = $con->prepare("SELECT quantity, name, description FROM medicine WHERE med_id = ? FOR UPDATE");
+        if (!$stmt_select) {
+             throw new Exception("Prepare SELECT failed: " . $con->error);
+        }
+        $stmt_select->bind_param("i", $med_id);
+        $stmt_select->execute();
+        $result = $stmt_select->get_result();
+        $medicine = $result->fetch_assoc();
+        $stmt_select->close();
+
+        if (!$medicine) {
+            throw new Exception("Medicine with ID $med_id not found.");
+        }
+
+        $current_stock = (int)$medicine['quantity'];
+        if ($current_stock < $quantity_to_dispose) {
+            throw new Exception("Not enough stock for disposal. Available: " . $current_stock);
+        }
+
+        $new_stock = $current_stock - $quantity_to_dispose;
+
+        // 2. Update the medicine stock - EXPLICIT ERROR CHECKING
+        $update_stmt = $con->prepare("UPDATE medicine SET quantity = ? WHERE med_id = ?");
+        if (!$update_stmt) {
+             throw new Exception("Prepare UPDATE failed: " . $con->error);
+        }
+        $update_stmt->bind_param("ii", $new_stock, $med_id);
+        if (!$update_stmt->execute()) {
+            // This is the CRITICAL check for silent failure!
+            throw new Exception("Failed to update medicine stock (SQL Error): " . $update_stmt->error);
+        }
+        $update_stmt->close();
+
+        // 3. Record disposal - EXPLICIT ERROR CHECKING
+        $disposal_stmt = $con->prepare("
+            INSERT INTO disposed_medicines 
+            (med_id, name, status, quantity, description, reason, disposed_by, disposed_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
+        ");
+        if (!$disposal_stmt) {
+             throw new Exception("Prepare INSERT failed: " . $con->error);
+        }
+        $disposal_stmt->bind_param(
+            "ississs",
+            $med_id,
+            $medicine['name'],
+            $reason_status,
+            $quantity_to_dispose,
+            $medicine['description'],
+            $reason_details,
+            $disposed_by
+        );
+        if (!$disposal_stmt->execute()) {
+            // This is the CRITICAL check for silent failure!
+            throw new Exception("Failed to record disposal (SQL Error): " . $disposal_stmt->error);
+        }
+        $disposal_stmt->close();
+
+        // 4. Audit trail
+        $details = "Disposed $quantity_to_dispose of {$medicine['name']} | Reason: {$reason_status}" .
+                   ($reason_details ? " - {$reason_details}" : "") .
+                   ". New stock: $new_stock";
+        log_audit_trail($con, $user_id, 'DISPOSE', 'medicine', $med_id, $details);
+
+        // 5. Commit - CHECK FOR COMMIT FAILURE
+        if (!$con->commit()) {
+            throw new Exception("Transaction Commit Failed: " . $con->error);
+        }
+        send_response($is_ajax, 'success', 'Medicine disposed successfully!');
+
+    } catch (Exception $e) {
+        $con->rollback();
+        // The detailed error message will now be displayed to the user
+        send_response($is_ajax, 'error', 'Disposal failed! Reason: ' . $e->getMessage());
+    }
+}
+// --- Handle Add Medicine Form Submission ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_medicine_submit'])) {
+    $med_name = trim($_POST['med_name']);
+    $med_description = trim($_POST['med_description']);
+    $med_quantity = filter_var($_POST['med_quantity'], FILTER_VALIDATE_INT);
+    $med_type = trim($_POST['med_type']);
+    $med_expiry = trim($_POST['med_expiry']);
+    $added_by = $admin_name; // Use $admin_name for 'added_by'
+
+    if ($med_quantity === false || $med_quantity <= 0) {
+        send_response($is_ajax, 'error', 'Quantity must be a valid number greater than zero.');
+    }
+
+    $stmt = $con->prepare("INSERT INTO medicine (name, description, quantity, type, expiry_date, added_by) VALUES (?, ?, ?, ?, ?, ?)");
+    if (!$stmt) {
+        send_response($is_ajax, 'error', 'Prepare statement failed: ' . $con->error);
+    }
+    $stmt->bind_param("ssisss", $med_name, $med_description, $med_quantity, $med_type, $med_expiry, $added_by);
+
+    try {
+        if ($stmt->execute()) {
+            $new_med_id = $con->insert_id;
+            
+            // --- AUDIT TRAIL LOGGING ---
+            $details = "Added new medicine: " . $med_name . " (Qty: " . $med_quantity . ", Exp: " . $med_expiry . ")";
+            log_audit_trail($con, $user_id, 'CREATE', 'medicine', $new_med_id, $details);
+            
+            send_response($is_ajax, 'success', 'Medicine added successfully!');
+        } else {
+            throw new Exception("Execute statement failed: " . $stmt->error);
+        }
+    } catch (Exception $e) {
+        send_response($is_ajax, 'error', 'Error: ' . $e->getMessage());
+    } finally {
+        $stmt->close();
+    }
+}
+
 // --- Handle Deduct Form Submission ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['deduct_items'])) {
-    $is_ajax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
     
-    if ($is_ajax) {
-        header('Content-Type: application/json');
+    if (empty($_POST['deduct_items'])) {
+        send_response($is_ajax, 'error', 'Please select at least one medicine to deduct.');
     }
 
-    if (!empty($_POST['deduct_items'])) {
-        $deduct_items = $_POST['deduct_items'];
-        $success = true;
+    $con->begin_transaction();
 
-        $con->begin_transaction();
+    try {
+        foreach ($_POST['deduct_items'] as $med_id => $quantity_to_deduct) {
+            $med_id = filter_var($med_id, FILTER_VALIDATE_INT);
+            $quantity_to_deduct = filter_var($quantity_to_deduct, FILTER_VALIDATE_INT);
 
-        try {
-            foreach ($deduct_items as $med_id => $quantity_to_deduct) {
-                $med_id = $con->real_escape_string($med_id);
-                $quantity_to_deduct = (int)$quantity_to_deduct;
-
-                if ($quantity_to_deduct <= 0) {
-                    continue; 
-                }
-
-                // Get the medicine details and lock the row
-                $stmt = $con->prepare("SELECT quantity, name FROM medicine WHERE med_id = ? FOR UPDATE");
-                if (!$stmt) {
-                    throw new Exception("Prepare statement failed: " . $con->error);
-                }
-                $stmt->bind_param("i", $med_id);
-                $stmt->execute();
-                $result = $stmt->get_result();
-                $medicine = $result->fetch_assoc();
-                $stmt->close();
-
-                if ($medicine) {
-                    $current_stock = (int)$medicine['quantity'];
-                    if ($current_stock < $quantity_to_deduct) {
-                        throw new Exception("Not enough stock for " . htmlspecialchars($medicine['name']) . ". Available: " . $current_stock);
-                    }
-
-                    $new_stock = $current_stock - $quantity_to_deduct;
-
-                    // Update the quantity
-                    $update_stmt = $con->prepare("UPDATE medicine SET quantity = ? WHERE med_id = ?");
-                    if (!$update_stmt) {
-                        throw new Exception("Update statement failed: " . $con->error);
-                    }
-                    $update_stmt->bind_param("ii", $new_stock, $med_id);
-                    $update_stmt->execute();
-                    $update_stmt->close();
-                    
-                    // Log the usage
-                    $usage_stmt = $con->prepare("INSERT INTO medicine_usage (med_id, quantity_used) VALUES (?, ?)");
-                    if (!$usage_stmt) {
-                        throw new Exception("Usage log statement failed: " . $con->error);
-                    }
-                    $usage_stmt->bind_param("ii", $med_id, $quantity_to_deduct);
-                    $usage_stmt->execute();
-                    $usage_stmt->close();
-                } else {
-                    throw new Exception("Medicine with ID $med_id not found.");
-                }
+            if ($med_id === false || $quantity_to_deduct === false || $quantity_to_deduct <= 0) {
+                continue; // Skip invalid items
             }
+
+            // 1. Get current quantity and lock row
+            $stmt_select = $con->prepare("SELECT quantity, name FROM medicine WHERE med_id = ? FOR UPDATE");
+            $stmt_select->bind_param("i", $med_id);
+            $stmt_select->execute();
+            $result = $stmt_select->get_result();
+            $medicine = $result->fetch_assoc();
+            $stmt_select->close();
+
+            if (!$medicine) {
+                throw new Exception("Medicine with ID $med_id not found.");
+            }
+
+            $current_stock = (int)$medicine['quantity'];
+            if ($current_stock < $quantity_to_deduct) {
+                throw new Exception("Not enough stock for " . htmlspecialchars($medicine['name']) . ". Available: " . $current_stock);
+            }
+
+            $new_stock = $current_stock - $quantity_to_deduct;
+
+            // 2. Update the medicine quantity
+            $update_stmt = $con->prepare("UPDATE medicine SET quantity = ? WHERE med_id = ?");
+            $update_stmt->bind_param("ii", $new_stock, $med_id);
+            $update_stmt->execute();
+            $update_stmt->close();
             
-            $con->commit();
+            // 3. Log the usage
+            $usage_stmt = $con->prepare("INSERT INTO medicine_usage (med_id, quantity_used) VALUES (?, ?)");
+            $usage_stmt->bind_param("ii", $med_id, $quantity_to_deduct);
+            $usage_stmt->execute();
+            $usage_stmt->close();
             
-            if ($is_ajax) {
-                echo json_encode(['status' => 'success', 'message' => 'Deduction successful!']);
-            } else {
-                echo "<script>alert('Deduction successful!'); window.location.href = 'Inventory.php';</script>";
-            }
-        } catch (Exception $e) {
-            $con->rollback();
-            if ($is_ajax) {
-                echo json_encode(['status' => 'error', 'message' => 'Error: ' . $e->getMessage()]);
-            } else {
-                echo "<script>alert('Error: " . $e->getMessage() . "'); window.location.href = 'Inventory.php';</script>";
-            }
+            // --- AUDIT TRAIL LOGGING ---
+            $details = "Deducted " . $quantity_to_deduct . " of " . $medicine['name'] . ". New stock: " . $new_stock;
+            log_audit_trail($con, $user_id, 'DEDUCT', 'medicine', $med_id, $details);
         }
-    } else {
-        if ($is_ajax) {
-            echo json_encode(['status' => 'error', 'message' => 'Please select at least one medicine to deduct.']);
-        } else {
-            echo "<script>alert('Please select at least one medicine to deduct.'); window.location.href = 'Inventory.php';</script>";
-        }
+        
+        $con->commit();
+        send_response($is_ajax, 'success', 'Deduction successful!');
+
+    } catch (Exception $e) {
+        $con->rollback();
+        send_response($is_ajax, 'error', 'Deduction error: ' . $e->getMessage());
     }
-    exit; 
 }
 
 
 // --- Handle Restock Form Submission ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['restock_items'])) {
-    $is_ajax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
-    
-    if ($is_ajax) {
-        header('Content-Type: application/json');
+
+    if (empty($_POST['restock_items'])) {
+        send_response($is_ajax, 'error', 'Please select at least one medicine to restock.');
     }
 
-    if (!empty($_POST['restock_items'])) {
-        $restock_items = $_POST['restock_items'];
-        $success = true;
+    $con->begin_transaction();
 
-        $con->begin_transaction();
+    try {
+        foreach ($_POST['restock_items'] as $med_id => $details) {
+            $med_id = filter_var($med_id, FILTER_VALIDATE_INT);
+            $quantity_to_add = filter_var($details['quantity'], FILTER_VALIDATE_INT);
+            $new_expiry_date = trim($details['expiry_date']);
 
-        try {
-            foreach ($restock_items as $med_id => $details) {
-                $med_id = $con->real_escape_string($med_id);
-                $quantity_to_add = (int)$details['quantity'];
-                $new_expiry_date = $details['expiry_date'];
+            if ($med_id === false || $quantity_to_add === false || $quantity_to_add <= 0) {
+                continue; 
+            }
+            
+            // 1. Get current medicine details and lock the row
+            $stmt_select = $con->prepare("SELECT name, description, type, added_by, quantity, expiry_date FROM medicine WHERE med_id = ? FOR UPDATE");
+            $stmt_select->bind_param("i", $med_id);
+            $stmt_select->execute();
+            $result = $stmt_select->get_result();
+            $medicine = $result->fetch_assoc();
+            $stmt_select->close();
 
-                if ($quantity_to_add <= 0) {
-                    continue; 
-                }
+            if (!$medicine) {
+                throw new Exception("Medicine with ID $med_id not found.");
+            }
+            
+            $current_expiry_date = $medicine['expiry_date'];
+            $new_med_id = $med_id;
+
+            if ($current_expiry_date === $new_expiry_date) {
+                // Update the quantity if expiry dates match (same batch logic)
+                $new_stock = $medicine['quantity'] + $quantity_to_add;
+
+                $update_stmt = $con->prepare("UPDATE medicine SET quantity = ? WHERE med_id = ?");
+                $update_stmt->bind_param("ii", $new_stock, $med_id);
+                $update_stmt->execute();
+                $update_stmt->close();
                 
-                // Get the medicine details and lock the row
-                $stmt = $con->prepare("SELECT quantity, name, expiry_date FROM medicine WHERE med_id = ? FOR UPDATE");
-                if (!$stmt) {
-                    throw new Exception("Prepare statement failed: " . $con->error);
-                }
-                $stmt->bind_param("i", $med_id);
-                $stmt->execute();
-                $result = $stmt->get_result();
-                $medicine = $result->fetch_assoc();
-                $stmt->close();
+                // --- AUDIT TRAIL LOGGING (Update existing record) ---
+                $details_log = "Restocked " . $quantity_to_add . " of " . $medicine['name'] . ". New stock: " . $new_stock;
+                log_audit_trail($con, $user_id, 'UPDATE', 'medicine', $med_id, $details_log);
 
-                if ($medicine) {
-                    $current_stock = (int)$medicine['quantity'];
-                    $current_expiry_date = $medicine['expiry_date'];
-
-                    // If the expiry date is different, we create a new entry.
-                    // If it's the same, we update the existing quantity.
-                    if ($current_expiry_date === $new_expiry_date) {
-                        $new_stock = $current_stock + $quantity_to_add;
-
-                        $update_stmt = $con->prepare("UPDATE medicine SET quantity = ? WHERE med_id = ?");
-                        if (!$update_stmt) {
-                            throw new Exception("Update statement failed: " . $con->error);
-                        }
-                        $update_stmt->bind_param("ii", $new_stock, $med_id);
-                        $update_stmt->execute();
-                        $update_stmt->close();
-                    } else {
-                        // This assumes the `med_id` is for a specific batch.
-                        // The form should have been changed to pass the name, not the ID.
-                        // Since we can't change the form without knowing the full JS, I will
-                        // create a new entry. This is a bit of a workaround.
-                        // A better approach would be to refactor the frontend form entirely.
-
-                        // Get original medicine details to create a new entry
-                        $original_med_stmt = $con->prepare("SELECT name, description, type, added_by FROM medicine WHERE med_id = ?");
-                        $original_med_stmt->bind_param("i", $med_id);
-                        $original_med_stmt->execute();
-                        $original_med_result = $original_med_stmt->get_result();
-                        $original_med_data = $original_med_result->fetch_assoc();
-                        $original_med_stmt->close();
-
-                        $insert_stmt = $con->prepare("INSERT INTO medicine (name, description, quantity, type, expiry_date, added_by) VALUES (?, ?, ?, ?, ?, ?)");
-                        if (!$insert_stmt) {
-                            throw new Exception("Insert statement failed: " . $con->error);
-                        }
-                        $insert_stmt->bind_param("ssisss", $original_med_data['name'], $original_med_data['description'], $quantity_to_add, $original_med_data['type'], $new_expiry_date, $original_med_data['added_by']);
-                        $insert_stmt->execute();
-                        $insert_stmt->close();
-                    }
-                } else {
-                    throw new Exception("Medicine with ID $med_id not found.");
-                }
-            }
-            
-            $con->commit();
-            
-            if ($is_ajax) {
-                echo json_encode(['status' => 'success', 'message' => 'Restock successful!']);
             } else {
-                echo "<script>alert('Restock successful!'); window.location.href = 'Inventory.php';</script>";
-            }
-        } catch (Exception $e) {
-            $con->rollback();
-            if ($is_ajax) {
-                echo json_encode(['status' => 'error', 'message' => 'Error: ' . $e->getMessage()]);
-            } else {
-                echo "<script>alert('Error: " . $e->getMessage() . "'); window.location.href = 'Inventory.php';</script>";
+                // Insert a new record for a new batch (different expiry date)
+                $insert_stmt = $con->prepare("INSERT INTO medicine (name, description, quantity, type, expiry_date, added_by) VALUES (?, ?, ?, ?, ?, ?)");
+                $insert_stmt->bind_param("ssisss", $medicine['name'], $medicine['description'], $quantity_to_add, $medicine['type'], $new_expiry_date, $medicine['added_by']);
+                $insert_stmt->execute();
+                $new_med_id = $con->insert_id; // Get ID of the newly inserted batch
+                $insert_stmt->close();
+                
+                // --- AUDIT TRAIL LOGGING (Create new record) ---
+                $details_log = "Restocked new batch of " . $medicine['name'] . " (Qty: " . $quantity_to_add . ", New Exp: " . $new_expiry_date . ")";
+                log_audit_trail($con, $user_id, 'CREATE', 'medicine', $new_med_id, $details_log);
             }
         }
-    } else {
-        if ($is_ajax) {
-            echo json_encode(['status' => 'error', 'message' => 'Please select at least one medicine to restock.']);
-        } else {
-            echo "<script>alert('Please select at least one medicine to restock.'); window.location.href = 'Inventory.php';</script>";
-        }
+        
+        $con->commit();
+        send_response($is_ajax, 'success', 'Restock successful!');
+
+    } catch (Exception $e) {
+        $con->rollback();
+        send_response($is_ajax, 'error', 'Restock error: ' . $e->getMessage());
     }
-    exit; 
 }
 
-// --- Dashboard Data Queries ---
+
+// --- Dashboard Data Queries (No major changes needed, keeping original logic) ---
 $total_meds_query = $con->query("SELECT SUM(quantity) AS total_count FROM medicine");
 $total_meds_count = $total_meds_query->fetch_assoc()['total_count'] ?? 0;
 
@@ -271,104 +348,63 @@ $expired_count = $expired_query->fetch_assoc()['expired_count'] ?? 0;
 $monthly_usage_query = $con->query("SELECT SUM(quantity_used) AS total_used FROM medicine_usage WHERE MONTH(usage_date) = MONTH(CURDATE()) AND YEAR(usage_date) = YEAR(CURDATE())");
 $monthly_usage_count = $monthly_usage_query->fetch_assoc()['total_used'] ?? 0;
 
-// Handle AJAX requests for medicine list updates
+
+// --- Handle AJAX requests for medicine list updates (Keeping original logic, but simplified) ---
 if (isset($_GET['action']) && $_GET['action'] == 'fetch_medicines') {
+    header('Content-Type: text/html'); // Ensure proper header for HTML response
+    
     $search_query = "";
     $sort_query = "";
-
     $params = [];
     $param_types = "";
-    
+
+    // Build the query and parameters based on filters
     if (isset($_GET['search']) && !empty($_GET['search'])) {
-        $search = '%' . $con->real_escape_string($_GET['search']) . '%';
+        $search = '%' . $_GET['search'] . '%';
         $search_query = "WHERE name LIKE ? OR description LIKE ?";
         $params[] = $search;
         $params[] = $search;
         $param_types .= "ss";
     }
 
+    // This section is kept complex as it handles specific filtering which is likely necessary
+    // for the inventory view. No simple refactor here without changing logic.
     if (isset($_GET['sort'])) {
         switch ($_GET['sort']) {
-            case 'low':
-                $sort_query = "ORDER BY quantity ASC";
-                break;
-            case 'high':
-                $sort_query = "ORDER BY quantity DESC";
-                break;
-            case 'expired':
-                if (!empty($search_query)) {
-                    $search_query .= " AND expiry_date < CURDATE()";
-                } else {
-                    $search_query = "WHERE expiry_date < CURDATE()";
-                }
-                $sort_query = "ORDER BY expiry_date ASC";
-                break;
-            case 'near_expiry':
-                if (!empty($search_query)) {
-                    $search_query .= " AND expiry_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 5 MONTH)";
-                } else {
-                    $search_query = "WHERE expiry_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 5 MONTH)";
-                }
-                $sort_query = "ORDER BY expiry_date ASC";
-                break;
+            case 'low': $sort_query = "ORDER BY quantity ASC"; break;
+            case 'high': $sort_query = "ORDER BY quantity DESC"; break;
+            case 'expired': 
+                $search_query .= (empty($search_query) ? "WHERE" : " AND") . " expiry_date < CURDATE()";
+                $sort_query = "ORDER BY expiry_date ASC"; break;
+            case 'near_expiry': 
+                $search_query .= (empty($search_query) ? "WHERE" : " AND") . " expiry_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 5 MONTH)";
+                $sort_query = "ORDER BY expiry_date ASC"; break;
             case 'expiry_1m':
-                if (!empty($search_query)) {
-                    $search_query .= " AND expiry_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 1 MONTH)";
-                } else {
-                    $search_query = "WHERE expiry_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 1 MONTH)";
-                }
-                $sort_query = "ORDER BY expiry_date ASC";
-                break;
             case 'expiry_2m':
-                if (!empty($search_query)) {
-                    $search_query .= " AND expiry_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 2 MONTH)";
-                } else {
-                    $search_query = "WHERE expiry_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 2 MONTH)";
-                }
-                $sort_query = "ORDER BY expiry_date ASC";
-                break;
             case 'expiry_3m':
-                if (!empty($search_query)) {
-                    $search_query .= " AND expiry_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 3 MONTH)";
-                } else {
-                    $search_query = "WHERE expiry_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 3 MONTH)";
-                }
-                $sort_query = "ORDER BY expiry_date ASC";
-                break;
+                $months = substr($_GET['sort'], -2, 1);
+                $search_query .= (empty($search_query) ? "WHERE" : " AND") . " expiry_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL {$months} MONTH)";
+                $sort_query = "ORDER BY expiry_date ASC"; break;
             case 'tablet':
             case 'capsule':
             case 'syrup':
             case 'injection':
             case 'ointment':
             case 'other':
-                if (!empty($search_query)) {
-                    $search_query .= " AND type = ?";
-                } else {
-                    $search_query = "WHERE type = ?";
-                }
+                $search_query .= (empty($search_query) ? "WHERE" : " AND") . " type = ?";
                 $params[] = $_GET['sort'];
                 $param_types .= "s";
-                $sort_query = "ORDER BY name ASC";
-                break;
-            case 'oldest_first':
-                $sort_query = "ORDER BY expiry_date ASC";
-                break;
-            case 'newest_first':
-                $sort_query = "ORDER BY expiry_date DESC";
-                break;
-            default:
-                $sort_query = "ORDER BY added_at DESC";
+                $sort_query = "ORDER BY name ASC"; break;
+            case 'oldest_first': $sort_query = "ORDER BY expiry_date ASC"; break;
+            case 'newest_first': $sort_query = "ORDER BY expiry_date DESC"; break;
+            default: $sort_query = "ORDER BY added_at DESC";
         }
     }
     
     // New category filter
     if (isset($_GET['category']) && !empty($_GET['category'])) {
-        $category = '%' . $con->real_escape_string($_GET['category']) . '%';
-        if (!empty($search_query)) {
-            $search_query .= " AND description LIKE ?";
-        } else {
-            $search_query = "WHERE description LIKE ?";
-        }
+        $category = '%' . $_GET['category'] . '%';
+        $search_query .= (empty($search_query) ? "WHERE" : " AND") . " description LIKE ?";
         $params[] = $category;
         $param_types .= "s";
     }
@@ -377,22 +413,29 @@ if (isset($_GET['action']) && $_GET['action'] == 'fetch_medicines') {
     $stmt = $con->prepare($medicines_query);
 
     if (!empty($params)) {
-        $stmt->bind_param($param_types, ...$params);
+        // Use call_user_func_array for dynamic binding
+        $bind_params = array_merge([$param_types], $params);
+        $ref = [];
+        foreach($bind_params as $key => $value) {
+            $ref[$key] = &$bind_params[$key];
+        }
+        call_user_func_array([$stmt, 'bind_param'], $ref);
     }
 
     $stmt->execute();
     $medicines_result = $stmt->get_result();
 
-   
+    
     if ($medicines_result->num_rows > 0) {
         while ($row = $medicines_result->fetch_assoc()) {
+            // --- UI/DISPLAY LOGIC ---
             $expiry_date = new DateTime($row['expiry_date']);
             $today = new DateTime();
             $interval = $today->diff($expiry_date);
 
             // Status logic
             $is_expired = $expiry_date < $today;
-            $is_near_expiry = !$is_expired && $interval->days <= 30;
+            $is_near_expiry = !$is_expired && $interval->days <= 90; // Adjusted for better near-expiry window
             $is_low_stock = $row['quantity'] < 15;
             $is_healthy_stock = $row['quantity'] >= 15 && !$is_expired && !$is_near_expiry;
 
@@ -401,35 +444,28 @@ if (isset($_GET['action']) && $_GET['action'] == 'fetch_medicines') {
             $added_at = new DateTime($row['added_at']);
             $formatted_added_at = $added_at->format('F d, Y h:i A');
 
-            // Card highlight class
+            // Card highlight class & status text
             $card_highlight_class = 'default-highlight';
-            $status_text = '';
+            $status_text = 'Healthy Stock';
             if ($is_expired) {
-                $card_highlight_class = 'expired-highlight';
-                $status_text = 'Expired';
+                $card_highlight_class = 'expired-highlight'; $status_text = 'Expired';
             } elseif ($is_near_expiry) {
-                $card_highlight_class = 'near-expiry-highlight';
-                $status_text = 'Near Expiry';
+                $card_highlight_class = 'near-expiry-highlight'; $status_text = 'Near Expiry';
             } elseif ($is_low_stock) {
-                $card_highlight_class = 'low-stock-highlight';
-                $status_text = 'Low Stock';
-            } elseif ($is_healthy_stock) {
-                $card_highlight_class = 'healthy-stock-highlight';
-                $status_text = 'Healthy Stock';
+                $card_highlight_class = 'low-stock-highlight'; $status_text = 'Low Stock';
             }
 
-                // Determine stock text color
-                $stock_class = '';
-                if ($row['quantity'] <= 10) {
-                    $stock_class = 'text-red-600'; // Low stock
-                } elseif ($row['quantity'] < 15) {
-                    $stock_class = 'text-yellow-600'; // Medium stock / warning
-                } else {
-                    $stock_class = 'text-green-600'; // Healthy stock
-                }
+            // Determine stock text color
+            $stock_class = 'text-green-600';
+            if ($row['quantity'] <= 10) {
+                $stock_class = 'text-red-600'; // Critical low stock
+            } elseif ($row['quantity'] < 15) {
+                $stock_class = 'text-yellow-600'; // Low stock warning
+            }
+            
+            // --- HTML OUTPUT ---
             ?>
             <div class="medicine-card <?= htmlspecialchars($row['type']) ?> <?= $card_highlight_class ?> relative mt-2">
-                <!-- Status badge top-right -->
                 <?php if ($status_text): ?>
                     <div class="absolute -top-3 right-2 px-2 py-1 text-xs font-normal rounded-full
                         <?php
@@ -460,9 +496,16 @@ if (isset($_GET['action']) && $_GET['action'] == 'fetch_medicines') {
                         <p class="text-lg font-bold ">Action</p>
                         <span class="text-sm">Dispose medicine in any circumstances.</span>
                     </div>
-                    <button class="btn btn-danger btn-sm bg-red-600 text-white rounded-lg p-2" onclick="showDisposeModal(<?= $row['med_id'] ?>, '<?= htmlspecialchars($row['name']) ?>', '<?= htmlspecialchars($row['quantity']) ?>', '<?= htmlspecialchars($row['description']) ?>', '<?= htmlspecialchars($row['type']) ?>')">
+                    <button 
+                        class="btn btn-danger btn-sm bg-red-600 text-white rounded-lg p-2 flex items-center gap-1" 
+                        onclick="showDisposeModal(
+                            <?= (int)$row['med_id'] ?>, 
+                            '<?= htmlspecialchars($row['name'], ENT_QUOTES) ?>', 
+                            '<?= (int)$row['quantity'] ?>'
+                        )">
                         <i class='bx bx-trash'></i> Dispose
                     </button>
+
                 </div>
             </div>
             <?php
@@ -470,8 +513,10 @@ if (isset($_GET['action']) && $_GET['action'] == 'fetch_medicines') {
     } else {
         echo "<p>No medicines found.</p>";
     }
+    $stmt->close();
     exit; 
 }
+
 
 // --- Initial Page Load Queries ---
 $medicines_query = "SELECT * FROM medicine ORDER BY added_at DESC";
@@ -490,7 +535,6 @@ while ($row = $categories_result->fetch_assoc()) {
 $categories = array_filter(array_unique($categories));
 sort($categories);
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1397,10 +1441,16 @@ sort($categories);
                                                 <p class="text-lg font-bold ">Action</p>
                                                 <span class="text-sm">Dispose medicine in any circumstances.</span>
                                             </div>
-                                            <button class="btn btn-danger btn-sm bg-red-600 text-white rounded-lg p-2 flex items-center gap-1" 
-                                                onclick="showDisposeModal(<?= $row['med_id'] ?>, '<?= htmlspecialchars($row['name']) ?>', '<?= htmlspecialchars($row['quantity']) ?>', '<?= htmlspecialchars($row['description']) ?>', '<?= htmlspecialchars($row['type']) ?>')">
+                                            <button 
+                                                class="btn btn-danger btn-sm bg-red-600 text-white rounded-lg p-2 flex items-center gap-1" 
+                                                onclick="showDisposeModal(
+                                                    <?= (int)$row['med_id'] ?>, 
+                                                    '<?= htmlspecialchars($row['name'], ENT_QUOTES) ?>', 
+                                                    '<?= (int)$row['quantity'] ?>'
+                                                )">
                                                 <i class='bx bx-trash'></i> Dispose
                                             </button>
+
                                         </div>
                                     </div>
                                 <?php endwhile; ?>
@@ -1560,27 +1610,65 @@ sort($categories);
         </div>
     </div>
     
-    <div id="disposeModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Dispose Medicine</h2>
-                <span class="close-btn" onclick="closeDisposeModal()">&times;</span>
+    <div id="disposeModal" class="modal hidden fixed inset-0 items-center justify-center bg-black bg-opacity-50 z-50">
+        <div class="modal-content bg-white rounded-lg p-6 shadow-lg w-full max-w-lg">
+            <div class="modal-header flex justify-between items-center border-b pb-2 mb-4">
+                <h2 class="text-lg font-bold">Dispose Medicine</h2>
+                <span class="close-btn cursor-pointer text-xl font-bold" onclick="closeDisposeModal()">&times;</span>
             </div>
-            <form id="disposeForm" action="handle_disposal.php" method="POST">
+
+            <form id="disposeForm" action="Inventory.php" method="POST">
                 <input type="hidden" id="dispose-med-id" name="med_id">
-                <div class="restock-card">
-                    <div class="name" id="dispose-med-name"></div>
-                    <div class="stock" id="dispose-med-stock"></div>
+
+                <!-- Medicine info -->
+                <div class="mb-4">
+                    <div class="flex justify-between text-sm text-gray-600">
+                        <h2 class="font-semibold">Medicine Name</h2>
+                        <p class="font-semibold">Stock</p>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <div id="dispose-med-name" class="text-lg font-bold text-gray-800"></div>
+                        <div id="dispose-med-stock" class="text-xl font-extrabold text-blue-600"></div>
+                    </div>
                 </div>
-                <label for="dispose_reason">Reason for Disposal:</label>
-                <textarea id="dispose_reason" name="reason" rows="4" required></textarea>
-                
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-danger bg-red-600 text-white rounded-lg p-2 hover:bg-red-800">Confirm Disposal</button>
+
+                <!-- Quantity & Reason -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Quantity:</label>
+                        <input type="number" id="dispose_quantity" name="quantity" readonly required
+                            class="mt-1 block w-full rounded-lg border-gray-300 bg-gray-100 text-gray-800 shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Reason Type:</label>
+                        <select id="disposal_type" name="type" required
+                            class="mt-1 block w-full rounded-lg border-gray-300 bg-white text-gray-800 shadow-sm">
+                            <option value="low_stock">Low Stock</option>
+                            <option value="near_expiry">Near Expiry</option>
+                            <option value="expired">Expired</option>
+                            <option value="damaged">Damaged</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Details -->
+                <label for="dispose_reason" class="block text-sm font-medium text-gray-700 mt-4">Detailed Reason (Optional):</label>
+                <textarea id="dispose_reason" name="reason" rows="3"
+                    class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm"></textarea>
+
+                <!-- User -->
+                <input type="hidden" name="disposed_by" value="<?php echo htmlspecialchars($_SESSION['username'] ?? 'System'); ?>">
+
+                <!-- Footer -->
+                <div class="modal-footer flex justify-end mt-4">
+                    <button type="submit" class="bg-red-600 hover:bg-red-700 text-white rounded-lg px-4 py-2">
+                        Confirm Disposal
+                    </button>
                 </div>
             </form>
         </div>
     </div>
+
     
     <script src="../Js/script.js"></script>
     <script>
@@ -1656,19 +1744,16 @@ sort($categories);
             document.getElementById('deductModal').style.display = 'none';
         }
 
-        function showDisposeModal(id, name, quantity, description, type) {
+        function showDisposeModal(id, name, quantity) {
             document.getElementById('dispose-med-id').value = id;
-            document.getElementById('dispose-med-name').textContent = `Name: ${name}`;
-            document.getElementById('dispose-med-stock').textContent = `Quantity: ${quantity}`;
-            
-            document.getElementById('disposeForm').dataset.medId = id;
-            document.getElementById('disposeForm').dataset.name = name;
-            document.getElementById('disposeForm').dataset.quantity = quantity;
-            document.getElementById('disposeForm').dataset.description = description;
-            document.getElementById('disposeForm').dataset.type = type;
+            document.getElementById('dispose-med-name').textContent = name;
+            document.getElementById('dispose-med-stock').textContent = quantity;
+            document.getElementById('dispose_quantity').value = quantity;
+            document.getElementById('dispose_reason').value = '';
 
             document.getElementById('disposeModal').style.display = 'flex';
         }
+
         
         function closeDisposeModal() {
             document.getElementById('disposeModal').style.display = 'none';
@@ -1908,5 +1993,8 @@ sort($categories);
             showCustomAlert(message);
         };
     </script>
+    
+    <!-- Check-in Modal -->
+    <?php include '../Modals/Checkin_modal.php'; ?>
 </body>
 </html>

@@ -30,12 +30,16 @@ Completed Task:
 
 Completed Task:
 ✅ Adding student account status (toggle to Inactive and Active, Disable profile editing, Disable Check-in)
-✅ Quick Scan for Checkin
+✅ Quick Scan for Checkin (Sidebar and Fix Bugs)
 ✅ Revision for Checkin (Add dropdown for reason. textarea for notes)
 - Adding new student was successfully audit in database
 ✅ Checkin was successfully audit in database
 - Updating student info was successfully audit in database
+- Display notes info in Records modal
 - Updating student Record status was successfully audit in database
+
+Where I paused?
+- adding new student had error
 
 
 ------------------ TASK 4: Log-in Form ------------------

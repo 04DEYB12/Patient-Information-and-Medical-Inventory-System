@@ -136,16 +136,35 @@ require_once '../Functions/MedicineCard.php';
 
                     </div>
 
-                    <div class="card chart-card"  style="margin-top: -13px; width: 600px; height: 450px;">
-                        <div class="card-header">
-                            <h2>Common Reason For Visit</h2>
+                    <div class="card chart-card min-w-[400px] max-w-[900px] h-[450px] bg-white p-2 rounded-2xl shadow-lg overflow-hidden">
+                        <!-- Top: Quick Scan Header -->
+                        <div class="rounded-2xl bg-gradient-to-r from-green-700 to-green-900 p-4 shadow-md cursor-pointer mb-2">
+                            <div class="flex items-center gap-4">
+                                <!-- Icon -->
+                                <div class="bg-white rounded-full p-3 shadow-inner flex items-center justify-center">
+                                    <i class="bx bx-barcode text-green-800 text-2xl"></i>
+                                </div>
+                                <!-- Text -->
+                                <div>
+                                    <h1 class="text-white text-xl font-bold tracking-wide uppercase">Quick Student Scan</h1>
+                                    <p class="text-green-200 text-sm mt-1">Scan student IDs quickly and efficiently</p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="card-content">
-                            <div class="chart-container bg-green-800">
-                                <canvas id="visitReasonsChart"></canvas>
+
+                        <!-- Middle: Card Header -->
+                        <div class="px-4 py-2 border-b border-gray-200 bg-gray-50">
+                            <h2 class="text-gray-700 font-semibold text-lg">Common Reasons For Visit</h2>
+                        </div>
+
+                        <!-- Bottom: Chart -->
+                        <div class="card-content p-4 h-[calc(100%-128px)] bg-green-50 flex items-center justify-center">
+                            <div class="chart-container w-full h-full rounded-xl bg-green-100 p-2 shadow-inner">
+                                <canvas id="visitReasonsChart" class="w-full h-full"></canvas>
                             </div>
                         </div>
                     </div>
+
                 </div>
                 
 
@@ -555,5 +574,8 @@ require_once '../Functions/MedicineCard.php';
         }
     });
 </script>
+
+<!-- Check-in Modal -->
+<?php include '../Modals/Checkin_modal.php'; ?>
 
 </html>

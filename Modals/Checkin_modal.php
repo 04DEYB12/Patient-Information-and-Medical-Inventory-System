@@ -17,14 +17,14 @@
         <input type="hidden" id="CheckInStaffIdHidden" value="">
         
         <!-- Main Content -->
-        <div id="studentProfileContent" style="padding: 1.5rem; overflow-y: auto; max-height: calc(90vh - 120px);">
+        <div id="studentProfileContent" style="padding: 1rem; overflow-y: auto; max-height: calc(90vh - 120px);">
             <!-- Student Profile Header -->
-            <div class="profile-header" style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem; padding: 1.5rem; background-color: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
-                <div id="CheckInAvatar" style="width: 80px; height: 80px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: 600; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+            <div class="profile-header" style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1rem; padding: 1rem; background-color: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div id="CheckInAvatar" style="width: 60px; height: 60px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: 600; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
                     <span id="studentAvatar">JD</span>
                 </div>
                 <div>
-                    <h3 style="font-size: 1.5rem; font-weight: 700; margin: 0 0 0.25rem 0; color: #1e293b;" id="CheckInStudentName">Loading...</h3>
+                    <h3 style="font-size: 1.2rem; font-weight: 700; margin: 0 0 0.25rem 0; color: #1e293b;" id="CheckInStudentName">Loading...</h3>
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                         <span style="background: #e0f2fe; color: #0369a1; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500;" id="CheckInStudentID">ID: Loading...</span>
                     </div>
@@ -76,7 +76,7 @@
             </div>
 
             <!-- Notes Section -->
-            <div class="form-group" style="margin-bottom: 1.5rem;">
+            <div class="form-group" >
                 <label for="notes" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #475569; font-size: 0.9375rem;">
                     <i class="far fa-edit" style="margin-right: 6px; color: #64748b;"></i>Additional Notes
                 </label>

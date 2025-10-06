@@ -330,6 +330,9 @@ function debounce(func, wait) {
 }
 </script>
 
+    <!-- Check-in Modal -->
+    <?php include '../Modals/Checkin_modal.php'; ?>
+
 </body>
 
 </html>

@@ -1,6 +1,8 @@
 <?php
 include '../Landing Repository/Connection.php';
 
+error_log('POST data: ' . print_r($_POST, true));
+
 /**
  * Send JSON response (for GET requests)
  */
@@ -249,44 +251,56 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     switch ($action) {
         case 'addStudent': // --------------------------------------- ADD STUDENT ---------------------------------------
-            $school_id = $_POST['school_id'];
-            $first_name = $_POST['first_name'];
-            $last_name = $_POST['last_name'];
-            $middle_name = $_POST['middle_name'];
-            $date_of_birth = $_POST['date_of_birth'];
-            $age = $_POST['age'];
-            $gender = $_POST['gender'];
+            // Student Basic Information
+            $schoolId = $_POST['schoolId'];
+            $section = $_POST['section'];
             $department = $_POST['department'];
             $gradeLevel = $_POST['gradeLevel'];
-            $section = $_POST['section'];
-            $student_contact_number = $_POST['student_contact_number'];
-            $student_email_address = $_POST['student_email_address'];
+            // Personal Information
+            $lastName = $_POST['lastName'];
+            $firstName = $_POST['firstName'];
+            $middleName = $_POST['middleName'];
+            $birthDate = $_POST['birthDate'];
+            $age = $_POST['age'];
+            $gender = $_POST['gender'];
             $address = $_POST['address'];
-            $guardian_firstName = $_POST['guardian_firstName'];
-            $guardian_lastName = $_POST['guardian_lastName'];
-            $guardian_contactNumber = $_POST['guardian_contactNumber'];
-            $guardian_emailAddress = $_POST['guardian_emailAddress'];
-            $emergency_contactName = $_POST['emergency_contactName'];
-            $emergency_contactNumber = $_POST['emergency_contactNumber'];
-            $emergency_contactRelation = $_POST['emergency_contactRelation'];
-            $blood_type = $_POST['blood_type'];
-            $known_allergies = $_POST['known_allergies'];
-            $chronic_conditions = $_POST['chronic_conditions'];
-            $current_medications = $_POST['current_medications'];
+            $contactNumber = $_POST['contactNumber'];
+            $email = $_POST['email'];
+            // Guardian Information
+            $guardianFirstName = $_POST['guardianFirstName'];
+            $guardianLastName = $_POST['guardianLastName'];
+            $guardianContact = $_POST['guardianContact'];
+            $guardianEmail = $_POST['guardianEmail'];
+            // Emergency Contact
+            $emergencyName = $_POST['emergencyName'];
+            $emergencyContact = $_POST['emergencyContact'];
+            $emergencyRelation = $_POST['emergencyRelation'];
+            // Medical Information
+            $bloodType = $_POST['bloodType'];
+            $Allergies = $_POST['Allergies'];
+            $Conditions = $_POST['Conditions'];
+            $Medications = $_POST['Medications'];
             
-            $query = "SELECT * FROM student WHERE School_ID = '$school_id'";
+            $query = "SELECT * FROM student WHERE School_ID = '$schoolId'";
             $result = mysqli_query($con, $query);
             
             if (mysqli_num_rows($result) > 0) {
-                echo "<script>alert('Student ID already exists'); window.location.href = '../PIAIMS Repository/PIAIMS.php';</script>";
+                sendJsonResponse(['success' => false, 'message' => 'Student ID already exists']);
             } else {
                 $query = "INSERT INTO student ( School_ID, FirstName, LastName, MiddleName, DateOfBirth, Age, Gender, Department, GradeLevel, Section, StudentContactNumber, StudentEmailAddress, Address, GuardianFirstName, GuardianLastName, GuardianContactNumber, GuardianEmailAddress, EmergencyContactName, EmergencyContactNumber, EmergencyContactRelation, BloodType, KnownAllergies, ChronicConditions, CurrentMedications ) 
-                        VALUES ('$school_id', '$first_name', '$last_name', '$middle_name', '$date_of_birth', '$age', '$gender', '$department', '$gradeLevel', '$section', '$student_contact_number', '$student_email_address', '$address', '$guardian_firstName', '$guardian_lastName', '$guardian_contactNumber', '$guardian_emailAddress', '$emergency_contactName', '$emergency_contactNumber', '$emergency_contactRelation', '$blood_type', '$known_allergies', '$chronic_conditions', '$current_medications')";
+                        VALUES ('$schoolId', '$firstName', '$lastName', '$middleName', '$birthDate', '$age', '$gender', '$department', '$gradeLevel', '$section', '$contactNumber', '$email', '$address', '$guardianFirstName', '$guardianLastName', '$guardianContact', '$guardianEmail', '$emergencyName', '$emergencyContact', '$emergencyRelation', '$bloodType', '$Allergies', '$Conditions', '$Medications')";
             
                 if (mysqli_query($con, $query)) {
-                    echo "<script>alert('New record created successfully'); window.location.href = '../PIAIMS Repository/PIAIMS.php';</script>";
+                    $user_id = $_SESSION['User_ID'];
+                    $actionType = 'CREATE';
+                    $tableName = 'student';
+                    $recordId = $schoolId;
+                    $actionDetails = "New student added: $schoolId";
+                    
+                    audit($user_id, $actionType, $tableName, $recordId, $actionDetails);
+                    sendJsonResponse(['success' => true, 'message' => 'New record created successfully']);
                 } else {
-                    echo "Error: " . $query . "<br>" . mysqli_error($con);
+                    sendJsonResponse(['success' => false, 'message' => 'Error: ' . $query . "<br>" . mysqli_error($con)]);
                 }
             }
             break;

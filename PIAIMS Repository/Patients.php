@@ -22,6 +22,7 @@ require_once '../Functions/Queries.php';
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="../Stylesheet/Design.css">
+    <script src="../Functions/scripts.js"></script>
     <!-- TailwindCSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -459,11 +460,11 @@ require_once '../Functions/Queries.php';
                             </button>
                             
                             <!-- quick scan -->
-                            <div class="relative">
+                            <!-- <div class="relative">
                                 <i class='bx bx-qr-scan absolute left-3 top-1/2 -translate-y-1/2 text-gray-400'></i>
                                 <input id="scannerInput" type="text" placeholder="Quick Scan!" autofocus onkeyup="quickScan(event)"
                                 class="pl-10 pr-10 py-2 border rounded-lg w-52 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            </div>
+                            </div> -->
 
                             <!-- Entries Filter -->
                             <div class="flex items-center gap-2 text-sm text-gray-900 p-2 bg-gray-200 rounded-lg px-4">
@@ -807,28 +808,7 @@ require_once '../Functions/Queries.php';
         };
     });
 
-    // 🔎 Quick Scan
-    let scanTimer;
-    let lastScanned = '';
     
-    function quickScan(event) {
-        // Clear any existing timer
-        clearTimeout(scanTimer);
-        
-        // Set a new timer (300ms after last input)
-        scanTimer = setTimeout(() => {
-            const scannedValue = event.target.value.trim();
-            
-            // Only process if we have a value and it's different from the last scan
-            if (scannedValue && scannedValue !== lastScanned) {
-                lastScanned = scannedValue;
-                openCheckInModal(scannedValue);
-                
-                // Clear the input after processing
-                event.target.value = '';
-            }
-        }, 300);
-    }
     
     // Handle View Record button click
     function viewStudentRecord(studentId) {
@@ -1269,48 +1249,6 @@ require_once '../Functions/Queries.php';
                 console.error('Error loading student data:', error);
                 alert('Failed to load student data. Please try again.');
                 closeModal('viewStudentModal');
-            });
-    }
-    
-    function openCheckInModal(studentId) {
-        // Open the modal
-        openModal('checkInModal');
-        
-        // Show loading state
-        console.log('Loading student data for ID:', studentId);
-        document.getElementById('CheckInStudentName').textContent = 'Loading...';
-        document.getElementById('CheckInStudentID').textContent = 'ID: ' + studentId;
-        
-        fetch(`../Functions/patientFunctions.php?action=getStudent&id=${studentId}`)
-            .then(response => {
-                console.log('Response status:', response.status);
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Received data:', data);
-                if (data.success) {
-                    const student = data.student;
-                    
-                    // Update header
-                    const checkInFirstInitial = student.FirstName ? student.FirstName[0] : '';
-                    const checkInLastInitial = student.LastName ? student.LastName[0] : '';
-                    document.getElementById('CheckInAvatar').textContent = checkInFirstInitial + checkInLastInitial;
-                    document.getElementById('CheckInStudentName').textContent = `${student.FirstName || ''} ${student.LastName || ''}`.trim();
-                    // Update the hidden input value
-                    document.getElementById('CheckInStudentIdHidden').value = studentId;
-                    document.getElementById('CheckInStaffIdHidden').value = "<?php echo $_SESSION['User_ID']; ?>";
-                } else {
-                    alert('Failed to load student data: ' + (data.message || 'Unknown error'));
-                    closeModal('checkInModal');
-                }
-            })
-            .catch(error => {
-                console.error('Error loading student data:', error);
-                alert('Failed to load student data. Please try again.');
-                closeModal('checkInModal');
             });
     }
     

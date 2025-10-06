@@ -784,4 +784,7 @@ if ($_SESSION['role'] != 'Administrator') {
 <!-- View User Profile Modal -->
 <?php include '../Modals/viewUserProfile_modal.php'; ?>
 
+<!-- Check-in Modal -->
+<?php include '../Modals/Checkin_modal.php'; ?>
+
 </html>
