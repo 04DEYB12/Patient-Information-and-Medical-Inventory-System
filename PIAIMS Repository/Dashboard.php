@@ -32,7 +32,7 @@ require_once '../Functions/MedicineCard.php';
         <!-- Sidebar -->
         <?php include '../components/sidebar.php'; ?>
         
-        <main class="main-content">
+        <main class="main-content w-full h-screen p-2 overflow-auto bg-gray-50">
             <!-- Header -->
             <header class="main-header">
                 <button class="sidebar-toggle" id="sidebarToggle">
@@ -46,91 +46,93 @@ require_once '../Functions/MedicineCard.php';
             <section class="content-section active" id="dashboardSection">
                 <div class="top-container flex items-center justify-center gap-4">
                     <!-- Status Grid -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full mb-10 h-[450px] w-full">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full mb-10">
 
-                        <!-- Total Medicines -->
-                        <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-3xl hover:shadow-2xl transition-all transform hover:-translate-y-2 p-8 border border-green-200">
-                            <div class="flex justify-between items-center mb-4">
-                                <h3 class="font-bold text-lg text-green-800 tracking-wide">Total Medicines</h3>
-                                <svg class="h-10 w-10 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                                    </svg>
+                        <div class="bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-2 p-8 border-t-4 border-green-500">
+                            <div class="flex justify-between items-start mb-4">
+                                <h3 class="font-bold text-lg text-gray-700 tracking-wide">Total Medicines</h3>
+                                <svg class="h-10 w-10 text-green-500 bg-green-100 p-2 rounded-full" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M12 20.5v-2.5m-5.464-9.673l-1.414-1.414M17.464 10.827l1.414-1.414M16.5 12h-2.5m-7.5 0h-2.5m-2 7.5l-1.414-1.414M20 19l-1.414-1.414"></path>
+                                </svg>
                             </div>
                             <div class="mt-2">
-                                <div class="text-5xl font-extrabold text-green-700 leading-tight"><?= $total_meds_count ?></div>
-                                <p class="text-base text-green-500 mt-1">Items in inventory</p>
+                                <div class="text-6xl font-extrabold text-green-700 leading-tight"><?= $total_meds_count ?></div>
+                                <p class="text-base text-gray-500 mt-1">Total items in inventory</p>
                             </div>
                         </div>
 
-                        <!-- Low Stock -->
-                        <div class="bg-gradient-to-br from-green-50 to-yellow-200 rounded-3xl hover:shadow-2xl transition-all transform hover:-translate-y-2 p-8 border border-green-200">
-                            <div class="flex justify-between items-center">
-                            <h3 class="font-semibold text-lg text-gray-700">Low Stock Items</h3>
-                            <i class="bx bx-error text-4xl text-yellow-500"></i>
+                        <div class="bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-2 p-8 border-t-4 border-yellow-500">
+                            <div class="flex justify-between items-start mb-4">
+                                <h3 class="font-bold text-lg text-gray-700">Low Stock Items</h3>
+                                <svg class="h-10 w-10 text-yellow-500 bg-yellow-100 p-2 rounded-full" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                </svg>
                             </div>
-                            <div class="mt-4">
-                            <div class="text-5xl font-extrabold text-yellow-400 leading-tight"><?= $low_stock_count ?></div>
-                            <p class="text-sm text-gray-500">Requires restocking</p>
-                            </div>
-                        </div>
-
-                        <!-- Near Expiry -->
-                        <div class="bg-gradient-to-br from-orange-50 to-orange-200 rounded-3xl hover:shadow-2xl transition-all transform hover:-translate-y-2 p-8 border border-green-200">
-                            <div class="flex justify-between items-center">
-                            <h3 class="font-semibold text-lg text-gray-700">Near Expiry</h3>
-                            <i class="bx bx-calendar-exclamation text-4xl text-orange-500"></i>
-                            </div>
-                            <div class="mt-4">
-                            <div class="text-5xl font-extrabold text-orange-400 leading-tight"><?= $near_expiry_count ?></div>
-                            <p class="text-sm text-gray-500">Approaching expiry</p>
+                            <div class="mt-2">
+                                <div class="text-6xl font-extrabold text-yellow-600 leading-tight"><?= $low_stock_count ?></div>
+                                <p class="text-base text-gray-500 mt-1">Requires immediate restocking</p>
                             </div>
                         </div>
 
-                        <!-- Expired -->
-                        <div class="bg-gradient-to-br from-red-50 to-red-200 rounded-3xl hover:shadow-2xl transition-all transform hover:-translate-y-2 p-8 border border-green-200">
-                            <div class="flex justify-between items-center">
-                            <h3 class="font-semibold text-lg text-gray-700">Expired</h3>
-                            <i class="bx bx-trash text-4xl text-red-500"></i>
+                        <div class="bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-2 p-8 border-t-4 border-orange-500">
+                            <div class="flex justify-between items-start mb-4">
+                                <h3 class="font-bold text-lg text-gray-700">Near Expiry</h3>
+                                <svg class="h-10 w-10 text-orange-500 bg-orange-100 p-2 rounded-full" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
                             </div>
-                            <div class="mt-4">
-                            <div class="text-5xl font-extrabold text-red-500 leading-tight"><?= $expired_count ?></div>
-                            <p class="text-sm text-gray-500">Should be disposed</p>
-                            </div>
-                        </div>
-
-                        <!-- Users Total (Improved Design) -->
-                        <div class="bg-gradient-to-br from-blue-50 to-blue-500 rounded-3xl hover:shadow-2xl transition-all transform hover:-translate-y-2 p-8 border border-green-200">
-                            <div class="flex justify-between items-center">
-                            <h3 class="font-semibold text-lg text-gray-700">Users Overview</h3>
-                            <i class="bx bx-group text-4xl text-green-600"></i>
-                            </div>
-                            <div class="mt-6 grid grid-cols-3 gap-4 text-center">
-                            <div class="bg-white rounded-xl shadow p-3">
-                                <i class="bx bxs-graduation text-green-500 text-2xl"></i>
-                                <p class="mt-1 text-xs text-gray-500">Students</p>
-                                <div class="text-lg font-bold text-gray-700"><?= $student_count; ?></div>
-                            </div>
-                            <div class="bg-white rounded-xl shadow p-3">
-                                <i class="bx bxs-user-badge text-blue-500 text-2xl"></i>
-                                <p class="mt-1 text-xs text-gray-500">Admins</p>
-                                <div class="text-lg font-bold text-gray-700"><?= $clinicPersonnel_count; ?></div>
-                            </div>
-                            <div class="bg-white rounded-xl shadow p-3">
-                                <i class="bx bxs-user text-purple-500 text-2xl"></i>
-                                <p class="mt-1 text-xs text-gray-500">Staff</p>
-                                <div class="text-lg font-bold text-gray-700">15</div>
-                            </div>
+                            <div class="mt-2">
+                                <div class="text-6xl font-extrabold text-orange-600 leading-tight"><?= $near_expiry_count ?></div>
+                                <p class="text-base text-gray-500 mt-1">Items approaching expiration</p>
                             </div>
                         </div>
 
-                        <!-- Check-In Counts -->
-                        <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-3xl hover:shadow-2xl transition-all transform hover:-translate-y-2 p-8 border border-green-200">
-                            <div class="flex justify-between items-center">
-                                <h3 class="font-semibold text-lg text-gray-700">Check-In Counts</h3>
-                                <i class="bx bx-calendar-check text-4xl text-green-500"></i>
+                        <div class="bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-2 p-8 border-t-4 border-red-500">
+                            <div class="flex justify-between items-start mb-4">
+                                <h3 class="font-bold text-lg text-gray-700">Expired Stock</h3>
+                                <svg class="h-10 w-10 text-red-500 bg-red-100 p-2 rounded-full" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
+                                </svg>
                             </div>
-                            <div class="mt-4">
-                                <div class="text-5xl font-extrabold text-green-700 leading-tight"><?= $clinicPersonnel_count; ?></div>
-                                <p class="text-sm text-gray-500">Students checked in today</p>
+                            <div class="mt-2">
+                                <div class="text-6xl font-extrabold text-red-600 leading-tight"><?= $expired_count ?></div>
+                                <p class="text-base text-gray-500 mt-1">Requires disposal/removal</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-2 p-8 border-t-4 border-blue-500">
+                            <div class="flex justify-between items-start mb-4">
+                                <h3 class="font-bold text-lg text-gray-700">Users Overview</h3>
+                                <svg class="h-10 w-10 text-blue-500 bg-blue-100 p-2 rounded-full" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m0 0v-2a3 3 0 014.54-2.329m7.58 1.42L13.75 6.13a2.5 2.5 0 00-3.5 0L6.75 16.09m10.5-5.91h-2.5m-3 0h-2.5"></path>
+                                </svg>
+                            </div>
+                            <div class="grid grid-cols-3 gap-4 mt-6 text-center">
+                                <div class="p-3">
+                                    <div class="text-3xl font-extrabold text-blue-600"><?= $student_count; ?></div>
+                                    <p class="mt-1 text-sm text-gray-500 font-medium">Students</p>
+                                </div>
+                                <div class="p-3 border-l border-r border-gray-100">
+                                    <div class="text-3xl font-extrabold text-purple-600"><?= $clinicPersonnel_count; ?></div>
+                                    <p class="mt-1 text-sm text-gray-500 font-medium">Admins</p>
+                                </div>
+                                <div class="p-3">
+                                    <div class="text-3xl font-extrabold text-pink-600">15</div>
+                                    <p class="mt-1 text-sm text-gray-500 font-medium">Staff</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-2 p-8 border-t-4 border-indigo-500">
+                            <div class="flex justify-between items-start mb-4">
+                                <h3 class="font-bold text-lg text-gray-700">Daily Check-Ins</h3>
+                                <svg class="h-10 w-10 text-indigo-500 bg-indigo-100 p-2 rounded-full" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h.01M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2zm7-9h.01M12 15h.01"></path>
+                                </svg>
+                            </div>
+                            <div class="mt-2">
+                                <div class="text-6xl font-extrabold text-indigo-600 leading-tight"><?= $clinicPersonnel_count; ?></div> 
+                                <p class="text-base text-gray-500 mt-1">Students checked in today</p>
                             </div>
                         </div>
 
@@ -170,63 +172,249 @@ require_once '../Functions/MedicineCard.php';
 
                 
 
-                <div class="card">
-                    <div class="card-header">
-                        <h2>Recent Clinic Visits</h2>
-                        <div style="display: flex; gap: 1rem; align-items: center;">
-                                <!-- Search Bar -->
-                                <div class="search-container" style="position: relative;">
-                                    <i class='bx bx-search' style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #6b7280;"></i>
-                                    <input type="text" id="studentSearch" placeholder="Search students..." style="padding: 0.5rem 1rem 0.5rem 2rem; border: 1px solid #d1d5db; border-radius: 0.375rem; width: 250px;">
+                
+                <div class=" flex gap-4">
+                    <div class="card w-full border-2 border-blue-600">
+                        <div class="card-header flex flex-col gap-2 w-full ">
+                            <div class="w-full flex items-center justify-between p-6">
+                                <h3 class="text-xl font-bold text-gray-700 mb-4 flex items-center">
+                                    <svg class="h-6 w-6 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    Clinick check-in visits
+                                </h3>
+                                <div class="card-count"></div>
+                            </div>
+                            <div class="mt-4 flex flex-wrap items-center gap-4">
+
+                                <div class="flex items-center gap-4 justify-between w-full">
+                                    <!-- Search Bar -->
+                                    <div class="relative w-[500px]">
+                                        <i class='bx bx-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400'></i>
+                                        <input 
+                                            type="text" 
+                                            id="studentSearch" 
+                                            placeholder="Search students..." 
+                                            class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+                                        >
+                                    </div>
+
+                                    <!-- Entries Filter -->
+                                    <div class="flex items-center gap-2 rounded-md px-8 bg-gray-50">
+                                        <span class="text-gray-600 text-sm">Show</span>
+                                        <select 
+                                            id="entriesFilter" 
+                                            class="px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+                                        >
+                                            <option value="10">10</option>
+                                            <option value="25">25</option>
+                                            <option value="50">50</option>
+                                            <option value="100">100</option>
+                                        </select>
+                                        <span class="text-gray-600 text-sm">entries</span>
+                                    </div>
                                 </div>
-                                
-                                <!-- Entries Filter -->
-                                <div class="entries-filter" style="display: flex; align-items: center; gap: 0.5rem;">
-                                    <span style="font-size: 0.875rem; color: #4b5563;">Show</span>
-                                    <select id="entriesFilter" style="padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; background-color: white;">
-                                        <option value="10">10</option>
-                                        <option value="25">25</option>
-                                        <option value="50">50</option>
-                                        <option value="100">100</option>
-                                    </select>
-                                    <span style="font-size: 0.875rem; color: #4b5563;">entries</span>
+                                <div class="flex items-center gap-4 justify-between w-full">
+                                    <!-- Date Filter -->
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-gray-600 text-sm">Date:</span>
+                                        <select 
+                                            id="dateFilter" 
+                                            class="px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+                                        >
+                                            <option value="all">All</option>
+                                            <option value="today">Today</option>
+                                            <option value="week">This Week</option>
+                                            <option value="month">This Month</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Managed By Filter -->
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-gray-600 text-sm">Managed By:</span>
+                                        <select 
+                                            id="staffFilter" 
+                                            class="px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+                                        >
+                                            <option value="all">All</option>
+                                            <?php
+                                            // Fetch all staff for the dropdown
+                                            $staffSql = "SELECT PersonnelID, FirstName, MiddleName, LastName FROM clinicpersonnel ORDER BY LastName";
+                                            $staffResult = $con->query($staffSql);
+                                            if($staffResult->num_rows > 0){
+                                                while($staff = $staffResult->fetch_assoc()){
+                                                    $staffName = $staff['FirstName'] . ' ' . ($staff['MiddleName'] ? $staff['MiddleName'] . ' ' : '') . $staff['LastName'];
+                                                    echo "<option value='" . $staff['PersonnelID'] . "'>" . htmlspecialchars($staffName) . "</option>";
+                                                }
+                                            }
+                                            ?>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
+
+                        </div>
+
+                        <div class="card-content">
+                            <div class="table-container">
+                                <table class="data-table" id="clinicTable">
+                                    <thead>
+                                        <tr class="text-nowrap">
+                                            <th>Managed By</th>
+                                            <th>Time</th>    
+                                            <th>Student ID</th>
+                                            <th>Student Name</th>
+                                            <th>Reason for Visit</th>
+                                            <th>Status/Outcome</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="text-nowrap">
+                                        <?php
+                                        // Fetch all recent visits
+                                        $sql = "SELECT 
+                                                    sc.DateTime as DT,
+                                                    sc.StaffID as StaffID,
+                                                    s.School_ID as SID, 
+                                                    s.FirstName as FN, 
+                                                    s.LastName as LN, 
+                                                    sc.Reason as R, 
+                                                    sc.Status as S,
+                                                    cp.FirstName as StaffFN,
+                                                    cp.MiddleName as StaffMN,
+                                                    cp.LastName as StaffLN
+                                                FROM studentcheckins sc
+                                                JOIN student s ON sc.StudentID = s.School_ID
+                                                LEFT JOIN clinicpersonnel cp ON sc.StaffID = cp.PersonnelID
+                                                ORDER BY sc.ID DESC";
+                                        $result = $con->query($sql);
+
+                                        if ($result->num_rows > 0) {
+                                            while ($row = $result->fetch_assoc()) {
+                                                $managedBy = $row['StaffFN'] . ' ' . ($row['StaffMN'] ? $row['StaffMN'] . ' ' : '') . $row['StaffLN'];
+                                                echo "<tr data-staff='" . $row['StaffID'] . "' data-date='" . $row['DT'] . "'>";
+                                                echo "<td class='text-nowrap'>" . htmlspecialchars($managedBy) . "</td>";
+                                                echo "<td>" . date("F j, Y g:i A", strtotime($row["DT"])) . "</td>";
+                                                echo "<td>" . htmlspecialchars($row["SID"]) . "</td>";
+                                                echo "<td class='text-nowrap'>" . htmlspecialchars($row["FN"] . " " . $row["LN"]) . "</td>";
+                                                echo "<td class='text-nowrap italic font-500 text-green-600'>" . htmlspecialchars($row['R']) . "</td>";
+                                                echo "<td class='text-nowrap text-green-600'>" . htmlspecialchars($row['S']) . "</td>";
+                                                echo "</tr>";
+                                            }
+                                        } else {
+                                            echo "<tr><td colspan='6'>No recent clinic visits</td></tr>";
+                                        }
+                                        ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-content">
-                        <div class="table-container">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Time</th>    
-                                        <th>Student ID</th>
-                                        <th>Student Name</th>
-                                        <th>Reason for Visit</th>
-                                        <th>Status/Outcome</th>
+
+                    <?php
+                        include '../Landing Repository/Connection.php';
+
+                       // Fetch from audit_trail (only those related to medicine) and get medicine name
+                        $audit_query = "
+                        SELECT a.*, m.name AS med_name
+                        FROM audit_trail a
+                        JOIN medicine m ON a.record_id = m.med_id
+                        WHERE a.table_name = 'medicine'
+                        ORDER BY a.created_at DESC
+                        ";
+                        $audit_result = $con->query($audit_query);
+
+                        // Fetch from medicine_usage (also with medicine name)
+                        $usage_query = "
+                        SELECT u.*, m.name AS med_name
+                        FROM medicine_usage u
+                        JOIN medicine m ON u.med_id = m.med_id
+                        ORDER BY u.usage_date DESC
+                        ";
+                        $usage_result = $con->query($usage_query);
+
+
+                    ?>
+
+                    <div class="inventory-log bg-white rounded-3xl shadow-xl p-6 border-2 border-purple-600 overflow-hidden w-full">
+                        <h3 class="text-xl font-bold text-gray-700 mb-4 flex items-center">
+                            <svg class="h-6 w-6 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Unified Inventory Actions and Events Log
+                        </h3>
+
+                        <div class="overflow-x-auto max-h-[600px] lg:max-h-[700px]">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50 sticky top-0">
+                                    <tr class="text-nowrap"> 
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action Type</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Med NAME</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details / Description</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User/Source</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <?php
-                                    $sql = "SELECT sc.DateTime as DT, s.School_ID as SID, s.FirstName as FN, s.LastName as LN, sc.Reason as R, sc.Status as S FROM studentcheckins sc JOIN student s ON sc.StudentID = s.School_ID ORDER BY ID DESC";
-                                    $result = $con->query($sql);
-                                    if ($result->num_rows > 0) {
-                                        while ($row = $result->fetch_assoc()) {
-                                            echo "<tr>";
-                                            echo "<td>" . $row["DT"] . "</td>";
-                                            echo "<td>" . $row["SID"] . "</td>";
-                                            echo "<td>" . $row["FN"] . " " . $row["LN"] . "</td>";
-                                            echo "<td>" . $row["R"] . "</td>";
-                                            echo "<td>" . $row["S"] . "</td>";
-                                            echo "</tr>";
-                                        }
-                                    } else {
-                                        echo "<tr><td colspan='5'>No recent clinic visits</td></tr>";
-                                    }
+                                <tbody class="bg-white divide-y divide-gray-200 text-sm text-nowrap">
+
+                                    <!-- Medicine Usage Logs -->
+                                    <?php while ($row = $usage_result->fetch_assoc()): 
+                                        $timestamp = date("F j, Y h:i A", strtotime($row["usage_date"]));
+                                        $actionType = "USED";
+                                        ?>
+                                        <tr class="hover:bg-blue-50">
+                                            <td class="px-4 py-3 text-gray-500 text-nowrap"><?= $timestamp ?></td>
+                                            <td class="px-4 py-3 text-blue-600"><?= $actionType ?></td>
+                                            <td class="px-4 py-3 text-blue-700"><?= strtoupper($row['med_name']) ?></td>
+                                            <td class="px-4 py-3 text-gray-600">
+                                                Quantity of <strong><?= htmlspecialchars($row['quantity_used']) ?></strong> used from Medicine ID <?= htmlspecialchars($row['med_id']) ?>.
+                                            </td>
+                                            <td class="px-4 py-3 text-gray-500">System/Usage</td>
+                                        </tr>
+                                    <?php endwhile; ?>
+
+                                    <!-- Audit Trail Logs -->
+                                    <?php while ($row = $audit_result->fetch_assoc()):
+                                        $timestamp = date("F j, Y h:i A", strtotime($row["created_at"]));
+
+                                        // Original action type (from DB)
+                                        $type = strtoupper($row["action_type"]);
+
+                                        // Map for display name changes
+                                        $displayType = match($type) {
+                                            'CREATE' => 'ADDED',
+                                            'UPDATE' => 'RESTOCK',
+                                            default => $type
+                                        };
+
+                                        // Color scheme
+                                        $color = match($displayType) {
+                                            'ADDED' => 'green',
+                                            'RESTOCK' => 'green',
+                                            'DEDUCT' => 'red',
+                                            'DELETE' => 'red',
+                                            default => 'gray'
+                                        };
                                     ?>
+                                        <tr class="hover:bg-<?=
+                                            $color === 'green' ? 'green-50' :
+                                            ($color === 'yellow' ? 'yellow-50' :
+                                            ($color === 'red' ? 'red-50' : 'gray-50'));
+                                        ?>">
+                                            <td class="px-4 py-3 whitespace-nowrap text-gray-500"><?= $timestamp ?></td>
+                                            <td class="px-4 py-3 whitespace-nowrap text-<?= $color ?>-600"><?= $displayType ?></td>
+                                            <td class="px-4 py-3 whitespace-nowrap text-blue-700"><?= strtoupper($row['med_name']) ?></td>
+                                            <td class="px-4 py-3 text-gray-600"><?= htmlspecialchars($row['action_details']) ?></td>
+                                            <td class="px-4 py-3 whitespace-nowrap text-gray-500"><?= htmlspecialchars($row['user_id']) ?></td>
+                                        </tr>
+                                    <?php endwhile; ?>
+
                                 </tbody>
                             </table>
                         </div>
                     </div>
+
                 </div>
             </section>
             </div>
@@ -259,7 +447,67 @@ require_once '../Functions/MedicineCard.php';
     console.log('Doctor Management System initialized successfully!');
     });
     
-    
+    const searchInput = document.getElementById('studentSearch');
+    const entriesFilter = document.getElementById('entriesFilter');
+    const dateFilter = document.getElementById('dateFilter');
+    const staffFilter = document.getElementById('staffFilter');
+    const table = document.getElementById('clinicTable').getElementsByTagName('tbody')[0];
+
+    function filterTable() {
+        const searchText = searchInput.value.toLowerCase();
+        const selectedDate = dateFilter.value;
+        const selectedStaff = staffFilter.value;
+
+        const rows = table.getElementsByTagName('tr');
+        let visibleCount = 0;
+        const maxEntries = parseInt(entriesFilter.value);
+
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const studentName = row.cells[3].textContent.toLowerCase();
+            const studentID = row.cells[2].textContent.toLowerCase();
+            const rowStaff = row.dataset.staff;
+            const rowDate = new Date(row.dataset.date);
+
+            // Search filter
+            let matchSearch = studentName.includes(searchText) || studentID.includes(searchText);
+
+            // Staff filter
+            let matchStaff = (selectedStaff === 'all' || rowStaff === selectedStaff);
+
+            // Date filter
+            let matchDate = false;
+            const today = new Date();
+            const oneWeekAgo = new Date(); oneWeekAgo.setDate(today.getDate() - 7);
+            const oneMonthAgo = new Date(); oneMonthAgo.setMonth(today.getMonth() - 1);
+
+            if(selectedDate === 'all') matchDate = true;
+            else if(selectedDate === 'today') {
+                matchDate = rowDate.toDateString() === today.toDateString();
+            } else if(selectedDate === 'week') {
+                matchDate = rowDate >= oneWeekAgo;
+            } else if(selectedDate === 'month') {
+                matchDate = rowDate >= oneMonthAgo;
+            }
+
+            if(matchSearch && matchStaff && matchDate && visibleCount < maxEntries){
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        }
+    }
+
+    // Event listeners
+    searchInput.addEventListener('input', filterTable);
+    entriesFilter.addEventListener('change', filterTable);
+    dateFilter.addEventListener('change', filterTable);
+    staffFilter.addEventListener('change', filterTable);
+
+    // Initial filter
+    filterTable();
+
     // Register the datalabels plugin
     Chart.register(ChartDataLabels);
 
@@ -435,7 +683,7 @@ require_once '../Functions/MedicineCard.php';
                     });
                     
                     // Add total visits badge
-                    const cardHeader = document.querySelector('.card-header');
+                    const cardHeader = document.querySelector('.card-count');
                     const badge = document.createElement('div');
                     badge.className = 'total-visits-badge';
                     badge.innerHTML = `
@@ -450,10 +698,11 @@ require_once '../Functions/MedicineCard.php';
                         .card {
                             position: relative;
                             background: #ffffff;
-                            border-radius: 12px;
+                            border-radius: 20px;
                             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
                             overflow: hidden;
                             transition: transform 0.3s ease, box-shadow 0.3s ease;
+                            border-top: 4px solidrgb(36, 103, 190);
                         }
                         .card:hover {
                             transform: translateY(-2px);
@@ -574,8 +823,4 @@ require_once '../Functions/MedicineCard.php';
         }
     });
 </script>
-
-<!-- Check-in Modal -->
-<?php include '../Modals/Checkin_modal.php'; ?>
-
 </html>
