@@ -1,3 +1,5 @@
+
+
 /* Base Styles */
 :root {
   --color-nature-green-50: #F7FFF7;
@@ -49,6 +51,7 @@ body {
   line-height: 1.5;
   min-height: 100vh;
 }
+
 
 /* Layout */
 .dashboard-container {

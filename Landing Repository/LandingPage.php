@@ -307,10 +307,10 @@
       <div class="md:w-2/3 text-center md:text-left animate-fadeInUp">
         <p class="text-md sm:text-xl font-medium text-gray-700 mb-4">Start your journey</p>
         <h1 class="font-extrabold text-xl md:text-6xl lg:text-6xl leading-tight mb-6">
-          Now managing Patient Information <br class="hidden md:block"> and <br class="hidden md:block"> managing Medical Inventory <span class="animated-underline mb-2">makes it easy for you</span>.
+        Because Every Patient<br class="hidden md:block">- <span class="animated-underline mb-2">Story Matters.</span>
         </h1>
         <p class="text-sm sm:text-lg text-gray-700 mb-10 max-w-lg mx-auto md:mx-0">
-          We believe in accessible and efficient data management, digital solutions for a seamless experience for all.
+          We believe that every patient is more than just data — our system is built to protect, organize, and honor each individual’s journey toward better health.
         </p>
         <button class="bg-imageGreen text-white font-semibold px-10 py-4 rounded-full text-lg hover:bg-green-700 transition duration-300 transform hover:scale-105 shadow-lg">
           Get Started Today
@@ -520,21 +520,21 @@
   </section>
   
   
-  <section id="team" class="py-20 px-6 md:px-16 bg-dark text-white text-center min-h-screen flex flex-col items-center justify-center">
+  <section id="team" class="py-20 px-6 md:px-16 bg-white text-white text-center min-h-screen flex flex-col items-center justify-center">
     <h2 class="text-4xl font-bold mb-4 text-primary">Meet Our Team</h2>
-    <p class="text-white mb-12 max-w-3xl">Dedicated professionals committed to improving healthcare management.</p>
+    <p class="text-gray-900 mb-12 max-w-3xl">Dedicated professionals committed to improving healthcare management.</p>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl">
-      <div class="p-8 bg-white/10 rounded-xl animated-card">
+      <div class="p-8 bg-green-800 opacity-80 rounded-xl animated-card">
         <div class="text-5xl mb-4">👩‍⚕️</div>
         <h3 class="text-xl font-bold mt-2">Dr. Ana</h3>
         <p class="text-sm text-gray-300">Chief Medical Officer</p>
       </div>
-      <div class="p-8 bg-white/10 rounded-xl animated-card">
+      <div class="p-8 bg-green-800 opacity-80 rounded-xl animated-card">
         <div class="text-5xl mb-4">👨‍⚕️</div>
         <h3 class="text-xl font-bold mt-2">Dr. Luis</h3>
         <p class="text-sm text-gray-300">Lead Software Architect</p>
       </div>
-      <div class="p-8 bg-white/10 rounded-xl animated-card">
+      <div class="p-8 bg-green-800 opacity-80 rounded-xl animated-card">
         <div class="text-5xl mb-4">👩‍⚕️</div>
         <h3 class="text-xl font-bold mt-2">Dr. Carla</h3>
         <p class="text-sm text-gray-300">Client Relations Manager</p>
