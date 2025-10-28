@@ -8,12 +8,66 @@ if (!isset($_SESSION['User_ID'])) {
 }
 
 $user_id = $_SESSION['User_ID'];
-require_once '../Functions/Queries.php';
-
-
+// Keeping require_once for compatibility, but fetching critical data here for certainty.
+require_once '../Functions/Queries.php'; 
 require_once '../Functions/MedicineCard.php';
-?>
 
+// --- DATA FETCHING ENHANCEMENT ---
+
+// 1. Daily Check-ins: Fetches count of students checked in today.
+$daily_checkin_sql = "SELECT COUNT(*) as count FROM studentcheckins WHERE DATE(DateTime) = CURDATE()";
+$daily_checkin_result = $con->query($daily_checkin_sql);
+$daily_checkin_count = $daily_checkin_result ? $daily_checkin_result->fetch_assoc()['count'] : 0;
+
+// 2. Users Overview: Fetches student, admin, and staff counts separately.
+$student_count_sql = "SELECT COUNT(*) as count FROM student";
+$student_count_result = $con->query($student_count_sql);
+$student_count = $student_count_result ? $student_count_result->fetch_assoc()['count'] : 0;
+
+// ASSUMPTION: 'clinicpersonnel' table has a 'Role' column ('Admin', 'Staff').
+$admin_count_sql = "SELECT COUNT(*) as count FROM clinicpersonnel WHERE RoleID = '1'";
+$admin_count_result = $con->query($admin_count_sql);
+$admin_count = $admin_count_result ? $admin_count_result->fetch_assoc()['count'] : 0;
+
+$staff_count_sql = "SELECT COUNT(*) as count FROM clinicpersonnel WHERE RoleID = '2'";
+$staff_count_result = $con->query($staff_count_sql);
+$staff_count = $staff_count_result ? $staff_count_result->fetch_assoc()['count'] : 0;
+
+// Placeholder variables for Inventory Summary (If not defined in Queries.php)
+$total_meds_count = $total_meds_count ?? 0;
+$low_stock_count = $low_stock_count ?? 0;
+$near_expiry_count = $near_expiry_count ?? 0;
+$expired_count = $expired_count ?? 0;
+
+// --- INVENTORY LOG FETCHING FIX ---
+
+// A. Medicine Usage Logs: Join 'medicine_usage' with 'medicine' to get the name
+$usage_sql = "SELECT 
+                mu.usage_date,
+                mu.med_id,
+                mu.quantity_used,
+                m.name AS med_name
+              FROM medicine_usage mu
+              JOIN medicine m ON mu.med_id = m.med_id
+              ORDER BY mu.usage_date DESC";
+$usage_result = $con->query($usage_sql);
+
+// B. Audit Trail Logs (Inventory Actions): Join 'audit_trail' with 'medicine' to get the medicine name
+// Filter for actions that reference the 'medicine' table (inventory actions).
+$audit_sql = "SELECT 
+                at.created_at,
+                at.action_type,
+                at.action_details,
+                at.user_id,
+                m.name AS med_name
+              FROM audit_trail at
+              LEFT JOIN medicine m ON at.record_id = m.med_id AND at.table_name = 'medicine'
+              WHERE at.table_name = 'medicine' OR at.table_name IS NULL
+              ORDER BY at.created_at DESC";
+$audit_result = $con->query($audit_sql);
+
+// --- END INVENTORY LOG FETCHING FIX ---
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -23,218 +77,480 @@ require_once '../Functions/MedicineCard.php';
     <link rel="icon" type="image/x-icon" href="../Images/webbackg.png">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="../Stylesheet/Design.css">
 </head>
+<style>
+    /* Luminous Time Styling */
+    .luminous-time {
+        text-shadow:
+            0 0 6px rgba(34, 197, 94, 0.6),
+            0 0 12px rgba(34, 197, 94, 0.6),
+            0 0 24px rgba(34, 197, 94, 0.4),
+            0 0 36px rgba(34, 197, 94, 0.3);
+        letter-spacing: 0.15em;
+        transition: all 0.3s ease-in-out;
+        font-family: "Orbitron", sans-serif;
+    }
+
+    /* Optional glowing pulse animation */
+    @keyframes pulseGlow {
+        0%, 100% {
+            text-shadow:
+                0 0 6px rgba(34, 197, 94, 0.7),
+                0 0 14px rgba(34, 197, 94, 0.5),
+                0 0 28px rgba(34, 197, 94, 0.4);
+        }
+        50% {
+            text-shadow:
+                0 0 12px rgba(34, 197, 94, 1),
+                0 0 24px rgba(34, 197, 94, 0.8),
+                0 0 36px rgba(34, 197, 94, 0.6);
+        }
+    }
+
+    .luminous-time:hover {
+        animation: pulseGlow 2s infinite alternate;
+    }
+    
+    /* Button Active State Styling */
+    .active-btn {
+        background: linear-gradient(90deg, #16a34a, #22c55e);
+        box-shadow: 0 0 12px rgba(34, 197, 94, 0.5), 0 0 0 3px rgba(34, 197, 94, 0.3); /* Enhanced ring */
+    }
+    
+    /* Page Section Transition */
+    .page-section {
+        animation: fadeIn 0.5s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+        from {opacity: 0; transform: translateY(10px);}
+        to {opacity: 1; transform: translateY(0);}
+    }
+
+    /* Table Styling Enhancement */
+    .data-table th {
+        padding: 12px 10px;
+        text-align: left;
+        font-weight: 700;
+        color: #374151; /* Darker text */
+        border-bottom: 2px solid #e5e7eb;
+    }
+    .data-table td {
+        padding: 10px;
+        border-bottom: 1px solid #f3f4f6;
+        vertical-align: middle;
+    }
+    .data-table tbody tr:hover {
+        background-color: #f9fafb;
+    }
+    
+    /* Custom Card Design for Users Overview */
+    .user-card {
+        transition: all 0.3s ease;
+        border: 2px solid;
+    }
+    .user-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+    }
+
+</style>
 <body>
     <div class="dashboard-container">
-        <!-- Sidebar -->
         <?php include '../components/sidebar.php'; ?>
         
-        <main class="main-content">
-            <!-- Header -->
-            <header class="main-header">
+        <main class="main-content w-full h-screen overflow-auto bg-gray-50">
+            <header class="main-header p-4">
                 <button class="sidebar-toggle" id="sidebarToggle">
                     <i class='bx bx-menu'></i>
                 </button>
                 <h1 id="pageTitle" style="color: #002e2d;">ADMIN DASHBOARD</h1>
             </header>
             
-            <!-- Contents -->
             <div class="content-container">
-            <section class="content-section active" id="dashboardSection">
-                <div class="top-container flex items-center justify-center gap-4">
-                    <!-- Status Grid -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full mb-10 h-[450px] w-full">
-
-                        <!-- Total Medicines -->
-                        <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-3xl hover:shadow-2xl transition-all transform hover:-translate-y-2 p-8 border border-green-200">
-                            <div class="flex justify-between items-center mb-4">
-                                <h3 class="font-bold text-lg text-green-800 tracking-wide">Total Medicines</h3>
-                                <svg class="h-10 w-10 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                                    </svg>
-                            </div>
-                            <div class="mt-2">
-                                <div class="text-5xl font-extrabold text-green-700 leading-tight"><?= $total_meds_count ?></div>
-                                <p class="text-base text-green-500 mt-1">Items in inventory</p>
-                            </div>
-                        </div>
-
-                        <!-- Low Stock -->
-                        <div class="bg-gradient-to-br from-green-50 to-yellow-200 rounded-3xl hover:shadow-2xl transition-all transform hover:-translate-y-2 p-8 border border-green-200">
-                            <div class="flex justify-between items-center">
-                            <h3 class="font-semibold text-lg text-gray-700">Low Stock Items</h3>
-                            <i class="bx bx-error text-4xl text-yellow-500"></i>
-                            </div>
-                            <div class="mt-4">
-                            <div class="text-5xl font-extrabold text-yellow-400 leading-tight"><?= $low_stock_count ?></div>
-                            <p class="text-sm text-gray-500">Requires restocking</p>
-                            </div>
-                        </div>
-
-                        <!-- Near Expiry -->
-                        <div class="bg-gradient-to-br from-orange-50 to-orange-200 rounded-3xl hover:shadow-2xl transition-all transform hover:-translate-y-2 p-8 border border-green-200">
-                            <div class="flex justify-between items-center">
-                            <h3 class="font-semibold text-lg text-gray-700">Near Expiry</h3>
-                            <i class="bx bx-calendar-exclamation text-4xl text-orange-500"></i>
-                            </div>
-                            <div class="mt-4">
-                            <div class="text-5xl font-extrabold text-orange-400 leading-tight"><?= $near_expiry_count ?></div>
-                            <p class="text-sm text-gray-500">Approaching expiry</p>
-                            </div>
-                        </div>
-
-                        <!-- Expired -->
-                        <div class="bg-gradient-to-br from-red-50 to-red-200 rounded-3xl hover:shadow-2xl transition-all transform hover:-translate-y-2 p-8 border border-green-200">
-                            <div class="flex justify-between items-center">
-                            <h3 class="font-semibold text-lg text-gray-700">Expired</h3>
-                            <i class="bx bx-trash text-4xl text-red-500"></i>
-                            </div>
-                            <div class="mt-4">
-                            <div class="text-5xl font-extrabold text-red-500 leading-tight"><?= $expired_count ?></div>
-                            <p class="text-sm text-gray-500">Should be disposed</p>
-                            </div>
-                        </div>
-
-                        <!-- Users Total (Improved Design) -->
-                        <div class="bg-gradient-to-br from-blue-50 to-blue-500 rounded-3xl hover:shadow-2xl transition-all transform hover:-translate-y-2 p-8 border border-green-200">
-                            <div class="flex justify-between items-center">
-                            <h3 class="font-semibold text-lg text-gray-700">Users Overview</h3>
-                            <i class="bx bx-group text-4xl text-green-600"></i>
-                            </div>
-                            <div class="mt-6 grid grid-cols-3 gap-4 text-center">
-                            <div class="bg-white rounded-xl shadow p-3">
-                                <i class="bx bxs-graduation text-green-500 text-2xl"></i>
-                                <p class="mt-1 text-xs text-gray-500">Students</p>
-                                <div class="text-lg font-bold text-gray-700"><?= $student_count; ?></div>
-                            </div>
-                            <div class="bg-white rounded-xl shadow p-3">
-                                <i class="bx bxs-user-badge text-blue-500 text-2xl"></i>
-                                <p class="mt-1 text-xs text-gray-500">Admins</p>
-                                <div class="text-lg font-bold text-gray-700"><?= $clinicPersonnel_count; ?></div>
-                            </div>
-                            <div class="bg-white rounded-xl shadow p-3">
-                                <i class="bx bxs-user text-purple-500 text-2xl"></i>
-                                <p class="mt-1 text-xs text-gray-500">Staff</p>
-                                <div class="text-lg font-bold text-gray-700">15</div>
-                            </div>
-                            </div>
-                        </div>
-
-                        <!-- Check-In Counts -->
-                        <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-3xl hover:shadow-2xl transition-all transform hover:-translate-y-2 p-8 border border-green-200">
-                            <div class="flex justify-between items-center">
-                                <h3 class="font-semibold text-lg text-gray-700">Check-In Counts</h3>
-                                <i class="bx bx-calendar-check text-4xl text-green-500"></i>
-                            </div>
-                            <div class="mt-4">
-                                <div class="text-5xl font-extrabold text-green-700 leading-tight"><?= $clinicPersonnel_count; ?></div>
-                                <p class="text-sm text-gray-500">Students checked in today</p>
-                            </div>
-                        </div>
-
-                    </div>
-
-                    <div class="card chart-card min-w-[400px] max-w-[900px] h-[450px] bg-white p-2 rounded-2xl shadow-lg overflow-hidden">
-                        <!-- Top: Quick Scan Header -->
-                        <div class="rounded-2xl bg-gradient-to-r from-green-700 to-green-900 p-4 shadow-md cursor-pointer mb-2">
-                            <div class="flex items-center gap-4">
-                                <!-- Icon -->
-                                <div class="bg-white rounded-full p-3 shadow-inner flex items-center justify-center">
-                                    <i class="bx bx-barcode text-green-800 text-2xl"></i>
+                <section class="content-section active" id="dashboardSection">
+                    <div class="flex flex-col w-full gap-4">
+                        
+                        <!-- Inventory Summary -->
+                        <div class="top-container w-full flex flex-col lg:flex-row gap-4">
+                            <div class="flex-1 bg-green-50 max-w-[700px] rounded-2xl shadow-lg p-6 border border-green-400">
+                                <div class="flex justify-between items-center mb-8">
+                                    <h3 class="font-semibold text-gray-700">Inventory Summary</h3>
+                                    <div class="h-10 w-10 text-green-500 bg-green-200 p-2 rounded-full flex items-center justify-center">
+                                        <i class='bx bx-package text-xl'></i>
+                                    </div>
                                 </div>
-                                <!-- Text -->
-                                <div>
-                                    <h1 class="text-white text-xl font-bold tracking-wide uppercase">Quick Student Scan</h1>
-                                    <p class="text-green-200 text-sm mt-1">Scan student IDs quickly and efficiently</p>
+
+                                <div class="grid grid-cols-4 gap-2">
+                                    <div class="bg-green-50 border border-green-400 p-3 rounded-xl text-center">
+                                        <span class="text-green-700 font-bold text-lg"><?= $total_meds_count ?></span>
+                                        <p class="text-gray-600 text-sm font-medium">All</p>
+                                    </div>
+                                    <div class="bg-yellow-50 border border-yellow-400 p-3 rounded-xl text-center">
+                                        <span class="text-yellow-600 font-bold text-lg"><?= $low_stock_count ?></span>
+                                        <p class="text-gray-600 text-sm font-medium">Low</p>
+                                    </div>
+                                    <div class="bg-orange-50 border border-orange-400 p-3 rounded-xl text-center">
+                                        <span class="text-orange-600 font-bold text-lg"><?= $near_expiry_count ?></span>
+                                        <p class="text-gray-600 text-sm font-medium">Near</p>
+                                    </div>
+                                    <div class="bg-red-50 border border-red-400 p-3 rounded-xl text-center">
+                                        <span class="text-red-600 font-bold text-lg"><?= $expired_count ?></span>
+                                        <p class="text-gray-600 text-sm font-medium">Expired</p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Middle: Card Header -->
-                        <div class="px-4 py-2 border-b border-gray-200 bg-gray-50">
-                            <h2 class="text-gray-700 font-semibold text-lg">Common Reasons For Visit</h2>
-                        </div>
+                            <!-- Users Overview -->
+                            <div class="flex-1 bg-blue-50 max-w-[400px] rounded-2xl shadow-lg p-6 border border-blue-300">
+                                <div class="flex justify-between items-center mb-6">
+                                    <h3 class="font-semibold text-gray-700">Users Overview</h3>
+                                    <div class="h-10 w-10 text-blue-500 bg-blue-100 p-2 rounded-full flex items-center justify-center">
+                                        <i class='bx bx-group text-xl'></i>
+                                    </div>
+                                </div>
 
-                        <!-- Bottom: Chart -->
-                        <div class="card-content p-4 h-[calc(100%-128px)] bg-green-50 flex items-center justify-center">
-                            <div class="chart-container w-full h-full rounded-xl bg-green-100 p-2 shadow-inner">
-                                <canvas id="visitReasonsChart" class="w-full h-full"></canvas>
+                                <div class="grid grid-cols-3 gap-3 text-center">
+                                    <div class="user-card bg-blue-50 border border-blue-400 p-4 rounded-xl">
+                                        <div class="text-2xl font-extrabold text-blue-600"><?= $student_count ?></div>
+                                        <p class="text-sm text-gray-500">Students</p>
+                                    </div>
+                                    <div class="user-card bg-purple-50 border border-purple-400 p-4 rounded-xl">
+                                        <div class="text-2xl font-extrabold text-purple-600"><?= $admin_count ?></div>
+                                        <p class="text-sm text-gray-500">Admins</p>
+                                    </div>
+                                    <div class="user-card bg-pink-50 border border-pink-400 p-4 rounded-xl">
+                                        <div class="text-2xl font-extrabold text-pink-600"><?= $staff_count ?></div>
+                                        <p class="text-sm text-gray-500">Staff</p>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
 
-                </div>
-                
-
-                
-
-                <div class="card">
-                    <div class="card-header">
-                        <h2>Recent Clinic Visits</h2>
-                        <div style="display: flex; gap: 1rem; align-items: center;">
-                                <!-- Search Bar -->
-                                <div class="search-container" style="position: relative;">
-                                    <i class='bx bx-search' style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #6b7280;"></i>
-                                    <input type="text" id="studentSearch" placeholder="Search students..." style="padding: 0.5rem 1rem 0.5rem 2rem; border: 1px solid #d1d5db; border-radius: 0.375rem; width: 250px;">
+                            <!-- Students Checked-in Today -->
+                            <div class="flex-1 max-w-[200px] bg-white rounded-2xl shadow-lg p-6 border-2 border-indigo-600 flex flex-col justify-between">
+                                <div class="flex justify-between items-center mb-6">
+                                    <h3 class="font-semibold text-gray-700 text-sm leading-tight">STUDENTS CHECKED-IN TODAY</h3>
+                                    <div class="h-10 w-10 text-white bg-indigo-600 p-2 rounded-full flex items-center justify-center shadow-lg">
+                                        <i class='bx bx-calendar-check text-xl'></i>
+                                    </div>
                                 </div>
                                 
-                                <!-- Entries Filter -->
-                                <div class="entries-filter" style="display: flex; align-items: center; gap: 0.5rem;">
-                                    <span style="font-size: 0.875rem; color: #4b5563;">Show</span>
-                                    <select id="entriesFilter" style="padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; background-color: white;">
-                                        <option value="10">10</option>
-                                        <option value="25">25</option>
-                                        <option value="50">50</option>
-                                        <option value="100">100</option>
-                                    </select>
-                                    <span style="font-size: 0.875rem; color: #4b5563;">entries</span>
+                                <div class="text-right">
+                                    <div class="text-6xl font-extrabold text-indigo-600 tracking-wider transition-transform hover:scale-105">
+                                        <?= $daily_checkin_count ?>
+                                    </div>
+                                    <p class="text-gray-500 text-xs mt-1 font-medium">Daily Visits</p>
                                 </div>
                             </div>
-                    </div>
-                    <div class="card-content">
-                        <div class="table-container">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Time</th>    
-                                        <th>Student ID</th>
-                                        <th>Student Name</th>
-                                        <th>Reason for Visit</th>
-                                        <th>Status/Outcome</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php
-                                    $sql = "SELECT sc.DateTime as DT, s.School_ID as SID, s.FirstName as FN, s.LastName as LN, sc.Reason as R, sc.Status as S FROM studentcheckins sc JOIN student s ON sc.StudentID = s.School_ID ORDER BY ID DESC";
-                                    $result = $con->query($sql);
-                                    if ($result->num_rows > 0) {
-                                        while ($row = $result->fetch_assoc()) {
-                                            echo "<tr>";
-                                            echo "<td>" . $row["DT"] . "</td>";
-                                            echo "<td>" . $row["SID"] . "</td>";
-                                            echo "<td>" . $row["FN"] . " " . $row["LN"] . "</td>";
-                                            echo "<td>" . $row["R"] . "</td>";
-                                            echo "<td>" . $row["S"] . "</td>";
-                                            echo "</tr>";
-                                        }
-                                    } else {
-                                        echo "<tr><td colspan='5'>No recent clinic visits</td></tr>";
-                                    }
-                                    ?>
-                                </tbody>
-                            </table>
+
+                            <!-- Time & Date -->
+                            <div class="flex-1 max-w-[200px] rounded-2xl shadow-lg hover:shadow-2xl p-2 text-white flex flex-col items-center justify-start"
+                                style="background-image: url('../Images/timebg.jpg'); background-size: cover;">
+                                <h1 class="text-2xl font-semibold tracking-wide mt-2">Time & Date</h1>
+                                <div id="currentDate" class="text-xl opacity-90 mb-1 mt-8"></div>
+                                <div id="currentTime" class="luminous-time text-3xl font-semibold tracking-widest mt-2 text-center text-green-300"></div>                            
+                            </div>
+
+                        </div>
+
+                        <!-- Bottom Container -->
+                        <div class="bottom-container w-full flex gap-4">
+                            <!-- Top Used Medicines -->
+                            <div class="w-2/3 bg-white rounded-md shadow-lg hover:border-blue-600 transition-all transform p-6 border border-blue-300">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h3 class="font-bold text-lg text-gray-700">Top Used Medicines</h3>
+
+                                    <div class="flex items-center gap-3">
+                                        <select id="chartDateFilter" class="border border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                            <option value="all">All Time</option>
+                                            <option value="today">Today</option>
+                                            <option value="day">Select Day</option>
+                                            <option value="week">This Week</option>
+                                            <option value="month">This Month</option>
+                                            <option value="year">This Year</option>
+                                        </select>
+                                        <input type="date" id="specificDate" class="hidden border border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                    </div>
+                                </div>
+
+                                <canvas id="medicineBarChart" class="w-full" style="max-height: 260px;"></canvas>
+                            </div>
+                            <!-- Common Reasons for Visit -->
+                            <div class="w-full bg-white rounded-md shadow-lg hover:border-green-600 transition-all transform p-6 border border-green-300">
+                                <div class="card-count flex justify-between items-center mb-2">
+                                    <h3 class="text-gray-700 font-semibold text-lg">Common Reasons for Visit</h3>
+                                    <div class="h-10 w-10 text-green-500 bg-green-100 p-2 rounded-full flex items-center justify-center">
+                                        <i class='bx bx-pulse text-xl'></i>
+                                    </div>
+                                </div>
+
+                                <div class="p-4 bg-green-50 rounded-xl flex items-center justify-center">
+                                    <div class="chart-container w-full h-[260px] rounded-xl bg-green-100 p-2 shadow-inner">
+                                        <canvas id="visitReasonsChart" class="w-full h-full"></canvas>
+                                        </div>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
-                </div>
-            </section>
+
+                    <!-- Page Buttons -->
+                    <div class="flex w-full items-center justify-start gap-2 mb-4 mt-8 pt-4 shadow-t-lg">
+                        <button 
+                            class="page-btn active-btn bg-white hover:shadow-lg text-gray-700 font-semibold px-6 py-2 border border-blue-600 transition-all"
+                            data-target="clinic-page">
+                            Clinic Check-in Visits
+                        </button>
+
+                        <button 
+                            class="page-btn bg-white hover:shadow-lg text-gray-700 font-semibold px-6 py-2 border border-green-600 transition-all"
+                            data-target="inventory-page">
+                            Inventory Log
+                        </button>
+                    </div>
+
+                    <!-- Pages Container -->
+                    <div class="pages-container w-full">
+
+                        <!-- Clinic Page -->
+                        <div id="clinic-page" class="page-section">
+                            <div class="card w-full border-2 border-blue-600 rounded-2xl bg-white shadow-xl p-4">
+                                <div class="card-header w-full flex flex-col gap-2">
+                                    <div class="w-full flex items-center justify-between">
+                                        <h3 class="text-xl font-bold text-gray-700 mb-4 flex items-center">
+                                            <i class='bx bxs-time-five text-purple-600 mr-2 text-2xl'></i>
+                                            Clinic Check-in Visits
+                                        </h3>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-gray-600 text-sm text-nowrap">Show:</span>
+                                            <select id="entriesFilter" class="border rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-400">
+                                                <option value="5">5 Entries</option>
+                                                <option value="10">10 Entries</option>
+                                                <option value="25">25 Entries</option>
+                                                <option value="50">50 Entries</option>
+                                                <option value="100">100 Entries</option>
+                                                <option value="999999">All</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex flex-wrap gap-4 w-full items-center justify-between">
+                                        <div class="relative w-full md:w-1/3">
+                                            <i class='bx bx-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400'></i>
+                                            <input 
+                                                type="text" 
+                                                id="studentSearch" 
+                                                placeholder="Search students..." 
+                                                class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                            >
+                                        </div>
+
+                                        <div class="flex gap-4 items-center">
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-gray-600 text-sm">Date:</span>
+                                                <select id="clinicDateFilter" class="border rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-400">
+                                                    <option value="all">All</option>
+                                                    <option value="today">Today</option>
+                                                    <option value="week">This Week</option>
+                                                    <option value="month">This Month</option>
+                                                </select>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-gray-600 text-sm text-nowrap">Managed By:</span>
+                                                <select id="staffFilter" class="border rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-400">
+                                                    <option value="all">All</option>
+                                                    <?php
+                                                    $staffSql = "SELECT PersonnelID, FirstName, MiddleName, LastName FROM clinicpersonnel ORDER BY LastName";
+                                                    $staffResult = $con->query($staffSql);
+                                                    if($staffResult && $staffResult->num_rows > 0){
+                                                        while($staff = $staffResult->fetch_assoc()){
+                                                            $staffName = $staff['FirstName'] . ' ' . ($staff['MiddleName'] ? $staff['MiddleName'] . ' ' : '') . $staff['LastName'];
+                                                            echo "<option value='" . htmlspecialchars($staff['PersonnelID']) . "'>" . htmlspecialchars($staffName) . "</option>";
+                                                        }
+                                                    }
+                                                    ?>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="card-content p-6">
+                                    <div class="overflow-x-auto">
+                                        <table id="clinicTable" class="data-table min-w-full divide-y divide-gray-200 text-sm">
+                                            <thead class="bg-gray-50">
+                                                <tr class="text-nowrap">
+                                                    <th>Managed By</th>
+                                                    <th>Time</th>
+                                                    <th>Student ID</th>
+                                                    <th>Student Name</th>
+                                                    <th>Reason for Visit</th>
+                                                    <th>Status/Outcome</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php
+                                                $sql = "SELECT 
+                                                            sc.DateTime as DT,
+                                                            sc.StaffID as StaffID,
+                                                            s.School_ID as SID, 
+                                                            s.FirstName as FN, 
+                                                            s.LastName as LN, 
+                                                            sc.Reason as R, 
+                                                            sc.Status as S,
+                                                            cp.FirstName as StaffFN,
+                                                            cp.MiddleName as StaffMN,
+                                                            cp.LastName as StaffLN
+                                                        FROM studentcheckins sc
+                                                        JOIN student s ON sc.StudentID = s.School_ID
+                                                        LEFT JOIN clinicpersonnel cp ON sc.StaffID = cp.PersonnelID
+                                                        ORDER BY sc.ID DESC";
+                                                
+                                                $result = $con->query($sql);
+                                                if ($result && $result->num_rows > 0) {
+                                                    while ($row = $result->fetch_assoc()) {
+                                                        $managedBy = $row['StaffFN'] . ' ' . ($row['StaffMN'] ? $row['StaffMN'] . ' ' : '') . $row['StaffLN'];
+                                                        $status = htmlspecialchars($row["S"]);
+
+                                                        // Determine text color based on status
+                                                        $statusClass = match ($status) {
+                                                            'In Progress' => 'text-yellow-700 font-semibold',
+                                                            'Completed'   => 'text-blue-600 font-semibold',
+                                                            default       => 'text-green-600 font-semibold',
+                                                        };
+
+                                                        echo "<tr data-staff='" . htmlspecialchars($row['StaffID']) . "' data-date='" . date("Y-m-d", strtotime($row["DT"])) . "'>
+                                                                <td>" . htmlspecialchars($managedBy) . "</td>
+                                                                <td>" . date("F j, Y g:i A", strtotime($row["DT"])) . "</td>
+                                                                <td>" . htmlspecialchars($row["SID"]) . "</td>
+                                                                <td>" . htmlspecialchars($row["FN"] . ' ' . $row["LN"]) . "</td>
+                                                                <td class='italic text-green-600'>" . htmlspecialchars($row["R"]) . "</td>
+                                                                <td class='" . $statusClass . "'>" . $status . "</td>
+                                                            </tr>";
+                                                    }
+                                                } else {
+                                                    echo "<tr><td colspan='6' class='text-center text-gray-500 py-4'>No recent clinic visits</td></tr>";
+                                                }
+                                                ?>
+                                            </tbody>
+
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Inventory Page -->
+                        <div id="inventory-page" class="page-section hidden">
+                            <div class="inventory-log bg-white rounded-3xl shadow-xl p-6 border-2 border-purple-600">
+                                <h3 class="text-xl font-bold text-gray-700 mb-4 flex items-center">
+                                    <i class='bx bx-notepad text-purple-600 mr-2 text-2xl'></i>
+                                    Unified Inventory Actions and Events Log
+                                </h3>
+
+                                <div class="overflow-x-auto max-h-[600px] lg:max-h-[700px]">
+                                    <table class="data-table min-w-full divide-y divide-gray-200">
+                                        <thead class="bg-gray-50 sticky top-0">
+                                            <tr class="text-nowrap"> 
+                                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
+                                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action Type</th>
+                                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Med NAME</th>
+                                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details / Description</th>
+                                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User/Source</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-gray-200 text-sm text-nowrap">
+
+                                            <?php 
+                                            // Check if $usage_result is set and has rows before iterating
+                                            if ($usage_result && $usage_result->num_rows > 0) :
+                                                // Reset pointer for safety if needed, though this is the first iteration
+                                                $usage_result->data_seek(0);
+                                                while ($row = $usage_result->fetch_assoc()): 
+                                                    $timestamp = date("F j, Y h:i A", strtotime($row["usage_date"]));
+                                                    $actionType = "USED";
+                                                    ?>
+                                                    <tr class="hover:bg-blue-50">
+                                                        <td class="px-4 py-3 text-gray-500 text-nowrap"><?= $timestamp ?></td>
+                                                        <td class="px-4 py-3 text-blue-600"><?= $actionType ?></td>
+                                                        <td class="px-4 py-3 text-blue-700"><?= strtoupper(htmlspecialchars($row['med_name'])) ?></td>
+                                                        <td class="px-4 py-3 text-gray-600">
+                                                            Quantity of <strong><?= htmlspecialchars($row['quantity_used']) ?></strong> used from Medicine ID <?= htmlspecialchars($row['med_id']) ?>.
+                                                        </td>
+                                                        <td class="px-4 py-3 text-gray-500">System/Usage</td>
+                                                    </tr>
+                                                <?php endwhile; 
+                                            endif;
+                                            ?>
+
+                                            <?php 
+                                            // Check if $audit_result is set and has rows before iterating
+                                            if ($audit_result && $audit_result->num_rows > 0) :
+                                                // Reset pointer for safety if needed, though this is the first iteration
+                                                $audit_result->data_seek(0);
+                                                while ($row = $audit_result->fetch_assoc()):
+                                                    $timestamp = date("F j, Y h:i A", strtotime($row["created_at"]));
+
+                                                    // Original action type (from DB)
+                                                    $type = strtoupper($row["action_type"]);
+
+                                                    // Map for display name changes
+                                                    $displayType = match($type) {
+                                                        'CREATE' => 'ADDED',
+                                                        'UPDATE' => 'RESTOCK',
+                                                        'DEDUCT' => 'DEDUCT',
+                                                        'DELETE' => 'DELETE',
+                                                        default => $type
+                                                    };
+
+                                                    // Color scheme
+                                                    $color = match($displayType) {
+                                                        'ADDED' => 'green',
+                                                        'RESTOCK' => 'green',
+                                                        'DEDUCT' => 'red',
+                                                        'DELETE' => 'red',
+                                                        default => 'gray'
+                                                    };
+                                                ?>
+                                                    <tr class="hover:bg-<?=
+                                                        $color === 'green' ? 'green-50' :
+                                                        ($color === 'yellow' ? 'yellow-50' :
+                                                        ($color === 'red' ? 'red-50' : 'gray-50'));
+                                                    ?>">
+                                                        <td class="px-4 py-3 whitespace-nowrap text-gray-500"><?= $timestamp ?></td>
+                                                        <td class="px-4 py-3 whitespace-nowrap text-<?= $color ?>-600"><?= $displayType ?></td>
+                                                        <td class="px-4 py-3 whitespace-nowrap text-blue-700"><?= strtoupper(htmlspecialchars($row['med_name'])) ?></td>
+                                                        <td class="px-4 py-3 text-gray-600"><?= htmlspecialchars($row['action_details']) ?></td>
+                                                        <td class="px-4 py-3 whitespace-nowrap text-gray-500"><?= htmlspecialchars($row['user_id']) ?></td>
+                                                    </tr>
+                                                <?php endwhile;
+                                            endif; 
+                                            ?>
+
+                                            <?php 
+                                            // Display a message if neither result set has rows
+                                            if ((!$usage_result || $usage_result->num_rows === 0) && (!$audit_result || $audit_result->num_rows === 0)) {
+                                                echo '<tr><td colspan="5" class="text-center text-gray-500 py-8">No inventory actions or usage recorded.</td></tr>';
+                                            }
+                                            ?>
+
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
             </div>
         </main>
     </div>
 </body>
 
-<!-- Add Chart.js library with plugins -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 
@@ -256,20 +572,134 @@ require_once '../Functions/MedicineCard.php';
             }
         });
     
-    console.log('Doctor Management System initialized successfully!');
+    console.log('PIAIMS Dashboard initialized successfully!');
+    });
+
+    function updateDateTime() {
+        const now = new Date();
+
+        // Format date and time
+        const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+        const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true };
+
+        document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', dateOptions);
+        document.getElementById('currentTime').textContent = now.toLocaleTimeString('en-US', timeOptions);
+    }
+
+    // Initial call and auto-update every second
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+    
+    // Page Navigation Logic
+    const buttons = document.querySelectorAll('.page-btn');
+    const sections = document.querySelectorAll('.page-section');
+
+    buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+        // Reset all
+        buttons.forEach(b => b.classList.remove('active-btn'));
+        sections.forEach(s => s.classList.add('hidden'));
+
+        // Activate selected
+        btn.classList.add('active-btn');
+        document.getElementById(btn.dataset.target).classList.remove('hidden');
+        });
     });
     
-    
+    // Clinic Visits Table Filtering Logic
+    const searchInput = document.getElementById('studentSearch');
+    const entriesFilter = document.getElementById('entriesFilter');
+    const clinicDateFilter = document.getElementById('clinicDateFilter'); // Corrected ID
+    const staffFilter = document.getElementById('staffFilter');
+    const clinicTable = document.getElementById('clinicTable');
+    const tableBody = clinicTable ? clinicTable.getElementsByTagName('tbody')[0] : null;
+
+    if (tableBody) {
+        function filterTable() {
+            const searchText = searchInput.value.toLowerCase();
+            const selectedDate = clinicDateFilter.value; 
+            const selectedStaff = staffFilter.value;
+
+            const rows = tableBody.getElementsByTagName('tr');
+            let visibleCount = 0;
+            const maxEntries = parseInt(entriesFilter.value);
+
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                // Check if the row contains a data-date attribute (to skip "No recent visits" row)
+                if (!row.dataset.date) {
+                     row.style.display = 'table-row'; // Always show non-data rows
+                     continue;
+                }
+
+                // Get data from data-attributes (set in PHP) and cell content
+                const studentName = row.cells[3].textContent.toLowerCase();
+                const studentID = row.cells[2].textContent.toLowerCase();
+                const rowStaff = row.dataset.staff; 
+                const rowDate = new Date(row.dataset.date); 
+
+                // Search filter: Checks student name and ID
+                let matchSearch = studentName.includes(searchText) || studentID.includes(searchText);
+
+                // Staff filter
+                let matchStaff = (selectedStaff === 'all' || rowStaff === selectedStaff);
+
+                // Date filter
+                let matchDate = false;
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); // Normalize to start of day
+
+                const oneWeekAgo = new Date(today); oneWeekAgo.setDate(today.getDate() - 7);
+                const oneMonthAgo = new Date(today); oneMonthAgo.setMonth(today.getMonth() - 1);
+
+                if(selectedDate === 'all') matchDate = true;
+                else if(selectedDate === 'today') {
+                    // Check if the row date matches today's normalized date
+                    matchDate = rowDate.toDateString() === today.toDateString();
+                } else if(selectedDate === 'week') {
+                    // Check if the row date is within the last 7 days
+                    matchDate = rowDate >= oneWeekAgo;
+                } else if(selectedDate === 'month') {
+                    // Check if the row date is within the last 30 days
+                    matchDate = rowDate >= oneMonthAgo;
+                }
+
+                if(matchSearch && matchStaff && matchDate && visibleCount < maxEntries){
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        }
+
+        // Event listeners
+        searchInput.addEventListener('input', filterTable);
+        entriesFilter.addEventListener('change', filterTable);
+        clinicDateFilter.addEventListener('change', filterTable); 
+        staffFilter.addEventListener('change', filterTable);
+
+        // Initial filter
+        filterTable();
+    }
+
+
+    // --- Chart.js Logic ---
+
     // Register the datalabels plugin
     Chart.register(ChartDataLabels);
 
     // Wait for the document to be fully loaded
     document.addEventListener('DOMContentLoaded', function() {
-        // Add loading state
-        const chartContainer = document.querySelector('.card-content');
-        chartContainer.innerHTML = `
-            <div class="chart-loading" style="height: 300px; display: flex; align-items: center; justify-content: center;">
-                <div class="spinner" style="width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+        
+        // --- VISIT REASONS PIE CHART LOGIC ---
+        const visitReasonsChartContainer = document.querySelector('.chart-container');
+        
+        // Initial setup for loading state
+        visitReasonsChartContainer.innerHTML = `
+            <div class="chart-loading" style="height: 100%; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+                <div class="spinner" style="width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px;"></div>
+                <p class="text-gray-500 text-sm">Loading visit data...</p>
             </div>
             <canvas id="visitReasonsChart" style="display: none;"></canvas>
         `;
@@ -278,6 +708,9 @@ require_once '../Functions/MedicineCard.php';
         fetch('../Functions/patientFunctions.php?action=getVisitReasons')
             .then(response => response.json())
             .then(data => {
+                const chartElement = document.querySelector('#visitReasonsChart');
+                const loadingElement = document.querySelector('.chart-loading');
+
                 if (data.success && data.reasons.length > 0) {
                     const reasons = data.reasons;
                     
@@ -286,23 +719,14 @@ require_once '../Functions/MedicineCard.php';
                     const counts = reasons.map(item => item.count);
                     const totalVisits = counts.reduce((a, b) => a + b, 0);
                     
-                    // Generate gradient colors
-                    const { backgroundColors, borderColors } = generateGradientColors(labels.length);
+                    // Generate colors
+                    const { backgroundColors } = generateGradientColors(labels.length);
                     
-                    // Get the canvas element and show it
-                    const chartElement = document.querySelector('#visitReasonsChart');
+                    // Show canvas and hide loading
                     chartElement.style.display = 'block';
-                    document.querySelector('.chart-loading').style.display = 'none';
+                    loadingElement.style.display = 'none';
                     
                     const ctx = chartElement.getContext('2d');
-                    
-                    // Create gradient for bars
-                    function createGradient(ctx, chartArea, colors, index) {
-                        const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-                        gradient.addColorStop(0, colors[index].start);
-                        gradient.addColorStop(1, colors[index].end);
-                        return gradient;
-                    }
                     
                     // Create the pie chart
                     new Chart(ctx, {
@@ -326,7 +750,7 @@ require_once '../Functions/MedicineCard.php';
                             cutout: '65%',
                             radius: '90%',
                             layout: {
-                                padding: 20
+                                padding: 10
                             },
                             animation: {
                                 animateScale: true,
@@ -343,58 +767,24 @@ require_once '../Functions/MedicineCard.php';
                                         usePointStyle: true,
                                         pointStyle: 'circle',
                                         font: {
-                                            family: 'Inter, sans-serif',
+                                            family: 'Poppins, sans-serif',
                                             size: 12
-                                        },
-                                        generateLabels: function(chart) {
-                                            const data = chart.data;
-                                            if (data.labels.length && data.datasets.length) {
-                                                return data.labels.map((label, i) => {
-                                                    const meta = chart.getDatasetMeta(0);
-                                                    const ds = data.datasets[0];
-                                                    const arc = meta.data[i];
-                                                    const custom = arc && arc.custom || {};
-                                                    const value = chart.data.labels && i < chart.data.labels.length ? 
-                                                        `${label}: ${ds.data[i]} (${((ds.data[i] / totalVisits) * 100).toFixed(1)}%)` : 
-                                                        '';
-                                                    
-                                                    return {
-                                                        text: value,
-                                                        fillStyle: ds.backgroundColor[i],
-                                                        strokeStyle: ds.borderColor,
-                                                        lineWidth: 1,
-                                                        hidden: isNaN(ds.data[i]) || meta.data[i].hidden,
-                                                        index: i
-                                                    };
-                                                });
-                                            }
-                                            return [];
                                         }
                                     }
                                 },
                                 tooltip: {
                                     backgroundColor: 'rgba(33, 37, 41, 0.95)',
-                                    titleFont: {
-                                        family: 'Inter, sans-serif',
-                                        size: 13,
-                                        weight: '600'
-                                    },
-                                    bodyFont: {
-                                        family: 'Inter, sans-serif',
-                                        size: 13
-                                    },
+                                    titleFont: { size: 13, weight: '600' },
+                                    bodyFont: { size: 13 },
                                     padding: 12,
                                     cornerRadius: 8,
-                                    displayColors: false,
+                                    displayColors: true,
                                     callbacks: {
                                         label: function(context) {
                                             const label = context.label || '';
                                             const value = context.raw || 0;
                                             const percentage = ((value / totalVisits) * 100).toFixed(1);
-                                            return [
-                                                `${label}: ${value} visit${value !== 1 ? 's' : ''}`,
-                                                `(${percentage}% of total)`
-                                            ];
+                                            return `${label}: ${value} (${percentage}%)`;
                                         }
                                     }
                                 },
@@ -406,176 +796,179 @@ require_once '../Functions/MedicineCard.php';
                                     },
                                     color: '#fff',
                                     font: {
-                                        family: 'Inter, sans-serif',
+                                        family: 'Poppins, sans-serif',
                                         size: 11,
                                         weight: '600'
                                     },
                                     textAlign: 'center',
-                                    textShadowColor: 'rgba(0,0,0,0.3)',
-                                    textShadowBlur: 5
-                                }
-                            },
-                            interaction: {
-                                intersect: false,
-                                mode: 'index'
-                            },
-                            onHover: (event, chartElement) => {
-                                const target = event.native.target;
-                                target.style.cursor = chartElement[0] ? 'pointer' : 'default';
-                            },
-                            onClick: (event, elements) => {
-                                if (elements.length > 0) {
-                                    const index = elements[0].index;
-                                    const label = this.data.labels[index];
-                                    console.log('Clicked on:', label);
-                                    // You can add custom click behavior here
+                                    textShadowColor: 'rgba(0,0,0,0.4)',
+                                    textShadowBlur: 4
                                 }
                             }
                         }
                     });
                     
                     // Add total visits badge
-                    const cardHeader = document.querySelector('.card-header');
+                    const cardHeader = document.querySelector('.card-count');
+                    const existingBadge = document.querySelector('.total-visits-badge');
+                    if(existingBadge) existingBadge.remove(); // Prevent duplication
+                    
                     const badge = document.createElement('div');
-                    badge.className = 'total-visits-badge';
+                    badge.className = 'total-visits-badge bg-green-200 text-green-800 font-semibold px-3 py-1 rounded-full text-sm shadow-inner';
                     badge.innerHTML = `
-                        <span class="total-count">${totalVisits}</span>
-                        <span class="total-label">Total Visits</span>
+                        <span class="total-count text-lg">${totalVisits}</span>
+                        <span class="total-label text-xs">Total Visits</span>
                     `;
                     cardHeader.appendChild(badge);
                     
-                    // Add styles
-                    const style = document.createElement('style');
-                    style.textContent = `
-                        .card {
-                            position: relative;
-                            background: #ffffff;
-                            border-radius: 12px;
-                            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-                            overflow: hidden;
-                            transition: transform 0.3s ease, box-shadow 0.3s ease;
-                        }
-                        .card:hover {
-                            transform: translateY(-2px);
-                            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-                        }
-                        .card-header {
-                            padding: 1.25rem 1.5rem;
-                            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-                            display: flex;
-                            justify-content: space-between;
-                            align-items: center;
-                            position: relative;
-                        }
-                        .card-header h2 {
-                            margin: 0;
-                            font-size: 1.25rem;
-                            font-weight: 600;
-                            color: #2d3436;
-                            font-family: 'Inter', sans-serif;
-                        }
-                        .card-content {
-                            padding: 1.5rem;
-                            position: relative;
-                        }
-                        .total-visits-badge {
-                            background: #f8f9fa;
-                            border-radius: 20px;
-                            padding: 0.35rem 0.75rem;
-                            display: flex;
-                            align-items: center;
-                            gap: 0.5rem;
-                            font-family: 'Inter', sans-serif;
-                            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-                        }
-                        .total-count {
-                            font-weight: 700;
-                            color: #3498db;
-                            font-size: 1rem;
-                        }
-                        .total-label {
-                            font-size: 0.75rem;
-                            color: #6c757d;
-                            font-weight: 500;
-                        }
-                        @keyframes spin {
-                            0% { transform: rotate(0deg); }
-                            100% { transform: rotate(360deg); }
-                        }
-                        /* Custom scrollbar for chart tooltip */
-                        .chartjs-tooltip {
-                            max-height: 300px;
-                            overflow-y: auto;
-                        }
-                        .chartjs-tooltip::-webkit-scrollbar {
-                            width: 6px;
-                        }
-                        .chartjs-tooltip::-webkit-scrollbar-track {
-                            background: rgba(0, 0, 0, 0.05);
-                            border-radius: 10px;
-                        }
-                        .chartjs-tooltip::-webkit-scrollbar-thumb {
-                            background: rgba(0, 0, 0, 0.2);
-                            border-radius: 10px;
-                        }
-                    `;
-                    document.head.appendChild(style);
-                    
                 } else {
                     // Show no data message
-                    const message = data.success ? 'No visit data available' : 'Failed to load data';
-                    chartContainer.innerHTML = `
-                        <div style="height: 300px; display: flex; align-items: center; justify-content: center; flex-direction: column; color: #6c757d; font-family: 'Inter', sans-serif;">
-                            <i class='bx bx-pie-chart-alt' style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
-                            <p>${message}</p>
-                        </div>
+                    const message = data.success ? 'No visit data available for plotting.' : 'Failed to load visit data.';
+                    loadingElement.innerHTML = `
+                        <i class='bx bx-error-circle text-4xl text-gray-400 mb-2'></i>
+                        <p class="text-gray-500">${message}</p>
                     `;
-                    console.error('Failed to load visit reasons:', data.message || 'No data available');
+                    loadingElement.style.display = 'flex';
                 }
             })
             .catch(error => {
                 console.error('Error fetching visit reasons:', error);
-                chartContainer.innerHTML = `
-                    <div style="height: 300px; display: flex; align-items: center; justify-content: center; flex-direction: column; color: #dc3545; font-family: 'Inter', sans-serif;">
-                        <i class='bx bx-error-circle' style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                        <p>Error loading data. Please try again later.</p>
-                    </div>
+                document.querySelector('.chart-loading').innerHTML = `
+                    <i class='bx bx-server-Downtime text-4xl text-red-500 mb-2'></i>
+                    <p class="text-red-500">Error loading data. Check console.</p>
                 `;
+                document.querySelector('.chart-loading').style.display = 'flex';
             });
         
-        // Function to generate gradient colors for the chart
+        // Function to generate distinct colors for the chart
         function generateGradientColors(count) {
-            const backgroundColors = [];
-            const borderColors = [];
-            
             const colorPalette = [
-                { start: 'rgba(52, 152, 219, 0.8)', end: 'rgba(41, 128, 185, 0.8)' }, // Blue
-                { start: 'rgba(46, 204, 113, 0.8)', end: 'rgba(39, 174, 96, 0.8)' }, // Green
-                { start: 'rgba(155, 89, 182, 0.8)', end: 'rgba(142, 68, 173, 0.8)' }, // Purple
-                { start: 'rgba(241, 196, 15, 0.8)', end: 'rgba(243, 156, 18, 0.8)' }, // Yellow
-                { start: 'rgba(230, 126, 34, 0.8)', end: 'rgba(211, 84, 0, 0.8)' }, // Orange
-                { start: 'rgba(231, 76, 60, 0.8)', end: 'rgba(192, 57, 43, 0.8)' }, // Red
-                { start: 'rgba(26, 188, 156, 0.8)', end: 'rgba(22, 160, 133, 0.8)' }, // Turquoise
-                { start: 'rgba(52, 73, 94, 0.8)', end: 'rgba(44, 62, 80, 0.8)' }, // Dark
-                { start: 'rgba(149, 165, 166, 0.8)', end: 'rgba(127, 140, 141, 0.8)' }, // Gray
-                { start: 'rgba(22, 160, 133, 0.8)', end: 'rgba(26, 188, 156, 0.8)' }  // Teal
+                { start: 'rgb(52, 152, 219)', end: 'rgb(41, 128, 185)' }, // Blue
+                { start: 'rgb(46, 204, 113)', end: 'rgb(39, 174, 96)' }, // Green
+                { start: 'rgb(155, 89, 182)', end: 'rgb(142, 68, 173)' }, // Purple
+                { start: 'rgb(241, 196, 15)', end: 'rgb(243, 156, 18)' }, // Yellow
+                { start: 'rgb(230, 126, 34)', end: 'rgb(211, 84, 0)' }, // Orange
+                { start: 'rgb(231, 76, 60)', end: 'rgb(192, 57, 43)' }, // Red
+                { start: 'rgb(26, 188, 156)', end: 'rgb(22, 160, 133)' }, // Turquoise
+                { start: 'rgb(52, 73, 94)', end: 'rgb(44, 62, 80)' }, // Dark
             ];
             
+            const backgroundColors = [];
             for (let i = 0; i < count; i++) {
-                const colorIndex = i % colorPalette.length;
-                backgroundColors.push(colorPalette[colorIndex]);
-                borderColors.push({
-                    start: colorPalette[colorIndex].start.replace('0.8', '1'),
-                    end: colorPalette[colorIndex].end.replace('0.8', '1')
-                });
+                backgroundColors.push(colorPalette[i % colorPalette.length]);
             }
-            
-            return { backgroundColors, borderColors };
+            return { backgroundColors };
         }
+
+        // --- TOP USED MEDICINES BAR CHART LOGIC ---
+        
+        const ctx = document.getElementById("medicineBarChart").getContext("2d");
+        
+        // Initial Chart instance setup
+        let medicineChart = new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: [],
+                datasets: [{
+                    label: "Quantity Used",
+                    data: [],
+                    backgroundColor: [],
+                    borderRadius: 8,
+                    barPercentage: 0.6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { 
+                        grid: { display: false }, 
+                        ticks: { color: "#6b7280", font: { size: 12 } } 
+                    },
+                    y: { 
+                        beginAtZero: true, 
+                        grid: { color: "#e5e7eb" }, 
+                        ticks: { color: "#6b7280", stepSize: 10 } 
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { 
+                        backgroundColor: "#1f2937", 
+                        titleColor: "#fff", 
+                        bodyColor: "#d1d5db", 
+                        padding: 10, 
+                        cornerRadius: 8,
+                        callbacks: {
+                             label: function(context) {
+                                return ` Quantity Used: ${context.parsed.y}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        const colorMap = ["#22c55e", "#0ea5e9", "#f97316", "#a855f7", "#ec4899", "#84cc16", "#ef4444", "#eab308"];
+
+        function fetchChartData(filterType = "all", date = "") {
+            // Updated URL to point to the correct file (assuming it's named chart_data.php from the previous context)
+            const url = `../api/chart_data.php?filter=${filterType}&date=${encodeURIComponent(date)}`;
+
+            fetch(url)
+                .then(res => {
+                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                    return res.json();
+                })
+                .then(data => {
+                    // Check for PHP/SQL error
+                    if (data.error) {
+                        console.error('Backend Error:', data.error, data.sql_error, data.query);
+                        medicineChart.data.labels = ['Error Loading Data'];
+                        medicineChart.data.datasets[0].data = [1];
+                        medicineChart.data.datasets[0].backgroundColor = ['#ef4444'];
+                    } else {
+                        medicineChart.data.labels = data.labels || [];
+                        medicineChart.data.datasets[0].data = data.values || [];
+                        medicineChart.data.datasets[0].backgroundColor = (data.values || []).map((v, i) => colorMap[i % colorMap.length]);
+                    }
+                    
+                    medicineChart.update();
+                })
+                .catch(error => {
+                    console.error('Error fetching chart data:', error);
+                    medicineChart.data.labels = ['Network Error'];
+                    medicineChart.data.datasets[0].data = [1];
+                    medicineChart.data.datasets[0].backgroundColor = ['#9ca3af'];
+                    medicineChart.update();
+                });
+        }
+
+        // FIX: Initial load uses 'all' filter
+        fetchChartData("all");
+
+        // FIX: Use the correct, unique ID for the chart filter
+        const chartDateFilter = document.getElementById("chartDateFilter"); 
+        const specificDate = document.getElementById("specificDate");
+        
+        chartDateFilter.addEventListener("change", () => {
+            const selectedFilter = chartDateFilter.value;
+            specificDate.classList.add("hidden");
+
+            if (selectedFilter === "day") {
+                specificDate.classList.remove("hidden");
+                // Fetch with default value if empty
+                fetchChartData("day", specificDate.value || new Date().toISOString().slice(0, 10));
+            } else {
+                fetchChartData(selectedFilter);
+            }
+        });
+
+        specificDate.addEventListener("change", () => {
+            fetchChartData("day", specificDate.value);
+        });
+
     });
 </script>
-
-<!-- Check-in Modal -->
-<?php include '../Modals/Checkin_modal.php'; ?>
 
 </html>
