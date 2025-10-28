@@ -3,20 +3,14 @@
 Adele : PIAMIS199429 - Admin
 Dave : Dave147532689 - Staff
 
-galing kay angel
-
 📌 NOTE!!: I add cp_ID as PK and PersonnelID as UK in clinicpersonnel table
 
 ------------------ TASK 1: Audit Logs Section ------------------
 
 Completed Task:
 ✅ UI for Audit Logs Panel
-- Search Engine
-- Filter (Role and Modules/Table)
-
-Where I paused?
-- Search and Filter Audit Logs
-
+✅ Search Engine
+✅ Filter (Role and Modules/Table)
 
 ------------------ TASK 2: User Management Section ------------------
 
@@ -38,7 +32,7 @@ Completed Task:
 ✅ Checkin was successfully audit in database
 ✅ Updating student info was successfully audit in database
 ✅ Display notes info in Records modal
-- Updating student Record status was successfully audit in database
+✅ Updating student Record status was successfully audit in database
 - filter student by Department, Year, Section, Status, Inprogress
 - disposing of medicine
 

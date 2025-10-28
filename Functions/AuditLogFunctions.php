@@ -1,4 +1,16 @@
 <?php
+// Enable error reporting
+error_reporting(E_ALL);
+ini_set('display_errors', 0); // Don't show errors to users
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/../logs/php_errors.log');
+
+// Ensure no output is sent before headers
+if (headers_sent($filename, $linenum)) {
+    error_log("Headers already sent in $filename on line $linenum");
+    exit('Headers already sent');
+}
+
 header('Content-Type: application/json');
 
 // Include database connection
@@ -167,13 +179,27 @@ try {
     }
     
 } catch (Exception $e) {
+    error_log('Audit Log Error: ' . $e->getMessage());
+    error_log('Stack Trace: ' . $e->getTraceAsString());
+    
     http_response_code(500);
     $response = [
         'success' => false,
-        'message' => 'Server error: ' . $e->getMessage()
+        'message' => 'Server error: ' . $e->getMessage(),
+        'error' => [
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => $e->getTraceAsString()
+        ]
     ];
 }
 
-// Return the response as JSON
-echo json_encode($response);
-?>
+// Ensure no output before this
+if (ob_get_level() > 0) {
+    ob_clean();
+}
+
+// Set JSON header and output
+header('Content-Type: application/json');
+echo json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+exit;

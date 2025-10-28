@@ -534,7 +534,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             break;
         case 'updateCheckInRecord': // --------------------------------------- UPDATE CHECKIN ---------------------------------------
             $recordId = $_POST['recordId'];
-            $studentId = $_POST['studentId'];
+            $studentId = str_replace('ID: ', '', $_POST['studentId']);
             $updatedAt = $_POST['updatedAt'];
             $outcome = $_POST['outcome'];
             
@@ -549,6 +549,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             mysqli_stmt_bind_param($stmt, 'ssi', $outcome, $updatedAt, $recordId);
             
             if (mysqli_stmt_execute($stmt)) {
+                $user_id = $_SESSION['User_ID'];
+                $actionType = 'UPDATE';
+                $tableName = 'studentcheckins';
+                $recordId = $studentId;
+                $actionDetails = "Check-in updated: $studentId";
+                
+                audit($user_id, $actionType, $tableName, $recordId, $actionDetails);
                 sendJsonResponse([
                     'success' => true,
                     'message' => 'Check-in record updated successfully!'

@@ -111,7 +111,7 @@ if ($role != 'Administrator') {
                                                 class="pl-3 pr-8 py-2 border border-gray-300 rounded-md bg-white text-gray-600 cursor-pointer appearance-none min-w-[150px] focus:ring-2 focus:ring-yellow-400 focus:outline-none"
                                             >
                                                 <option value="">All Modules</option>
-                                                <option value="clinic_personnel">Clinic Personnel</option>
+                                                <option value="clinicpersonnel">Clinic Personnel</option>
                                                 <option value="student">Student/Patient</option>
                                                 <option value="medicine">Medicine</option>
                                                 <option value="studentcheckins">Student Check-ins</option>
@@ -252,6 +252,23 @@ function renderAuditLogs(logs) {
 // Function to fetch audit logs
 async function fetchAuditLogs() {
     const tbody = document.getElementById('auditLogsBody');
+    const searchInput = document.getElementById('searchInput');
+    const roleFilter = document.getElementById('roleFilter');
+    const moduleFilter = document.getElementById('moduleFilter');
+    
+    // Build query parameters
+    const params = new URLSearchParams();
+    params.append('action', 'get_logs');
+    
+    if (searchInput?.value) {
+        params.append('search', searchInput.value);
+    }
+    if (roleFilter?.value) {
+        params.append('role', roleFilter.value);
+    }
+    if (moduleFilter?.value) {
+        params.append('module', moduleFilter.value);
+    }
     
     try {
         // Show loading state
@@ -265,8 +282,10 @@ async function fetchAuditLogs() {
                 </td>
             </tr>`;
         
-        const response = await fetch('../Functions/AuditLogFunctions.php?action=get_logs');
+        // Include filters in the request
+        const response = await fetch(`../Functions/AuditLogFunctions.php?${params.toString()}`);
         
+        // Rest of the function remains the same...
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }

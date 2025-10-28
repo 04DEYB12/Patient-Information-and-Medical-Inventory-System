@@ -490,7 +490,7 @@ require_once '../Functions/Queries.php';
                                 <i class='bx bx-buildings text-xl'></i>
                             </div>
                             <select id="departmentFilter" onchange="updateGradeLevelOptions(this.value, 'gradeFilter')" class="pl-10 pr-3 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-colors">
-                                <option value="">All Departments</option>
+                                <option value="All">All Departments</option>
                                 <option value="Elementary">Elementary</option>
                                 <option value="Junior Highschool">Junior Highschool</option>
                                 <option value="Senior Highschool">Senior Highschool</option>
@@ -503,8 +503,8 @@ require_once '../Functions/Queries.php';
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-blue-500">
                                 <i class='bx bx-layer text-xl'></i>
                             </div>
-                            <select id="gradeFilter" class="pl-10 pr-3 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-colors">
-                                <option value="">All Grades</option>
+                            <select id="gradeFilter" onchange="filterbyGradeLevel(this.value)" class="pl-10 pr-3 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-colors">
+                                <option value="All">All Grades</option>
                             </select>
                         </div>
                         
@@ -523,8 +523,8 @@ require_once '../Functions/Queries.php';
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-blue-500">
                                 <i class='bx bx-user-check text-xl'></i>
                             </div>
-                            <select id="AccountStatus" class="pl-10 pr-3 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-colors">
-                                <option value="">All Status</option>
+                            <select id="AccountStatus" onchange="filterbyAccountStatus(this.value)" class="pl-10 pr-3 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-colors">
+                                <option value="All">All Status</option>
                                 <option value="Active">Active</option>
                                 <option value="Inactive">Inactive</option>
                             </select>
@@ -569,8 +569,8 @@ require_once '../Functions/Queries.php';
                                         $text_color = $student_status === 'Active' ? 'green' : 'red';
 
                                         echo "
-                                        <div class='flex mt-2 flex-col w-full max-w-[360px] h-[260px] flex-row items-center justify-between rounded-lg shadow-sm hover:shadow-md transition bg-white border-[1px] border-gray-300 shadow-lg patient-card rounded-xl'
-                                        data-patient-name='{$student_name}' data-patient-id='{$student_id}'>
+                                        <div class='flex mt-2 flex-col w-full max-w-[360px] h-[280px] flex-row items-center justify-between rounded-lg shadow-sm hover:shadow-md transition bg-white border-[1px] border-gray-300 shadow-lg patient-card rounded-xl'
+                                        data-patient-name='{$student_name}' data-patient-id='{$student_id}' data-patient-department='{$student_row['Department']}' data-patient-grade='{$student_year}' data-patient-section='{$student_section}' data-patient-status='{$student_status}'>
                                         <div class='patient-header w-full p-2 px-4 flex justify-start' style='border-radius: 10px 10px 0px 0px;'>
                                             <div class='flex items-start gap-4 w-full'>
                                                 <div class='flex items-center justify-center bg-[#ffffffd7] text-blue-400 rounded-lg shasow-lg font-bold text-2xl' style='height: 50px; width: 50px;'>
@@ -1033,6 +1033,7 @@ require_once '../Functions/Queries.php';
     
     // Function to update grade level options based on selected department
     function updateGradeLevelOptions(department, gradeLevelId) {
+        
         const gradeLevelSelect = document.getElementById(gradeLevelId);
         
         // Clear existing options
@@ -1071,7 +1072,7 @@ require_once '../Functions/Queries.php';
                 break;
             default:
                 gradeLevelSelect.disabled = true;
-                return;
+                break;
         }
         
         // Add options to select
@@ -1088,6 +1089,74 @@ require_once '../Functions/Queries.php';
         });
         
         gradeLevelSelect.disabled = false;
+        
+        const cards = document.querySelectorAll('.patient-card');
+        const noResultsMsg = document.getElementById('no-results-message1');
+        let hasVisibleCards = false;
+
+        cards.forEach(card => {
+            const dept = card.getAttribute('data-patient-department');
+            const isMatch = department == "All" || dept.includes(department);
+            card.style.display = isMatch ? 'flex' : 'none';
+            if (isMatch) hasVisibleCards = true;
+        });
+        
+        noResultsMsg.style.display = hasVisibleCards ? 'none' : 'block';
+    }
+    
+    function filterbyGradeLevel(gradeLevel) {
+        // If "All" is selected, show all cards
+        if (gradeLevel === "All") {
+            document.querySelectorAll('.patient-card').forEach(card => {
+                card.style.display = 'flex';
+            });
+            document.getElementById('no-results-message1').style.display = 'none';
+            return;
+        }
+
+        // For "Year X" format, extract just the number
+        const gradeToMatch = gradeLevel.startsWith('Year ') ? gradeLevel.replace('Year ', '') : gradeLevel;
+        
+        const cards = document.querySelectorAll('.patient-card');
+        const noResultsMsg = document.getElementById('no-results-message1');
+        let hasVisibleCards = false;
+
+        cards.forEach(card => {
+            const grade = card.getAttribute('data-patient-grade');
+            // Handle both "Year X" format and direct number matching
+            const normalizedGrade = grade.startsWith('Year ') ? grade.replace('Year ', '') : grade;
+            const isMatch = normalizedGrade === gradeToMatch;
+            card.style.display = isMatch ? 'flex' : 'none';
+            if (isMatch) hasVisibleCards = true;
+        });
+        
+        noResultsMsg.style.display = hasVisibleCards ? 'none' : 'block';
+        
+        
+    }
+    
+    function filterbyAccountStatus(accountStatus) {
+        // If "All" is selected, show all cards
+        if (accountStatus === "All") {
+            document.querySelectorAll('.patient-card').forEach(card => {
+                card.style.display = 'flex';
+            });
+            document.getElementById('no-results-message1').style.display = 'none';
+            return;
+        }
+        
+        const cards = document.querySelectorAll('.patient-card');
+        const noResultsMsg = document.getElementById('no-results-message1');
+        let hasVisibleCards = false;
+
+        cards.forEach(card => {
+            const status = card.getAttribute('data-patient-status');
+            const isMatch = accountStatus == "All" || status.includes(accountStatus);
+            card.style.display = isMatch ? 'flex' : 'none';
+            if (isMatch) hasVisibleCards = true;
+        });
+        
+        noResultsMsg.style.display = hasVisibleCards ? 'none' : 'block';
     }
     
     // Department to Grade Level mapping
