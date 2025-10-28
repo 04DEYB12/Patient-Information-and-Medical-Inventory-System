@@ -163,7 +163,7 @@
                 <textarea id="EditOutcome" name="EditOutcome" rows="3" required
                     style="width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 0.375rem;"
                     placeholder="Enter treatment outcome..."></textarea>
-                    <p id="EditOutcome" style="width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 0.375rem;"></p>
+                    <p id="DisplayOutcome" style="width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 0.375rem;"></p>
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 1rem; padding-top: 1rem; border-top: 1px solid #e5e7eb;">

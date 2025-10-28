@@ -153,7 +153,7 @@
                     <button 
                         type="button" 
                         id="UpdatePassword" 
-                        onclick="UpdatePassword()" 
+                        onclick="UpdatePassword('<?php echo $user_id; ?>')" 
                         class="flex-1 bg-blue-600 text-white font-medium py-2.5 px-4 rounded-lg hover:bg-blue-700 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                         disabled
                     >
@@ -186,12 +186,12 @@
             
             <div class="flex gap-3 justify-end">
                 <button type="button" 
-                        onclick="document.getElementById('PasswordChanges').style.display = 'block'; document.getElementById('ConfirmUser').style.display = 'none';" 
+                        onclick="goBackToProfile()" 
                         class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors duration-200">
                     Cancel
                 </button>
                 <button type="button" 
-                        onclick="verifyPassword()" 
+                        onclick="verifyPassword('<?php echo $user_id; ?>')" 
                         class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200">
                     Verify
                 </button>
@@ -205,6 +205,14 @@
         document.getElementById('NameSection').classList.remove('active');
         document.getElementById('PasswordSection').classList.remove('active');
         document.getElementById('MyProfileSection').classList.add('active');
+        document.getElementById('currentPassword').value = '';
+        document.getElementById('PasswordChanges').style.display = 'none';
+        document.getElementById('ConfirmUser').style.display = 'block';
+        document.getElementById('NewPassword').value = '';
+        document.getElementById('ConfirmNewPassword').value = '';
+        document.getElementById('passwordStrength').innerHTML = '';
+        document.getElementById('passwordMatchMessage').innerHTML = '';
+        document.getElementById('passwordStrengthBar').className = 'w-0 h-2 bg-blue-600';
     }
     
     function togglePasswordVisibility(inputId, toggleButtonId) {
@@ -313,6 +321,8 @@
         // Reset
         strengthBar.className = 'h-full transition-all duration-300';
         
+        // Empty password
+        if (password.length === 0) strength = 0;
         // Length check
         if (password.length >= 8) strength += 1;
         // Contains numbers
@@ -327,6 +337,10 @@
         // Update UI based on strength
         switch(strength) {
             case 0:
+                strengthBar.className += ' w-0 bg-gray-200';
+                strengthText.textContent = 'Empty';
+                strengthText.className = 'text-xs font-medium text-gray-600';
+                break;
             case 1:
                 strengthBar.className += ' w-1/4 bg-red-500';
                 strengthText.textContent = 'Weak';
@@ -385,7 +399,7 @@
         }
     }
     
-    function verifyPassword() {
+    function verifyPassword(user_id) {
         const currentPassword = document.getElementById('currentPassword').value;
         
         // Basic client-side validation
@@ -396,75 +410,45 @@
         
         const formData = new FormData();
         formData.append('action', 'confirmPassword');
-        formData.append('userId', <?php echo $user_id; ?>);
+        formData.append('userId', user_id);
         formData.append('currentPassword', currentPassword);
         
         fetch('../Functions/UserFunctions.php', {
             method: 'POST',
             body: formData
         })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.text().then(text => {
-                try {
-                    return text ? JSON.parse(text) : {};
-                } catch (e) {
-                    console.error('Failed to parse JSON:', text);
-                    throw new Error('Invalid JSON response from server');
-                }
-            });
-        })
+        .then(response => response.json())
         .then(data => {
             console.log('Response data:', data);
-            if (data && data.success) {
+            if (data.success) {
                 alert(data.message);
                 document.getElementById('PasswordChanges').style.display = 'block';
                 document.getElementById('ConfirmUser').style.display = 'none';
             } else {
-                alert(data?.error || 'Failed to confirm your password');
+                alert(data.message);
             }
         })
         .catch(error => {
-            console.error('Error details:', {
-                error: error.toString(),
-                name: error.name,
-                message: error.message,
-                stack: error.stack
-            });
             alert('Error: ' + (error.message || 'Failed to verify password'));
         });
     }
     
-    function UpdatePassword() {
+    function UpdatePassword(user_id) {
         const confirmNewPassword = document.getElementById('ConfirmNewPassword').value;
         
         const formData = new FormData();
         formData.append('action', 'UpdatePassword');
-        formData.append('userId', <?php echo $user_id; ?>);
+        formData.append('userId', user_id);
         formData.append('confirmNewPassword', confirmNewPassword);
         
         fetch('../Functions/UserFunctions.php', {
             method: 'POST',
             body: formData
         })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.text().then(text => {
-                try {
-                    return text ? JSON.parse(text) : {};
-                } catch (e) {
-                    console.error('Failed to parse JSON:', text);
-                    throw new Error('Invalid JSON response from server');
-                }
-            });
-        })
+        .then(response => response.json())
         .then(data => {
             console.log('Response data:', data);
-            if (data && data.success) {
+            if (data.success) {
                 alert(data.message);
                 if (data.redirect) {
                     setTimeout(() => {
@@ -474,7 +458,7 @@
                     window.location.reload();
                 }
             } else {
-                alert(data?.error || 'Failed to change your password');
+                alert(data.error);
             }
         })
         .catch(error => {

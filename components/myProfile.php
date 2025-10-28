@@ -42,6 +42,7 @@ require_once '../Functions/Queries.php';
             <!-- Contents -->
             <div class="content-container">
             <?php include '../components/Sections.php'; ?>
+            
             <section class="content-section active" id="MyProfileSection">
                 <div class="text-center mb-8">
                     <h1 class="text-2xl font-bold text-gray-800">Personal Info</h1>

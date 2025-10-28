@@ -1,6 +1,6 @@
 
 📌 ACCOUNT PASSWORDS
-Adele : PIAMIS199429 - Admin
+Adele : @Adella123 - Admin
 Dave : Dave147532689 - Staff
 
 📌 NOTE!!: I add cp_ID as PK and PersonnelID as UK in clinicpersonnel table
@@ -15,18 +15,20 @@ Completed Task:
 ------------------ TASK 2: User Management Section ------------------
 
 Completed Task:
-✅ Adding new user was successfully audit in database
-✅ Updating user status to Active/Inactive was successfully audit in database
-✅ Updating user Email was successfully audit in database
-✅ Resetting user password was successfully audit in database
-✅ Updating user role was successfully audit in database
+✅ Adding new user and auditing in database
+✅ Updating user status to Active/Inactive and auditing in database
+✅ Updating user Email and auditing in database
+✅ Resetting user password and auditing in database
+✅ Updating user role and auditing in database
+✅ Search Engine (ID or Name)
+✅ Role Filter (Administrator or Staff)
 
 
 ------------------ TASK 3: Patient Section ------------------
 
 Completed Task:
 ✅ Adding student account status (toggle to Inactive and Active, Disable profile editing, Disable Check-in)
-✅ Quick Scan for Checkin (Sidebar and Fix Bugs)
+✅ Quick Scan for Checkin (Sidebar)
 ✅ Revision for Checkin (Add dropdown for reason. textarea for notes)
 ✅ Adding new student was successfully audit in database
 ✅ Checkin was successfully audit in database
@@ -56,4 +58,4 @@ Completed Task:
 - Edit Phone Number (Logic and UI)
 - Edit Home Address (Logic and UI)
 - Edit Office (Logic and UI)
-- Enhance Password Management (Change Password, Validation)
+✅ Enhance Password Management (Change Password, Validation)

@@ -718,7 +718,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
                 }
                 break;
             case 'confirmPassword': // ------------------------------- Confirm Password --------------------------------
-                $userId = intval($_POST['userId']);
+                $userId = $_POST['userId'];
                 $currentPassword = $_POST['currentPassword'];
                 
                 $query = "SELECT PasswordHash FROM clinicpersonnel WHERE PersonnelID = ?";
@@ -731,7 +731,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
                 if (!$user || !password_verify($currentPassword, $user['PasswordHash'])) {
                     sendJsonResponse([
                         'success' => false,
-                        'error' => 'Incorrect password. Please try again.'
+                        'message' => 'Incorrect password. Please try again.'
                     ]);
                     exit();
                 }
@@ -744,7 +744,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
                 exit();
                 break;
             case 'UpdatePassword': // ------------------------------- Update Password --------------------------------
-                $userId = intval($_POST['userId']);
+                $userId = $_POST['userId'];
                 $newPassword = $_POST['confirmNewPassword'];
                 
                 // Validate password strength
