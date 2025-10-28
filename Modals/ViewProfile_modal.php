@@ -1,6 +1,5 @@
 <div id="viewStudentModal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5);">
         <div class="modal-content" style="background-color: #fefefe; margin: 5% auto; padding: 2rem; border-radius: 0.5rem; width: 90%; max-width: 780px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-            <form id="studentForm" method="POST" action="../Functions/patientFunctions.php">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                     <h2 style="font-size: 1.5rem; font-weight: 600; color: #1f2937;">Student Profile</h2>
                     <div style="display: flex; gap: 1rem; align-items: center;">
@@ -34,7 +33,7 @@
                             <button type="button" id="editStudentBtn" class="btn btn-primary w-[80px] flex items-center justify-center font-normal">
                                 <i class="fas fa-edit"></i> Edit
                             </button>
-                            <button type="submit" id="saveStudentBtn" class="btn btn-success w-[220px] bg-blue-600 text-white flex items-center justify-center font-normal hidden">
+                            <button onclick="updateStudent()" type="button" id="saveStudentBtn" class="btn btn-success w-[220px] bg-blue-600 text-white flex items-center justify-center font-normal hidden">
                                 <i class="fas fa-save"></i> Save Changes
                             </button>
                             <button type="button" id="cancelEditBtn" class="btn btn-secondary w-[90px] flex items-center justify-center font-normal hidden">
@@ -224,8 +223,69 @@
                         </div>
                     </div>
                 </div>
-                
-                <input type="hidden" name="action" value="updateStudent">
-            </form>  
         </div>
     </div>
+    
+<script>
+    function updateStudent() {
+        // Add loading state
+        const submitBtn = document.getElementById('saveStudentBtn');
+        const originalBtnText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+        
+        formData = new FormData();
+        formData.append('action', 'updateStudent');
+        //Student Basic Information
+        formData.append('schoolId', document.getElementById('student_SchoolID').value);
+        formData.append('editDepartment', document.getElementById('editDepartment').value);
+        formData.append('editGradeLevel', document.getElementById('editGradeLevel').value);
+        formData.append('editSection', document.getElementById('editSection').value);
+        //Personal Information
+        formData.append('editFirstName', document.getElementById('editFirstName').value);
+        formData.append('editMiddleName', document.getElementById('editMiddleName').value);
+        formData.append('editLastName', document.getElementById('editLastName').value);
+        formData.append('editGender', document.getElementById('editGender').value);
+        formData.append('editBirthdate', document.getElementById('editBirthdate').value);
+        formData.append('editAge', document.getElementById('editAge').value);
+        formData.append('editContactNumber', document.getElementById('editContactNumber').value);
+        formData.append('editStudentEmailAddress', document.getElementById('editStudentEmailAddress').value);
+        formData.append('editAddress', document.getElementById('editAddress').value);
+        //Guardian Information
+        formData.append('editGuardianFirstName', document.getElementById('editGuardianFirstName').value);
+        formData.append('editGuardianLastName', document.getElementById('editGuardianLastName').value);
+        formData.append('editGuardianContactNumber', document.getElementById('editGuardianContactNumber').value);
+        formData.append('editGuardianEmailAddress', document.getElementById('editGuardianEmailAddress').value);
+        //Emergency Contact
+        formData.append('editGuardianName', document.getElementById('editGuardianName').value);
+        formData.append('editGuardianRelationship', document.getElementById('editGuardianRelationship').value);
+        formData.append('editEmergencyContactNumber', document.getElementById('editEmergencyContactNumber').value);
+        //Medical Information
+        formData.append('editBloodType', document.getElementById('editBloodType').value);
+        formData.append('editKnownAllergies', document.getElementById('editKnownAllergies').value);
+        formData.append('editChronicConditions', document.getElementById('editChronicConditions').value);
+        formData.append('editCurrentMedication', document.getElementById('editCurrentMedication').value);
+        
+        fetch('../Functions/patientFunctions.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+            } else {
+                alert(data.message);
+            }
+            window.location.reload();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while updating the student.');
+        })
+            .finally(() => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
+        });
+    }
+</script>

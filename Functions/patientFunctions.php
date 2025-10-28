@@ -3,6 +3,11 @@ include '../Landing Repository/Connection.php';
 
 error_log('POST data: ' . print_r($_POST, true));
 
+// Start session if not already started
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 /**
  * Send JSON response (for GET requests)
  */
@@ -189,6 +194,7 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['action'])) {
                         'StudentID' => $row['StudentID'],
                         'DateTime' => $row['DateTime'],
                         'Reason' => $row['Reason'],
+                        'Notes' => $row['Notes'],
                         'Status' => $row['Status'],
                         'Outcome' => $row['Outcome'],
                     ];
@@ -306,38 +312,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             break;
         case 'updateStudent': // --------------------------------------- UPDATE STUDENT ---------------------------------------
             //student info
-            $schoolID = $_POST['schoolID'];
-            $department = $_POST['department'];
-            $gradeLevel = $_POST['GradeLevel'];
-            $section = $_POST['section'];
-            
+            $schoolID = $_POST['schoolId'];
+            $department = $_POST['editDepartment'];
+            $gradeLevel = $_POST['editGradeLevel'];
+            $section = $_POST['editSection'];
             //personal info
-            $firstname = $_POST['firstname'];
-            $middlename = $_POST['middlename'];
-            $lastname = $_POST['lastname'];
-            $gender = $_POST['gender'];
-            $birthdate = $_POST['birthdate'];
-            $age = $_POST['age'];
-            $contactNumber = $_POST['contactNumber'];
-            $email = $_POST['email'];
-            $address = $_POST['address'];
-            
+            $firstname = $_POST['editFirstName'];
+            $middlename = $_POST['editMiddleName'];
+            $lastname = $_POST['editLastName'];
+            $gender = $_POST['editGender'];
+            $birthdate = $_POST['editBirthdate'];
+            $age = $_POST['editAge'];
+            $contactNumber = $_POST['editContactNumber'];
+            $email = $_POST['editStudentEmailAddress'];
+            $address = $_POST['editAddress'];
             //guardian info
-            $guardianFirstName = $_POST['guardianFirstName'];
-            $guardianLastName = $_POST['guardianLastName'];
-            $guardianContactNumber = $_POST['guardianContactNumber'];
-            $guardianEmailAddress = $_POST['guardianEmailAddress'];
-            
+            $guardianFirstName = $_POST['editGuardianFirstName'];
+            $guardianLastName = $_POST['editGuardianLastName'];
+            $guardianContactNumber = $_POST['editGuardianContactNumber'];
+            $guardianEmailAddress = $_POST['editGuardianEmailAddress'];
             //emergency contact info
-            $emergencyContactName = $_POST['emergencyContactName'];
-            $emergencyContactRelation = $_POST['emergencyContactRelation'];
-            $emergencyContactNumber = $_POST['emergencyContactNumber'];
-            
+            $emergencyContactName = $_POST['editGuardianName'];
+            $emergencyContactRelation = $_POST['editGuardianRelationship'];
+            $emergencyContactNumber = $_POST['editEmergencyContactNumber'];
             //medical info
-            $bloodType = $_POST['bloodType'];
-            $knownAllergies = $_POST['knownAllergies'];
-            $chronicConditions = $_POST['chronicConditions'];
-            $currentMedications = $_POST['currentMedication'];
+            $bloodType = $_POST['editBloodType'];
+            $knownAllergies = $_POST['editKnownAllergies'];
+            $chronicConditions = $_POST['chronieditChronicConditionscConditions'];
+            $currentMedications = $_POST['editCurrentMedication'];
             
             // Start building the update query
             $updateQuery = "UPDATE student SET ";
@@ -486,13 +488,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 call_user_func_array(array($stmt, 'bind_param'), $bindParamsReferences);
                 
                 if ($stmt->execute()) {
-                    echo "<script>alert('Record updated successfully'); window.location.href = '../PIAIMS Repository/Patients.php';</script>";
+                    $user_id = $_SESSION['User_ID'];
+                    $actionType = 'UPDATE';
+                    $tableName = 'student';
+                    $recordId = $schoolID;
+                    $actionDetails = "Student updated: $schoolID";
+                    
+                    audit($user_id, $actionType, $tableName, $recordId, $actionDetails);
+                    sendJsonResponse(['success' => true, 'message' => 'Record updated successfully']);
                 } else {
-                    echo "Error updating record: " . $con->error;
+                    sendJsonResponse(['success' => false, 'message' => 'Error updating record: ' . $con->error]);
                 }
                 $stmt->close();
             } else {
-                echo "No fields to update";
+                sendJsonResponse(['success' => false, 'message' => 'No fields to update']);
             }
             
             break;

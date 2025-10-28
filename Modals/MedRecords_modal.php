@@ -109,7 +109,7 @@
 <div id="EditRecordModal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5);">
     <div class="modal-content" style="background-color: #fefefe; margin: 5% auto; padding: 2rem; border-radius: 0.5rem; width: 90%; max-width: 700px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-            <h2 style="font-size: 1.5rem; font-weight: 600; color: #1f2937;">Edit Record</h2>
+            <h2 style="font-size: 1.5rem; font-weight: 600; color: #1f2937;" id="EditRecordModalTitle">Edit Record</h2>
             <div style="display: flex; gap: 1rem; align-items: center;">
                 <span class="close-modal" style="font-size: 1.5rem; font-weight: bold; cursor: pointer;" onclick="closeModal('EditRecordModal')">&times;</span>
             </div>
@@ -139,6 +139,11 @@
             </div>
             
             <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label for="EditNotes" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151;">Notes</label>
+                <p style="margin: 0; color: #6b7280;" id="EditNotes">Loading...</p>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 1.5rem;">
                 <label for="EditStatus" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151;">Status</label>
                 <p style="margin: 0; color: #6b7280;" id="EditStatus">Loading...</p>
             </div>
@@ -156,20 +161,23 @@
             <div class="form-group" style="margin-bottom: 1.5rem;">
                 <label for="EditOutcome" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151;">Outcome</label>
                 <textarea id="EditOutcome" name="EditOutcome" rows="3" required
-                    style="width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 0.375rem; resize: vertical;"
-                    placeholder="Please describe the outcome">
-                </textarea>
-                <p style="margin: 0; color: #6b7280;" id="DisplayOutcome">Loading...</p>
+                    style="width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 0.375rem;"
+                    placeholder="Enter treatment outcome..."></textarea>
+                    <p id="EditOutcome" style="width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #d1d5db; border-radius: 0.375rem;"></p>
             </div>
 
-            <div class="form-actions" style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb;">
-                <button type="button" onclick="closeModal('EditRecordModal')" 
-                    style="padding: 0.5rem 1rem; background-color: #f3f4f6; border: 1px solid #d1d5db; border-radius: 0.375rem; cursor: pointer; font-weight: 500; color: #374151;">
+            <div style="display: flex; justify-content: flex-end; gap: 1rem; padding-top: 1rem; border-top: 1px solid #e5e7eb;">
+                <button type="button" onclick="closeModal('EditRecordModal')"
+                    style="padding: 0.5rem 1rem; background-color: #e5e7eb; color: #374151; border: none; border-radius: 0.375rem; cursor: pointer; font-weight: 500;"
+                    onmouseover="this.style.backgroundColor='#d1d5db'"
+                    onmouseout="this.style.backgroundColor='#e5e7eb'">
                     Cancel
                 </button>
                 <button type="button" id="EditSaveBtn"
-                    style="padding: 0.5rem 1.5rem; background-color: #3b82f6; color: white; border: none; border-radius: 0.375rem; cursor: pointer; font-weight: 500;">
-                    Save
+                    style="padding: 0.5rem 1rem; background-color: #3b82f6; color: white; border: none; border-radius: 0.375rem; cursor: pointer; font-weight: 500;"
+                    onmouseover="this.style.backgroundColor='#2563eb'"
+                    onmouseout="this.style.backgroundColor='#3b82f6'">
+                    Save Changes
                 </button>
             </div>
         </div>

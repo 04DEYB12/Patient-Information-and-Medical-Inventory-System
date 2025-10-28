@@ -172,7 +172,7 @@
         <!-- Form Actions -->
         <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e5e7eb;">
             <button type="button" class="btn btn-secondary" onclick="closeModal('addStudentModal')" style="background-color: #6b7280; color: white;">Cancel</button>
-            <button type="button" class="btn btn-primary" style="background-color: #4a6cf7; color: white;" onclick="AddStudent()">Add Student</button>
+            <button id="addStudentBtn" type="button" class="btn btn-primary" style="background-color: #4a6cf7; color: white;" onclick="AddStudent()">Add Student</button>
         </div>
     </div>
 </div>
@@ -180,7 +180,7 @@
 <script>
     function AddStudent() {
         // Add loading state
-        const submitBtn = document.querySelector('button[onclick="AddStudent()"]');
+        const submitBtn = document.getElementById('addStudentBtn');
         const originalBtnText = submitBtn.innerHTML;
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';

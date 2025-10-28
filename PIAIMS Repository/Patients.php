@@ -439,7 +439,7 @@ require_once '../Functions/Queries.php';
                     <div class="bg-white shadow-md rounded-xl overflow-hidden">
                         <!-- Header -->
                         <div class="flex flex-col md:flex-row justify-between items-center gap-4 px-6 py-4 border-b bg-gray-50">
-                            <h2 class="text-xl font-semibold text-gray-800">🎓 Student Records</h2>
+                            <h2 class="text-xl font-semibold text-gray-800">🎓 <?php echo $student_count; ?> Student Records</h2>
 
                             <div class="flex flex-wrap gap-4 items-center">
                             <!-- Search -->
@@ -451,6 +451,13 @@ require_once '../Functions/Queries.php';
                                 <i id="clearSearch1" class='bx bx-brush-alt absolute right-3 top-1/2 -translate-y-1/2 text-gray-700 cursor-pointer hidden'
                                 onclick="clearSearch1()"></i>
                             </div>
+                            
+                            <!-- filter button -->
+                            <div class="relative">
+                                <button id="filterBtn" onclick="filterbutton()" class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
+                                    <i class='bx bx-filter text-lg'></i> <p class="hidden sm:flex">Filter</p>
+                                </button>
+                            </div>
 
                             <!-- Add New Student -->
                             <button id="addStudentBtn"
@@ -458,13 +465,6 @@ require_once '../Functions/Queries.php';
                                 class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">
                                 <i class='bx bx-plus text-lg'></i> <p class="hidden sm:flex">Add New Student</p>
                             </button>
-                            
-                            <!-- quick scan -->
-                            <!-- <div class="relative">
-                                <i class='bx bx-qr-scan absolute left-3 top-1/2 -translate-y-1/2 text-gray-400'></i>
-                                <input id="scannerInput" type="text" placeholder="Quick Scan!" autofocus onkeyup="quickScan(event)"
-                                class="pl-10 pr-10 py-2 border rounded-lg w-52 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            </div> -->
 
                             <!-- Entries Filter -->
                             <div class="flex items-center gap-2 text-sm text-gray-900 p-2 bg-gray-200 rounded-lg px-4">
@@ -479,6 +479,67 @@ require_once '../Functions/Queries.php';
                                 </select>
                                 <span>entries</span>
                             </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Filter -->
+                    <div id="filter" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 p-4 bg-white rounded-lg shadow-sm mb-4 hidden">
+                        <!-- Department Filter -->
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-blue-500">
+                                <i class='bx bx-buildings text-xl'></i>
+                            </div>
+                            <select id="departmentFilter" onchange="updateGradeLevelOptions(this.value, 'gradeFilter')" class="pl-10 pr-3 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-colors">
+                                <option value="">All Departments</option>
+                                <option value="Elementary">Elementary</option>
+                                <option value="Junior Highschool">Junior Highschool</option>
+                                <option value="Senior Highschool">Senior Highschool</option>
+                                <option value="College">College</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Grade Filter -->
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-blue-500">
+                                <i class='bx bx-layer text-xl'></i>
+                            </div>
+                            <select id="gradeFilter" class="pl-10 pr-3 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-colors">
+                                <option value="">All Grades</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Section Filter -->
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-blue-500">
+                                <i class='bx bx-group text-xl'></i>
+                            </div>
+                            <select id="Section" class="pl-10 pr-3 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-colors">
+                                <option value="">All Sections</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Account Status Filter -->
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-blue-500">
+                                <i class='bx bx-user-check text-xl'></i>
+                            </div>
+                            <select id="AccountStatus" class="pl-10 pr-3 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-colors">
+                                <option value="">All Status</option>
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Visit Status Filter -->
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-blue-500">
+                                <i class='bx bx-calendar-check text-xl'></i>
+                            </div>
+                            <select id="VisitStatus" class="pl-10 pr-3 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-colors">
+                                <option value="">Visit Status</option>
+                                <option value="Inprogress">Inprogress</option>
+                                <option value="Completed">Completed</option>
+                            </select>
                         </div>
                     </div>
 
@@ -502,7 +563,7 @@ require_once '../Functions/Queries.php';
                                         $student_id = $student_row['School_ID'];
                                         $student_section = $student_row['Section'];
                                         $student_email = $student_row['StudentEmailAddress'];
-                                        $student_year = $student_row['GradeLevel']; 
+                                        $student_year = $student_row['Department'] === 'College' ? preg_replace('/[^0-9]/', '', $student_row['GradeLevel']) : $student_row['GradeLevel']; 
                                         $student_status = $student_row['Status'];
                                         $color = $student_status === 'Active' ? 'green' : 'slate';
                                         $text_color = $student_status === 'Active' ? 'green' : 'red';
@@ -542,8 +603,8 @@ require_once '../Functions/Queries.php';
                                             <span class='text-md font-semibold mb-2'>Basic Info:</span>
                                             <p class='text-sm text-gray-700'>ID: {$student_id}</p>
                                             <p class='text-sm text-gray-700'>Age: {$student_row['Age']}</p>
-                                            <p class='text-sm text-gray-700'>Year and Section: {$student_year} - {$student_section}</p>
-                                            <p class='text-sm text-gray-700'>Email: {$student_email}</p>
+                                            <p class='text-sm text-gray-700'>Department: {$student_row['Department']}</p>
+                                            <p class='text-sm text-gray-700'>" . ($student_row['Department'] === 'College' ? 'Year' : 'Grade') . " and Section: {$student_year} - {$student_section}</p>                                            <p class='text-sm text-gray-700'>Email: {$student_email}</p>
                                         </div>
                                     </div>";
                                     }
@@ -1370,8 +1431,11 @@ require_once '../Functions/Queries.php';
                                         
                                         document.getElementById('EditCheckInDateTime').textContent = `${formattedDate} ${formattedTime}`;
                                         document.getElementById('EditReason').textContent = record.Reason;
+                                        document.getElementById('EditNotes').textContent = record.Notes;
                                         document.getElementById('EditStatus').textContent = record.Status;
                                         document.getElementById('recordID').value = record.id;
+                                        
+                                        document.getElementById('EditRecordModalTitle').textContent = "Record Details";
                                         
                                         document.getElementById('EditOutcome').style.display = record.Status === 'In Progress' ? 'block' : 'none';
                                         document.getElementById('DisplayOutcome').textContent = record.Outcome;
@@ -1442,6 +1506,12 @@ require_once '../Functions/Queries.php';
                 alert('Error updating status: ' + error.message);
             });
         }
+    }
+    
+    // Filter Button
+    function filterbutton() {
+        const filter = document.getElementById('filter');
+        filter.classList.toggle('hidden');
     }
 </script>
     
