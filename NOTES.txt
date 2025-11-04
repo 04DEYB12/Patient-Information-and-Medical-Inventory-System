@@ -36,10 +36,10 @@ Completed Task:
 ✅ Display notes info in Records modal
 ✅ Updating student Record status was successfully audit in database
 - filter student by Department, Year, Section, Status, Inprogress
-- disposing of medicine
+✅ alert parent 
 
 Where I paused?
-- N/A
+- Filter student
 
 ------------------ TASK 4: Log-in Form ------------------
 

@@ -1300,6 +1300,8 @@ require_once '../Functions/Queries.php';
                     document.getElementById('student_SchoolID').value = student.School_ID;
                     document.getElementById('currentStatus').value = student.Status;
                     
+                    document.getElementById('recipientEmail').value = student.GuardianEmailAddress;
+                    
                     const statusBtn = document.getElementById('statusStudentBtn');
                     let spanval = "";
                     if (student.Status === 'Active') {
@@ -1406,6 +1408,7 @@ require_once '../Functions/Queries.php';
     function toggleEditMode(enableEdit) {
         const viewModeElements = document.querySelectorAll('.view-mode');
         const editModeElements = document.querySelectorAll('.edit-mode');
+        const informGuardianBtn = document.getElementById('informGuardianBtn');
         const editBtn = document.getElementById('editStudentBtn');
         const saveBtn = document.getElementById('saveStudentBtn');
         const cancelBtn = document.getElementById('cancelEditBtn');
@@ -1414,6 +1417,7 @@ require_once '../Functions/Queries.php';
             // Switch to edit mode
             viewModeElements.forEach(el => el.style.display = 'none');
             editModeElements.forEach(el => el.style.display = 'block');
+            informGuardianBtn.style.display = 'none';
             editBtn.style.display = 'none';
             saveBtn.style.display = 'inline-block';
             cancelBtn.style.display = 'inline-block';
@@ -1421,6 +1425,7 @@ require_once '../Functions/Queries.php';
             // Switch to view mode
             viewModeElements.forEach(el => el.style.display = 'block');
             editModeElements.forEach(el => el.style.display = 'none');
+            informGuardianBtn.style.display = 'inline-block';
             editBtn.style.display = 'inline-block';
             saveBtn.style.display = 'none';
             cancelBtn.style.display = 'none';
@@ -1587,6 +1592,9 @@ require_once '../Functions/Queries.php';
     
     <!-- Add New Student Modal -->
     <?php include '../Modals/NewStudent_modal.php'; ?>
+    
+    <!-- Alert Guardian Modal -->
+    <?php include '../Modals/AlertGuardian_modal.php'; ?>
     
     <!-- View Student Modal -->
     <?php include '../Modals/ViewProfile_modal.php'; ?>

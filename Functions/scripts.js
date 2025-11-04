@@ -1,6 +1,7 @@
 /*
     WHAT THIS FILE DOES
     - autoAppendDomain() : Auto append @gmail.com if no domain in email input and validate format.
+    - showAlert() : Show toast notification.
 */
 
 function autoAppendDomain(input) {
@@ -44,4 +45,70 @@ function autoAppendDomain(input) {
         errorElement.style.display = 'none';
         input.setCustomValidity('');
     }
+}
+
+function showAlert(message, type = 'success') {
+    // Create toast container if it doesn't exist
+    let toastContainer = document.getElementById('toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.id = 'toast-container';
+        toastContainer.className = 'fixed top-4 right-4 z-[100] space-y-3 w-80';
+        document.body.appendChild(toastContainer);
+    }
+    
+    // Create toast element
+    const toast = document.createElement('div');
+    const typeStyles = {
+        success: 'bg-green-50 border-green-200 text-green-800',
+        error: 'bg-red-50 border-red-200 text-red-800',
+        warning: 'bg-yellow-50 border-yellow-200 text-yellow-800',
+        info: 'bg-blue-50 border-blue-200 text-blue-800'
+    };
+    
+    const iconMap = {
+        success: 'check-circle',
+        error: 'error',
+        warning: 'error',
+        info: 'info-circle'
+    };
+    
+    const toastType = type in typeStyles ? type : 'info';
+    
+    // Add toast HTML
+    toast.className = `flex items-start p-4 rounded-lg border ${typeStyles[toastType]} shadow-lg transform transition-all duration-300 ease-in-out opacity-0 translate-x-8`;
+    toast.innerHTML = `
+        <i class='bx bx-${iconMap[toastType]} text-xl mr-3 mt-0.5'></i>
+        <div class='flex-1'>
+            <div class='font-medium'>${type.charAt(0).toUpperCase() + type.slice(1)}</div>
+            <div class='text-sm mt-1'>${message}</div>
+        </div>
+        <button type='button' class='ml-2 text-gray-500 hover:text-gray-700' onclick='this.parentElement.remove()'>
+            <i class='bx bx-x text-xl'></i>
+        </button>
+    `;
+    
+    // Add to container
+    toastContainer.prepend(toast);
+    
+    // Trigger animation
+    setTimeout(() => {
+        toast.classList.remove('opacity-0', 'translate-x-8');
+        toast.classList.add('opacity-100');
+    }, 10);
+    
+    // Auto-remove after delay
+    const autoRemove = setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-x-8');
+        setTimeout(() => toast.remove(), 300);
+    }, 5000);
+    
+    // Pause auto-remove on hover
+    toast.addEventListener('mouseenter', () => clearTimeout(autoRemove));
+    toast.addEventListener('mouseleave', () => {
+        setTimeout(() => {
+            toast.classList.add('opacity-0', 'translate-x-8');
+            setTimeout(() => toast.remove(), 300);
+        }, 1000);
+    });
 }

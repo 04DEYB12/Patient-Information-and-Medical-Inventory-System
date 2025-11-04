@@ -30,14 +30,17 @@
                             <span>Profile Locked - Inactive account</span>
                         </div>
                         <div id="profileButtons" class="flex gap-4 items-center justify-center">
-                            <button type="button" id="editStudentBtn" class="btn btn-primary w-[80px] flex items-center justify-center font-normal">
-                                <i class="fas fa-edit"></i> Edit
+                            <button onclick="informGuardian()" type="button" id="informGuardianBtn" class="px-4 py-2 bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-lg transition-colors duration-200 flex items-center gap-2 text-sm font-medium border border-blue-200">
+                                <i class='bx bx-bell text-blue-600'></i> Inform Guardian
                             </button>
-                            <button onclick="updateStudent()" type="button" id="saveStudentBtn" class="btn btn-success w-[220px] bg-blue-600 text-white flex items-center justify-center font-normal hidden">
-                                <i class="fas fa-save"></i> Save Changes
+                            <button type="button" id="editStudentBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 flex items-center gap-2 text-sm font-medium">
+                                <i class='bx bx-edit text-white'></i> Edit
                             </button>
-                            <button type="button" id="cancelEditBtn" class="btn btn-secondary w-[90px] flex items-center justify-center font-normal hidden">
-                                Cancel
+                            <button onclick="updateStudent()" type="button" id="saveStudentBtn" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200 flex items-center gap-2 text-sm font-medium hidden">
+                                <i class='bx bx-save text-white'></i> Save Changes
+                            </button>
+                            <button type="button" id="cancelEditBtn" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg transition-colors duration-200 flex items-center gap-2 text-sm font-medium border border-gray-200 hidden">
+                                <i class='bx bx-x text-gray-600'></i> Cancel
                             </button>
                         </div>
                     </div>
@@ -287,5 +290,12 @@
             submitBtn.disabled = false;
             submitBtn.innerHTML = originalBtnText;
         });
+    }
+    
+    function informGuardian() {
+        const viewStudentModal = document.getElementById('viewStudentModal');
+        const modal = document.getElementById('alertGuardianModal');
+        modal.classList.remove('hidden');
+        viewStudentModal.style.display = 'none';
     }
 </script>
