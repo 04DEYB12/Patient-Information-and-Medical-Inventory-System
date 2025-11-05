@@ -59,3 +59,13 @@ Completed Task:
 - Edit Home Address (Logic and UI)
 - Edit Office (Logic and UI)
 ✅ Enhance Password Management (Change Password, Validation)
+
+
+
+------------------ PAPER TASK -------------------------
+
+✅ Entity Relationship Diagram (ERD)
+- Data Dictionary
+- Use Case Diagram
+- Class Diagram
+- Sequence Diagram
