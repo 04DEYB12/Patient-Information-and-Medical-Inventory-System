@@ -65,7 +65,7 @@ Completed Task:
 ------------------ PAPER TASK -------------------------
 
 ✅ Entity Relationship Diagram (ERD)
-- Data Dictionary
-- Use Case Diagram
-- Class Diagram
+✅ Data Dictionary
+✅ Use Case Diagram
+✅ Class Diagram
 - Sequence Diagram
