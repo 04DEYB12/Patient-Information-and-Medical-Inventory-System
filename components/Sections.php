@@ -35,7 +35,7 @@
         </div>
         <div class="flex gap-4">
             <button id="backButtonAtName" onclick="goBackToProfile()" type="button" class="flex-1 bg-gray-200 text-gray-800 p-2 rounded-md hover:bg-gray-300 transition-colors duration-200">Back</button>
-            <button id="saveButtonAtName" onclick="saveChanges()" type="submit" class="flex-1 bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 transition-colors duration-200">Save Changes</button>
+            <button id="saveButtonAtName" onclick="saveChanges('NameSection','backButtonAtName','saveButtonAtName','passwordSectionAtName','passwordAtName')" type="submit" class="flex-1 bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 transition-colors duration-200">Save Changes</button>
         </div>
         
         <div id="passwordSectionAtName" class="hidden mt-4 space-y-3">
@@ -50,7 +50,7 @@
                         <i class='bx bx-show text-xl'></i>
                     </button>
                 </div>
-                <button type="button" id="cancel" onclick="resetFormState()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors duration-200">Cancel</button>
+                <button type="button" id="cancel" onclick="resetFormState('backButtonAtName','saveButtonAtName','passwordSectionAtName','passwordAtName')" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors duration-200">Cancel</button>
                 <button type="submit" id="submit" onclick="updateName('<?php echo $user_id; ?>')" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200">Confirm</button>
             </div>
         </div>
@@ -89,7 +89,7 @@
         </div>
         <div class="flex gap-4">
             <button id="backButtonAtEmail" onclick="goBackToProfile()" type="button" class="flex-1 bg-gray-200 text-gray-800 p-2 rounded-md hover:bg-gray-300 transition-colors duration-200">Back</button>
-            <button id="saveButtonAtEmail" onclick="saveChangesforEMAIL()" type="submit" class="flex-1 bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 transition-colors duration-200">Save Changes</button>
+            <button id="saveButtonAtEmail" onclick="saveChanges('EmailSection','backButtonAtEmail','saveButtonAtEmail','passwordSectionAtEmail','passwordAtEmail')" type="submit" class="flex-1 bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 transition-colors duration-200">Save Changes</button>
         </div>
         
         <div id="passwordSectionAtEmail" class="hidden mt-4 space-y-3">
@@ -104,7 +104,7 @@
                         <i class='bx bx-show text-xl'></i>
                     </button>
                 </div>
-                <button type="button" id="cancel" onclick="resetFormState()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors duration-200">Cancel</button>
+                <button type="button" id="cancel" onclick="resetFormState('backButtonAtEmail','saveButtonAtEmail','passwordSectionAtEmail','passwordAtEmail')" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors duration-200">Cancel</button>
                 <button type="submit" id="submit" onclick="updateEmail('<?php echo $user_id; ?>')" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200">Confirm</button>
             </div>
         </div>
@@ -148,7 +148,7 @@
         </div>
         <div class="flex gap-4">
             <button id="backButtonAtPhone" onclick="goBackToProfile()" type="button" class="flex-1 bg-gray-200 text-gray-800 p-2 rounded-md hover:bg-gray-300 transition-colors duration-200">Back</button>
-            <button id="saveButtonAtPhone" onclick="saveChangesforPHONE()" type="submit" class="flex-1 bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 transition-colors duration-200">Save Changes</button>
+            <button id="saveButtonAtPhone" onclick="saveChanges('PhoneSection','backButtonAtPhone','saveButtonAtPhone','passwordSectionAtPhone','passwordAtPhone')" type="submit" class="flex-1 bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 transition-colors duration-200">Save Changes</button>
         </div>
         
         <div id="passwordSectionAtPhone" class="hidden mt-4 space-y-3">
@@ -163,7 +163,7 @@
                         <i class='bx bx-show text-xl'></i>
                     </button>
                 </div>
-                <button type="button" id="cancel" onclick="resetFormState()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors duration-200">Cancel</button>
+                <button type="button" id="cancel" onclick="resetFormState('backButtonAtPhone','saveButtonAtPhone','passwordSectionAtPhone','passwordAtPhone')" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors duration-200">Cancel</button>
                 <button type="button" id="submit" onclick="updatePhone('<?php echo $user_id; ?>')" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200">Confirm</button>
             </div>
         </div>
@@ -202,7 +202,7 @@
         </div>
         <div class="flex gap-4">
             <button id="backButtonAtAddress" onclick="goBackToProfile()" type="button" class="flex-1 bg-gray-200 text-gray-800 p-2 rounded-md hover:bg-gray-300 transition-colors duration-200">Back</button>
-            <button id="saveButtonAtAddress" onclick="saveChangesforADDRESS()" type="submit" class="flex-1 bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 transition-colors duration-200">Save Changes</button>
+            <button id="saveButtonAtAddress" onclick="saveChanges('AddressSection','backButtonAtAddress','saveButtonAtAddress','passwordSectionAtAddress','passwordAtAddress')" type="submit" class="flex-1 bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 transition-colors duration-200">Save Changes</button>
         </div>
         
         <div id="passwordSectionAtAddress" class="hidden mt-4 space-y-3">
@@ -217,8 +217,62 @@
                         <i class='bx bx-show text-xl'></i>
                     </button>
                 </div>
-                <button type="button" id="cancel" onclick="resetFormState()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors duration-200">Cancel</button>
+                <button type="button" id="cancel" onclick="resetFormState('backButtonAtAddress','saveButtonAtAddress','passwordSectionAtAddress','passwordAtAddress')" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors duration-200">Cancel</button>
                 <button type="button" id="submit" onclick="updateAddress('<?php echo $user_id; ?>')" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200">Confirm</button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="content-section" id="OfficeSection">
+    <div class="flex items-center p-4 border-b border-gray-200">
+        <button id="ArrowbackButton" onclick="goBackToProfile()" class="flex items-center text-gray-600 hover:text-blue-600 transition-colors duration-200 mr-4">
+            <i class='bx bx-chevron-left text-2xl'></i>
+            <span class="ml-1 text-lg">Office</span>
+        </button>
+    </div>
+    <div class="p-6">
+        <h2 class="text-xl font-semibold mb-4">Edit Office</h2>
+        <p class="text-gray-600 mb-6">Changes to your office will be reflected across your PIAMIS Account.</p>
+        
+        <div class="flex items-center justify-center gap-2 w-full">
+            <div class="mb-4 w-full"> 
+                <label for="CurrentOffice" class="block text-sm font-medium text-gray-700 mb-1">Current Office</label>
+                <input type="text" id="CurrentOffice" class="w-full p-2 py-[10px] border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 cursor-not-allowed" disabled value="<?php echo htmlspecialchars($Office); ?>">
+            </div>
+            
+            <div class="mb-4 w-full">
+                <label for="NewOffice" class="block text-sm font-medium text-gray-700 mb-1">New Office</label>
+                <input type="text" id="NewOffice" name="NewOffice" class="w-full p-2 py-[10px] border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="Enter your New Office here.">
+            </div>
+        </div>
+        
+        <div class="flex items-start gap-3 bg-blue-50 p-4 rounded-lg mb-6">
+            <i class='bx bx-info-circle text-blue-600 text-xl mt-0.5'></i>
+            <div>
+                <h2 class="text-lg font-medium text-gray-800 mb-1">Office Visibility</h2>
+                <p class="text-sm text-gray-600">Your office will be visible to Administrator within the PIAMIS system when they interact with you.</p>
+            </div>
+        </div>
+        <div class="flex gap-4">
+            <button id="backButtonAtOffice" onclick="goBackToProfile()" type="button" class="flex-1 bg-gray-200 text-gray-800 p-2 rounded-md hover:bg-gray-300 transition-colors duration-200">Back</button>
+            <button id="saveButtonAtOffice" onclick="saveChanges('OfficeSection','backButtonAtOffice','saveButtonAtOffice','passwordSectionAtOffice','passwordAtOffice')" type="submit" class="flex-1 bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 transition-colors duration-200">Save Changes</button>
+        </div>
+        
+        <div id="passwordSectionAtOffice" class="hidden mt-4 space-y-3">
+            <div class="flex items-center justify-between">
+                <label for="password" class="block text-sm font-medium text-gray-700">Confirm your password</label>
+                <span class="text-xs text-gray-500">Required for security</span>
+            </div>
+            <div class="flex gap-2">
+                <div class="relative flex-1">
+                    <input type="password" id="passwordAtOffice" name="password" placeholder="Enter Password" class="w-full p-2 pr-10 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" required>
+                    <button type="button" onclick="togglePasswordVisibility('passwordAtOffice', 'togglePasswordAtOffice')" id="togglePasswordAtOffice" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700" aria-label="Toggle password visibility">
+                        <i class='bx bx-show text-xl'></i>
+                    </button>
+                </div>
+                <button type="button" id="cancel" onclick="resetFormState('backButtonAtOffice','saveButtonAtOffice','passwordSectionAtOffice','passwordAtOffice')" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors duration-200">Cancel</button>
+                <button type="button" id="submit" onclick="updateOffice('<?php echo $user_id; ?>')" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200">Confirm</button>
             </div>
         </div>
     </div>
@@ -405,16 +459,16 @@
         }
     });
     
-    function resetFormState() {
+    function resetFormState(backbtn, savebtn, passwordSection, passwordinput) {
         // Show the main buttons
-        document.getElementById('backButton').style.display = 'block';
-        document.getElementById('saveButton').style.display = 'block';
+        document.getElementById(backbtn).style.display = 'block';
+        document.getElementById(savebtn).style.display = 'block';
         
         // Hide the password section
-        document.getElementById('passwordSection').classList.add('hidden');
+        document.getElementById(passwordSection).classList.add('hidden');
         
         // Clear and reset the password field
-        const passwordInput = document.getElementById('password');
+        const passwordInput = document.getElementById(passwordinput);
         passwordInput.value = '';
         passwordInput.type = 'password';
         // Reset the toggle icon if it was changed
@@ -424,29 +478,56 @@
         }
     }
     
-    // UPDATING NAME SCRIPTSSS ----------------------
-    function saveChanges() {
-        const firstName = document.getElementById('firstName').value.trim();
-        const middleName = document.getElementById('middleName').value.trim();
-        const lastName = document.getElementById('lastName').value.trim();
-        
+    // SAVE CHANGES : Activating Password Confirmation and Update Trigger
+    function saveChanges(Section, backbtn, savebtn, passwordSection, passwordinput) {
+    
         let hasAnyValue = false;
-        hasAnyValue = firstName !== "" || middleName !== "" || lastName !== "";
+        let errorMessage = '';
+        switch (Section) {
+            case 'NameSection':
+                const firstName = document.getElementById('firstName').value.trim();
+                const middleName = document.getElementById('middleName').value.trim();
+                const lastName = document.getElementById('lastName').value.trim();
+                hasAnyValue = firstName !== "" || middleName !== "" || lastName !== "";
+                errorMessage = 'No changes detected';
+                break;
+            case 'EmailSection':
+                const newEmail = document.getElementById('NewEmail').value.trim();
+                hasAnyValue = newEmail !== "";
+                errorMessage = 'Enter your Email first.';
+                break;
+            case 'PhoneSection':
+                const newPhone = document.getElementById('NewPhone').value.trim();
+                hasAnyValue = newPhone !== "";
+                errorMessage = 'Enter your Phone Number first.';
+                break;
+            case 'AddressSection':
+                const newAddress = document.getElementById('NewAddress').value.trim();
+                hasAnyValue = newAddress !== "";
+                errorMessage = 'Enter your Address first.';
+                break;
+            case 'OfficeSection':
+                const newOffice = document.getElementById('NewOffice').value.trim();
+                hasAnyValue = newOffice !== "";
+                errorMessage = 'Enter your Office first.';
+                break;
+        }
         
         if(hasAnyValue) {
             // Hide the main buttons
-            document.getElementById('backButtonAtName').style.display = 'none';
-            document.getElementById('saveButtonAtName').style.display = 'none';
+            document.getElementById(backbtn).style.display = 'none';
+            document.getElementById(savebtn).style.display = 'none';
             
             // Show the password section
-            document.getElementById('passwordSectionAtName').classList.remove('hidden');
-            document.getElementById('passwordAtName').focus();
+            document.getElementById(passwordSection).classList.remove('hidden');
+            document.getElementById(passwordinput).focus();
         }else{
-            showAlert('No changes detected', 'error');
+            showAlert(errorMessage, 'error');
             return;
         }
     }
     
+    // UPDATING NAME SCRIPTSSS
     function updateName(user_id) {
         if (confirm(`Are you sure you want to save changes?`)) {
             const formData = new FormData();
@@ -480,10 +561,8 @@
             });
         }
     }
-    // UPDATING NAME SCRIPTSSS ENDS HERE ------------
     
-    
-    // UPDATING EMAIL SCRIPTSSS ---------------------
+    // UPDATING EMAIL SCRIPTSSS
     function updateEmail(user_id) {
         if (confirm(`Are you sure you want to save changes?`)) {
             const formData = new FormData();
@@ -515,49 +594,8 @@
             });
         }
     }
-
-    function saveChangesforEMAIL(){
-        const newEmail = document.getElementById('NewEmail').value.trim();
-        
-        let hasAnyValue = false;
-        hasAnyValue = newEmail !== "";
-        
-        if(hasAnyValue) {
-            // Hide the main buttons
-            document.getElementById('backButtonAtEmail').style.display = 'none';
-            document.getElementById('saveButtonAtEmail').style.display = 'none';
-            
-            // Show the password section
-            document.getElementById('passwordSectionAtEmail').classList.remove('hidden');
-            document.getElementById('passwordAtEmail').focus();
-        }else{
-            showAlert('No changes detected', 'error');
-            return;
-        }
-    }
-    // UPDATING EMAIL SCRIPTSSS ENDS HERE ----------    
     
-    // UPDATING PHONE NUMBER SCRIPTSSS -------------
-    function saveChangesforPHONE(){
-        const newPhone = document.getElementById('NewPhone').value.trim();
-        
-        let hasAnyValue = false;
-        hasAnyValue = newPhone !== "";
-        
-        if(hasAnyValue) {
-            // Hide the main buttons
-            document.getElementById('backButtonAtPhone').style.display = 'none';
-            document.getElementById('saveButtonAtPhone').style.display = 'none';
-            
-            // Show the password section
-            document.getElementById('passwordSectionAtPhone').classList.remove('hidden');
-            document.getElementById('passwordAtPhone').focus();
-        }else{
-            showAlert('Enter your new phone number first.', 'error');
-            return;
-        }
-    }
-    
+    // UPDATING PHONE NUMBER SCRIPTSSS
     function updatePhone(user_id){
         if (confirm(`Are you sure you want to save changes?`)) {
             const formData = new FormData();
@@ -590,29 +628,8 @@
             });
         }
     }
-    // UPDATING PHONE NUMBER SCRIPTSSS ENDS HERE ---
     
     // UPDATING ADDRESS SCRIPTSSS
-    function saveChangesforADDRESS(){
-        const newAddress = document.getElementById('NewAddress').value.trim();
-        
-        let hasAnyValue = false;
-        hasAnyValue = newAddress !== "";
-        
-        if(hasAnyValue) {
-            // Hide the main buttons
-            document.getElementById('backButtonAtAddress').style.display = 'none';
-            document.getElementById('saveButtonAtAddress').style.display = 'none';
-            
-            // Show the password section
-            document.getElementById('passwordSectionAtAddress').classList.remove('hidden');
-            document.getElementById('passwordAtAddress').focus();
-        }else{
-            showAlert('Enter your new address first.', 'error');
-            return;
-        }
-    }
-    
     function updateAddress(user_id){
         if (confirm(`Are you sure you want to save changes?`)) {
             const formData = new FormData();
@@ -645,10 +662,77 @@
             });
         }
     }
-    // UPDATING ADDRESS SCRIPTSSS ENDS HERE ---
     
+    // UPDATING OFFICE SCRIPTSSS
+    function updateOffice(user_id){
+        if (confirm(`Are you sure you want to save changes?`)) {
+            const formData = new FormData();
+            formData.append('action', 'UpdateOffice');
+            formData.append('userId', user_id);
+            formData.append('password', document.getElementById('passwordAtOffice').value.trim());
+            formData.append('NewOffice', document.getElementById('NewOffice').value.trim());
+            
+            fetch('../Functions/UserFunctions.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Refresh the user list to show updated status
+                    showAlert('Your Office updated successfully!','success');
+                    // Add delay before reload to show success message
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 5000);
+                } else {
+                    showAlert(data.message,'error');
+                    document.getElementById('passwordAtOffice').classList.add('border-red-500');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('An error occurred while updating your Office', 'error');
+            });
+        }
+    }
     
     // UPDATING PASSWORD SCRIPTSSS
+    function verifyPassword(user_id) {
+        const currentPassword = document.getElementById('currentPassword').value;
+        
+        // Basic client-side validation
+        if (!currentPassword) {
+            showAlert('Please enter your current password', 'error');
+            document.getElementById('currentPassword').classList.add('border-red-500');
+            return;
+        }
+        
+        const formData = new FormData();
+        formData.append('action', 'confirmPassword');
+        formData.append('userId', user_id);
+        formData.append('currentPassword', currentPassword);
+        
+        fetch('../Functions/UserFunctions.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Response data:', data);
+            if (data.success) {
+                showAlert(data.message, 'success');
+                document.getElementById('PasswordChanges').style.display = 'block';
+                document.getElementById('ConfirmUser').style.display = 'none';
+            } else {
+                showAlert(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            showAlert('Error: ' + (error.message || 'Failed to verify password'), 'error');
+        });
+    }
+    
     // Check password strength and update UI
     function checkPasswordStrength(password) {
         const strengthBar = document.getElementById('passwordStrengthBar');
@@ -735,40 +819,6 @@
             UpdatePassword.disabled = true;
             return false;
         }
-    }
-    
-    function verifyPassword(user_id) {
-        const currentPassword = document.getElementById('currentPassword').value;
-        
-        // Basic client-side validation
-        if (!currentPassword) {
-            showAlert('Please enter your current password', 'error');
-            return;
-        }
-        
-        const formData = new FormData();
-        formData.append('action', 'confirmPassword');
-        formData.append('userId', user_id);
-        formData.append('currentPassword', currentPassword);
-        
-        fetch('../Functions/UserFunctions.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log('Response data:', data);
-            if (data.success) {
-                showAlert(data.message, 'success');
-                document.getElementById('PasswordChanges').style.display = 'block';
-                document.getElementById('ConfirmUser').style.display = 'none';
-            } else {
-                showAlert(data.message, 'error');
-            }
-        })
-        .catch(error => {
-            showAlert('Error: ' + (error.message || 'Failed to verify password'), 'error');
-        });
     }
     
     function UpdatePassword(user_id) {
