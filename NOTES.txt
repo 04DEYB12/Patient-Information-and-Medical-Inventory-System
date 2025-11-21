@@ -55,7 +55,7 @@ Completed Task:
 
 Completed Task:
 ✅ Edit Email (Logic and UI)
-- Edit Phone Number (Logic and UI)
+✅ Edit Phone Number (Logic and UI)
 - Edit Home Address (Logic and UI)
 - Edit Office (Logic and UI)
 ✅ Enhance Password Management (Change Password, Validation)

@@ -1,6 +1,7 @@
 /*
     WHAT THIS FILE DOES
     - autoAppendDomain() : Auto append @gmail.com if no domain in email input and validate format.
+    - validatePhoneNumber() : Validate Philippine mobile number. Check if the number starts with 09 and has 11 digits
     - showAlert() : Show toast notification.
 */
 
@@ -45,6 +46,32 @@ function autoAppendDomain(input) {
         errorElement.style.display = 'none';
         input.setCustomValidity('');
     }
+}
+
+function validatePhoneNumber(input) {
+    // Remove all non-digit characters
+    let phoneNumber = input.value.replace(/\D/g, '');
+    
+    // Check if the number starts with 09 and has 11 digits
+    const phMobileRegex = /^09\d{9}$/;
+    
+    if (!phMobileRegex.test(phoneNumber)) {
+        showAlert('Please enter a valid Philippine mobile number (09XXXXXXXXX)', 'error');
+        input.setCustomValidity('Please enter a valid Philippine mobile number (09XXXXXXXXX)');
+        document.getElementById('NewPhone').classList.add('border-red-500');
+        document.getElementById('saveButtonAtPhone').disabled = true;
+        document.getElementById('saveButtonAtPhone').classList.add('cursor-not-allowed');
+        return false;
+    }
+    
+    // Format the phone number: 0912 345 6789
+    const formattedNumber = phoneNumber.replace(/(\d{4})(\d{3})(\d{4})/, '$1 $2 $3');
+    input.value = formattedNumber;
+    input.setCustomValidity('');
+    document.getElementById('NewPhone').classList.remove('border-red-500');
+    document.getElementById('saveButtonAtPhone').disabled = false;
+    document.getElementById('saveButtonAtPhone').classList.remove('cursor-not-allowed');
+    return true;
 }
 
 function showAlert(message, type = 'success') {

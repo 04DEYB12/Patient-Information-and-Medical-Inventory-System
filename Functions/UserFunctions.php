@@ -760,6 +760,42 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
                 } else {
                     throw new Exception('Failed to update email: ' . mysqli_error($con));
                 }
+                break;
+            case 'UpdatePhone': // ------------------------------- My Profile: Update Phone Number --------------------------------
+                $userId = $_POST['userId'];
+                $password = $_POST['password'];
+                $NewPhone = mysqli_real_escape_string($con, $_POST['NewPhone']);
+                
+                // Verify password first
+                $query = "SELECT PasswordHash FROM clinicpersonnel WHERE PersonnelID = ?";
+                $stmt = mysqli_prepare($con, $query);
+                mysqli_stmt_bind_param($stmt, 's', $userId);
+                mysqli_stmt_execute($stmt);
+                $result = mysqli_stmt_get_result($stmt);
+                $user = mysqli_fetch_assoc($result);
+                
+                if (!$user || !password_verify($password, $user['PasswordHash'])) {
+                    sendJsonResponse([
+                        'success' => false,
+                        'message' => 'Incorrect password. Please try again.'
+                    ]);
+                    exit();
+                }
+                
+                // Update user phone number in database
+                $query = "UPDATE clinicpersonnel SET ContactNumber = ? WHERE PersonnelID = ?";
+                $stmt = mysqli_prepare($con, $query);
+                
+                mysqli_stmt_bind_param($stmt, 'ss', $NewPhone, $userId);
+                
+                if (mysqli_stmt_execute($stmt)) {
+                    sendJsonResponse([
+                        'success' => true,
+                        'message' => 'Phone Number updated successfully.'
+                    ]);
+                } else {
+                    throw new Exception('Failed to update phone number: ' . mysqli_error($con));
+                }
                 
                 break;
             case 'confirmPassword': // ------------------------------- Confirm Password --------------------------------

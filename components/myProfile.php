@@ -92,7 +92,7 @@ require_once '../Functions/Queries.php';
                                 <label  class="w-full max-w-[200px]">Name</label>
                                 <span class="font-normal text-gray-800 ml-[295px]"><?php echo $fullname; ?></span>
                             </div>
-                            <button id="NameSectionbtn" type="button" class="px-10 text-gray-500 hover:text-blue-600 transition-colors duration-200">
+                            <button id="NameSectionbtn" onclick="showSection('NameSection')" type="button" class="px-10 text-gray-500 hover:text-blue-600 transition-colors duration-200">
                                 <i class="bx bx-chevron-right font-bold text-2xl"></i>
                             </button>
                             </div>
@@ -119,7 +119,7 @@ require_once '../Functions/Queries.php';
                                 <label class="w-full max-w-[200px]">Email</label>
                                 <span class="font-normal text-gray-800 ml-[295px]"><?php echo $Email; ?></span>
                             </div>
-                            <button id="EmailSectionbtn" type="button" class="px-10 text-gray-500 hover:text-blue-600 transition-colors duration-200">
+                            <button id="EmailSectionbtn" onclick="showSection('EmailSection')" type="button" class="px-10 text-gray-500 hover:text-blue-600 transition-colors duration-200">
                                 <i class="bx bx-chevron-right font-bold text-2xl"></i>
                             </button>
                         </div>
@@ -128,7 +128,9 @@ require_once '../Functions/Queries.php';
                                 <label class="w-full max-w-[200px]">Phone Number</label>
                                 <span class="font-normal text-gray-800 ml-[295px]"><?php echo $ContactNumber; ?></span>
                             </div>
-                            <i class="bx bx-chevron-right font-bold text-2xl"></i>
+                            <button id="PhoneSectionbtn" onclick="showSection('PhoneSection')" type="button" class="px-10 text-gray-500 hover:text-blue-600 transition-colors duration-200">
+                                <i class="bx bx-chevron-right font-bold text-2xl"></i>
+                            </button>
                         </div>
                     </div>
                     <div class="basicinfo rounded-lg border-[1px] border-gray-200 p-6 mb-6">
@@ -175,7 +177,7 @@ require_once '../Functions/Queries.php';
                             <div class="infodata p-4 mt-8 px-6 flex flex-col items-start justify-center">
                                 <div class="flex items-center w-full">
                                     <label  class="w-full font-bold text-2xl">........</label>
-                                    <button id="PasswordSectionbtn" type="button" class="text-gray-500 hover:text-blue-600 transition-colors duration-200">
+                                    <button id="PasswordSectionbtn" onclick="showSection('PasswordSection')"type="button" class="text-gray-500 hover:text-blue-600 transition-colors duration-200">
                                         <i class="bx bx-chevron-right font-bold text-2xl"></i>
                                     </button>
                                 </div>
@@ -230,19 +232,30 @@ require_once '../Functions/Queries.php';
 </body>
 
 <script>
-    document.getElementById('NameSectionbtn').addEventListener('click', function() {
-        document.getElementById('NameSection').classList.add('active');
-        document.getElementById('MyProfileSection').classList.remove('active');
-    });
     
-    document.getElementById('EmailSectionbtn').addEventListener('click', function() {
-        document.getElementById('EmailSection').classList.add('active');
+    function showSection(sectionId) {
+        document.getElementById(sectionId).classList.add('active');
         document.getElementById('MyProfileSection').classList.remove('active');
-    });
+    }
+
+    // document.getElementById('NameSectionbtn').addEventListener('click', function() {
+    //     document.getElementById('NameSection').classList.add('active');
+    //     document.getElementById('MyProfileSection').classList.remove('active');
+    // });
     
-    document.getElementById('PasswordSectionbtn').addEventListener('click', function() {
-        document.getElementById('PasswordSection').classList.add('active');
-        document.getElementById('MyProfileSection').classList.remove('active');
-    });
+    // document.getElementById('EmailSectionbtn').addEventListener('click', function() {
+    //     document.getElementById('EmailSection').classList.add('active');
+    //     document.getElementById('MyProfileSection').classList.remove('active');
+    // });
+    
+    // document.getElementById('PhoneSectionbtn').addEventListener('click', function() {
+    //     document.getElementById('PhoneSection').classList.add('active');
+    //     document.getElementById('MyProfileSection').classList.remove('active');
+    // });
+    
+    // document.getElementById('PasswordSectionbtn').addEventListener('click', function() {
+    //     document.getElementById('PasswordSection').classList.add('active');
+    //     document.getElementById('MyProfileSection').classList.remove('active');
+    // });
 </script>
 </html>

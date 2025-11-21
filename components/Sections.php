@@ -111,6 +111,65 @@
     </div>
 </section>
 
+<section class="content-section" id="PhoneSection">
+    <div class="flex items-center p-4 border-b border-gray-200">
+        <button id="ArrowbackButton" onclick="goBackToProfile()" class="flex items-center text-gray-600 hover:text-blue-600 transition-colors duration-200 mr-4">
+            <i class='bx bx-chevron-left text-2xl'></i>
+            <span class="ml-1 text-lg">Phone Number</span>
+        </button>
+    </div>
+    <div class="p-6">
+        <h2 class="text-xl font-semibold mb-4">Edit Phone Number</h2>
+        <p class="text-gray-600 mb-6">Changes to your phone number will be reflected across your PIAMIS Account.</p>
+        
+        <div class="flex items-center justify-center gap-2 w-full">
+            <div class="mb-4 w-full"> 
+                <label for="CurrentPhone" class="block text-sm font-medium text-gray-700 mb-1">Current Phone Number</label>
+                <input type="text" id="CurrentPhone" class="w-full p-2 py-[10px] border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 cursor-not-allowed" disabled value="<?php echo htmlspecialchars($ContactNumber); ?>">
+            </div>
+            
+            <div class="mb-4 w-full">
+                <label for="NewPhone" class="block text-sm font-medium text-gray-700 mb-1">New Phone Number</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <img src="../Images/philippines.png" alt="PH" class="w-5 h-5">
+                    </div>
+                    <input type="text" id="NewPhone" name="NewPhone" onblur="validatePhoneNumber(this)" class="w-full pl-10 p-2 py-[10px] border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="Enter your New Phone Number here.">
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex items-start gap-3 bg-blue-50 p-4 rounded-lg mb-6">
+            <i class='bx bx-info-circle text-blue-600 text-xl mt-0.5'></i>
+            <div>
+                <h2 class="text-lg font-medium text-gray-800 mb-1">Phone Number Visibility</h2>
+                <p class="text-sm text-gray-600">Your phone number will be visible to Administrator within the PIAMIS system when they interact with you.</p>
+            </div>
+        </div>
+        <div class="flex gap-4">
+            <button id="backButtonAtPhone" onclick="goBackToProfile()" type="button" class="flex-1 bg-gray-200 text-gray-800 p-2 rounded-md hover:bg-gray-300 transition-colors duration-200">Back</button>
+            <button id="saveButtonAtPhone" onclick="saveChangesforPHONE()" type="submit" class="flex-1 bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 transition-colors duration-200">Save Changes</button>
+        </div>
+        
+        <div id="passwordSectionAtPhone" class="hidden mt-4 space-y-3">
+            <div class="flex items-center justify-between">
+                <label for="password" class="block text-sm font-medium text-gray-700">Confirm your password</label>
+                <span class="text-xs text-gray-500">Required for security</span>
+            </div>
+            <div class="flex gap-2">
+                <div class="relative flex-1">
+                    <input type="password" id="passwordAtPhone" name="password" placeholder="Enter Password" class="w-full p-2 pr-10 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" required>
+                    <button type="button" onclick="togglePasswordVisibility('passwordAtPhone', 'togglePasswordAtPhone')" id="togglePasswordAtPhone" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700" aria-label="Toggle password visibility">
+                        <i class='bx bx-show text-xl'></i>
+                    </button>
+                </div>
+                <button type="button" id="cancel" onclick="resetFormState()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors duration-200">Cancel</button>
+                <button type="button" id="submit" onclick="updatePhone('<?php echo $user_id; ?>')" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200">Confirm</button>
+            </div>
+        </div>
+    </div>
+</section>
+
 <section class="content-section" id="PasswordSection">
     <div class="flex items-center p-4 border-b border-gray-200">
         <button id="ArrowbackButton" onclick="goBackToProfile()" class="flex items-center text-gray-600 hover:text-blue-600 transition-colors duration-200 mr-4">
@@ -256,18 +315,19 @@
 
 <script>
     function goBackToProfile() {
-        document.getElementById('NameSection').classList.remove('active');
-        document.getElementById('EmailSection').classList.remove('active');
-        document.getElementById('PasswordSection').classList.remove('active');
-        document.getElementById('MyProfileSection').classList.add('active');
-        document.getElementById('currentPassword').value = '';
-        document.getElementById('PasswordChanges').style.display = 'none';
-        document.getElementById('ConfirmUser').style.display = 'block';
-        document.getElementById('NewPassword').value = '';
-        document.getElementById('ConfirmNewPassword').value = '';
-        document.getElementById('passwordStrength').innerHTML = '';
-        document.getElementById('passwordMatchMessage').innerHTML = '';
-        document.getElementById('passwordStrengthBar').className = 'w-0 h-2 bg-blue-600';
+        // document.getElementById('NameSection').classList.remove('active');
+        // document.getElementById('EmailSection').classList.remove('active');
+        // document.getElementById('PasswordSection').classList.remove('active');
+        // document.getElementById('MyProfileSection').classList.add('active');
+        // document.getElementById('currentPassword').value = '';
+        // document.getElementById('PasswordChanges').style.display = 'none';
+        // document.getElementById('ConfirmUser').style.display = 'block';
+        // document.getElementById('NewPassword').value = '';
+        // document.getElementById('ConfirmNewPassword').value = '';
+        // document.getElementById('passwordStrength').innerHTML = '';
+        // document.getElementById('passwordMatchMessage').innerHTML = '';
+        // document.getElementById('passwordStrengthBar').className = 'w-0 h-2 bg-blue-600';
+        window.location.href = "../components/myProfile.php";
     }
     
     function togglePasswordVisibility(inputId, toggleButtonId) {
@@ -368,26 +428,62 @@
     }
     // UPDATING NAME SCRIPTSSS ENDS HERE
     
-    // UPDATING EMAIL SCRIPTSSS
-    function saveChangesforEMAIL(){
-        const newEmail = document.getElementById('NewEmail').value.trim();
+    // UPDATING PHONE NUMBER SCRIPTSSS
+    function saveChangesforPHONE(){
+        const newPhone = document.getElementById('NewPhone').value.trim();
         
         let hasAnyValue = false;
-        hasAnyValue = newEmail !== "";
+        hasAnyValue = newPhone !== "";
         
         if(hasAnyValue) {
             // Hide the main buttons
-            document.getElementById('backButtonAtEmail').style.display = 'none';
-            document.getElementById('saveButtonAtEmail').style.display = 'none';
+            document.getElementById('backButtonAtPhone').style.display = 'none';
+            document.getElementById('saveButtonAtPhone').style.display = 'none';
             
             // Show the password section
-            document.getElementById('passwordSectionAtEmail').classList.remove('hidden');
-            document.getElementById('passwordAtEmail').focus();
+            document.getElementById('passwordSectionAtPhone').classList.remove('hidden');
+            document.getElementById('passwordAtPhone').focus();
         }else{
-            showAlert('No changes detected', 'error');
+            showAlert('Input your new phone number', 'error');
             return;
         }
     }
+    
+    function updatePhone(user_id){
+        if (confirm(`Are you sure you want to save changes?`)) {
+            const formData = new FormData();
+            formData.append('action', 'UpdatePhone');
+            formData.append('userId', user_id);
+            formData.append('password', document.getElementById('passwordAtPhone').value.trim());
+            formData.append('NewPhone', document.getElementById('NewPhone').value.trim());
+            
+            fetch('../Functions/UserFunctions.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Refresh the user list to show updated status
+                    showAlert('Your Phone Number updated successfully!','success');
+                    // Add delay before reload to show success message
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 5000);
+                } else {
+                    showAlert(data.message,'error');
+                    document.getElementById('passwordAtPhone').classList.add('border-red-500');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('An error occurred while updating your Phone Number', 'error');
+            });
+        }
+    }
+    // UPDATING PHONE NUMBER SCRIPTSSS ENDS HERE
+    
+    // UPDATING EMAIL SCRIPTSSS
     
     function updateEmail(user_id) {
         if (confirm(`Are you sure you want to save changes?`)) {
@@ -421,6 +517,28 @@
         }
     }
     // UPDATING EMAIL SCRIPTSSS ENDS HERE
+    
+    // UPDATING PHONE NUMBER SCRIPTSSS
+    function saveChangesforEMAIL(){
+        const newEmail = document.getElementById('NewEmail').value.trim();
+        
+        let hasAnyValue = false;
+        hasAnyValue = newEmail !== "";
+        
+        if(hasAnyValue) {
+            // Hide the main buttons
+            document.getElementById('backButtonAtEmail').style.display = 'none';
+            document.getElementById('saveButtonAtEmail').style.display = 'none';
+            
+            // Show the password section
+            document.getElementById('passwordSectionAtEmail').classList.remove('hidden');
+            document.getElementById('passwordAtEmail').focus();
+        }else{
+            showAlert('No changes detected', 'error');
+            return;
+        }
+    }
+    
     
     
     
@@ -518,7 +636,7 @@
         
         // Basic client-side validation
         if (!currentPassword) {
-            alert('Please enter your current password');
+            showAlert('Please enter your current password', 'error');
             return;
         }
         
@@ -535,15 +653,15 @@
         .then(data => {
             console.log('Response data:', data);
             if (data.success) {
-                alert(data.message);
+                showAlert(data.message, 'success');
                 document.getElementById('PasswordChanges').style.display = 'block';
                 document.getElementById('ConfirmUser').style.display = 'none';
             } else {
-                alert(data.message);
+                showAlert(data.message, 'error');
             }
         })
         .catch(error => {
-            alert('Error: ' + (error.message || 'Failed to verify password'));
+            showAlert('Error: ' + (error.message || 'Failed to verify password'), 'error');
         });
     }
     
@@ -563,7 +681,7 @@
         .then(data => {
             console.log('Response data:', data);
             if (data.success) {
-                alert(data.message);
+                showAlert(data.message, 'success');
                 if (data.redirect) {
                     setTimeout(() => {
                         window.location.href = data.redirect;
@@ -572,7 +690,7 @@
                     window.location.reload();
                 }
             } else {
-                alert(data.error);
+                showAlert(data.error, 'error');
             }
         })
         .catch(error => {
@@ -582,7 +700,7 @@
                 message: error.message,
                 stack: error.stack
             });
-            alert('Error: ' + (error.message || 'Failed to change your password'));
+            showAlert('Error: ' + (error.message || 'Failed to change your password'), 'error');
         });
     }
 </script>    
