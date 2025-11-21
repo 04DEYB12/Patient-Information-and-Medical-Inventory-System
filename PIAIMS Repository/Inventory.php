@@ -548,6 +548,7 @@ sort($categories);
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="../Functions/scripts.js"></script>
     <style>
         :root {
             --color-nature-green-50: #F7FFF7;

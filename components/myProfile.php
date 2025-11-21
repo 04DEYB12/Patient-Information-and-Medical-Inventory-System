@@ -22,6 +22,7 @@ require_once '../Functions/Queries.php';
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 
+    <script src="../Functions/scripts.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="../Stylesheet/Design.css">
 </head>
@@ -118,7 +119,9 @@ require_once '../Functions/Queries.php';
                                 <label class="w-full max-w-[200px]">Email</label>
                                 <span class="font-normal text-gray-800 ml-[295px]"><?php echo $Email; ?></span>
                             </div>
-                            <i class="bx bx-chevron-right font-bold text-2xl"></i>
+                            <button id="EmailSectionbtn" type="button" class="px-10 text-gray-500 hover:text-blue-600 transition-colors duration-200">
+                                <i class="bx bx-chevron-right font-bold text-2xl"></i>
+                            </button>
                         </div>
                         <div class="infodata p-4 px-6 flex items-center justify-between">
                             <div class="flex items-center w-full">
@@ -229,6 +232,11 @@ require_once '../Functions/Queries.php';
 <script>
     document.getElementById('NameSectionbtn').addEventListener('click', function() {
         document.getElementById('NameSection').classList.add('active');
+        document.getElementById('MyProfileSection').classList.remove('active');
+    });
+    
+    document.getElementById('EmailSectionbtn').addEventListener('click', function() {
+        document.getElementById('EmailSection').classList.add('active');
         document.getElementById('MyProfileSection').classList.remove('active');
     });
     

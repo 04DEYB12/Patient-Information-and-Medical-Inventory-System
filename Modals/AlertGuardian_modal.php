@@ -55,7 +55,7 @@
                         class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
                     Cancel
                 </button>
-                <button type="submit" onclick="sendNotification()"
+                <button id="sendNotificationBtn" type="button" onclick="sendNotification()"
                         class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center">
                     <i class='bx bx-send mr-2'></i> Send Notification
                 </button>
@@ -68,6 +68,13 @@
 <script>
 
 function sendNotification() {
+    const sendBtn = document.getElementById('sendNotificationBtn');
+    const originalBtnText = sendBtn.innerHTML;
+    
+    // Disable button and show loading state
+    sendBtn.disabled = true;
+    sendBtn.innerHTML = '<i class="bx bx-loader-alt animate-spin mr-2"></i> Sending...';
+    
     const recipientEmail = document.getElementById('recipientEmail').value;
     const subject = document.getElementById('subject').value;
     const message = document.getElementById('message').value;
@@ -83,8 +90,14 @@ function sendNotification() {
     })
     .then(response => response.json())
     .then(data => {
+        // Re-enable button and restore original text
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = originalBtnText;
+        
         if (data.success) {
             showAlert(data.message, 'success');
+            // Close the modal after successful send if needed
+            // CloseAlertGuardianModal();
         } else {
             showAlert(data.message, 'error');
         }

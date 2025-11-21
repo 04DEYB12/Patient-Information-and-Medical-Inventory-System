@@ -1,0 +1,62 @@
+@startuml Patient Consultation Sequence Diagram
+title Patient Consultation Flow
+
+actor "Patient" as patient
+participant "Clinic Staff" as staff
+participant "System" as system
+participant "Database" as db
+
+alt Login
+    staff -> system: Login with credentials
+    system -> db: Verify credentials
+    db --> system: Authentication result
+    system --> staff: Show dashboard
+end
+
+alt New Consultation
+    staff -> patient: Request patient information
+    patient --> staff: Provide school ID/name
+    
+    staff -> system: Search patient (school ID/name)
+    system -> db: Query patient records
+    db --> system: Return patient info
+    
+    alt Patient exists
+        system --> staff: Display patient details
+    else New patient
+        staff -> system: Register new patient
+        system -> db: Create patient record
+        db --> system: Confirmation
+        system --> staff: New patient registered
+    end
+    
+    staff -> system: Record consultation details
+    system -> db: Save consultation record
+    db --> system: Confirmation
+    
+    alt Medication needed
+        staff -> system: Check medicine inventory
+        system -> db: Query medicine stock
+        db --> system: Return medicine availability
+        
+        alt Medicine available
+            system --> staff: Show available medicines
+            staff -> system: Prescribe medicine
+            system -> db: Update inventory
+            db --> system: Confirmation
+            system -> db: Record prescription
+            db --> system: Confirmation
+            system --> staff: Prescription recorded
+        else Medicine not available
+            system --> staff: Show out-of-stock message
+            staff -> system: Suggest alternative medicine
+            system --> staff: Show alternative options
+            [repeat medication process]
+        end
+    end
+    
+    system --> staff: Consultation completed
+    staff --> patient: Provide consultation summary
+end
+
+@enduml

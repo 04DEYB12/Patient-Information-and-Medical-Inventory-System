@@ -53,7 +53,11 @@ function showAlert(message, type = 'success') {
     if (!toastContainer) {
         toastContainer = document.createElement('div');
         toastContainer.id = 'toast-container';
-        toastContainer.className = 'fixed top-4 right-4 z-[100] space-y-3 w-80';
+        toastContainer.className = 'fixed top-4 right-4 z-[9999] space-y-3 w-80';
+        // Ensure container is on top of all other elements
+        toastContainer.style.position = 'fixed';
+        toastContainer.style.top = '1rem';
+        toastContainer.style.right = '1rem';
         document.body.appendChild(toastContainer);
     }
     
@@ -76,7 +80,13 @@ function showAlert(message, type = 'success') {
     const toastType = type in typeStyles ? type : 'info';
     
     // Add toast HTML
-    toast.className = `flex items-start p-4 rounded-lg border ${typeStyles[toastType]} shadow-lg transform transition-all duration-300 ease-in-out opacity-0 translate-x-8`;
+    toast.className = `flex items-start p-4 rounded-lg border ${typeStyles[toastType]} shadow-xl transform transition-all duration-300 ease-in-out opacity-0 translate-x-8`;
+    // Ensure toast is above other content
+    toast.style.position = 'relative';
+    toast.style.zIndex = '10000';
+    toast.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)';
+    toast.style.backdropFilter = 'blur(4px)';
+    toast.style.webkitBackdropFilter = 'blur(4px)';
     toast.innerHTML = `
         <i class='bx bx-${iconMap[toastType]} text-xl mr-3 mt-0.5'></i>
         <div class='flex-1'>

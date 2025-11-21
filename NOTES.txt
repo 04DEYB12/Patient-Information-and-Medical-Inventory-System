@@ -54,7 +54,7 @@ Completed Task:
 ------------------ TASK 5: My Profile Section ------------------
 
 Completed Task:
-- Edit Email (Logic and UI)
+✅ Edit Email (Logic and UI)
 - Edit Phone Number (Logic and UI)
 - Edit Home Address (Logic and UI)
 - Edit Office (Logic and UI)

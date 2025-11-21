@@ -4,9 +4,9 @@
   "settings": {
     "width": 2000,
     "height": 2000,
-    "scrollTop": -558.2464,
-    "scrollLeft": -427.1308,
-    "zoomLevel": 0.34,
+    "scrollTop": -442.789,
+    "scrollLeft": -290.027,
+    "zoomLevel": 0.76,
     "show": 431,
     "database": 4,
     "databaseName": "piamis_db",
@@ -2650,34 +2650,6 @@
         "meta": {
           "updateAt": 1762248127394,
           "createAt": 1762248127394
-        }
-      },
-      "7e78xeGaQHWKlB2_e4buP": {
-        "id": "7e78xeGaQHWKlB2_e4buP",
-        "identification": false,
-        "relationshipType": 16,
-        "startRelationshipType": 2,
-        "start": {
-          "tableId": "KKOkSwtW0FCinM9eLNTMT",
-          "columnIds": [
-            "2N29VrH0q6jtSkYpwvUyV"
-          ],
-          "x": 1157.6094,
-          "y": 979.0097,
-          "direction": 1
-        },
-        "end": {
-          "tableId": "NBsSzQrupEQq79uCVihNO",
-          "columnIds": [
-            "wsG85TUbfqOsP-J89WM_R"
-          ],
-          "x": 1013.8799,
-          "y": 1187.5335,
-          "direction": 2
-        },
-        "meta": {
-          "updateAt": 1762248197116,
-          "createAt": 1762248197116
         }
       },
       "2K3VoghMRPDN8haZfwIML": {

@@ -642,7 +642,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
                 }
                 break;
             case 'updateUser_Name': // ------------------------------- Update User Name --------------------------------
-                $userId = intval($_POST['userId']);
+                $userId = $_POST['userId'];
                 $password = $_POST['password'];
                 $firstName = mysqli_real_escape_string($con, $_POST['firstName']);
                 $middleName = mysqli_real_escape_string($con, $_POST['middleName']);
@@ -651,7 +651,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
                 // Verify password first
                 $query = "SELECT PasswordHash FROM clinicpersonnel WHERE PersonnelID = ?";
                 $stmt = mysqli_prepare($con, $query);
-                mysqli_stmt_bind_param($stmt, 'i', $userId);
+                mysqli_stmt_bind_param($stmt, 's', $userId);
                 mysqli_stmt_execute($stmt);
                 $result = mysqli_stmt_get_result($stmt);
                 $user = mysqli_fetch_assoc($result);
@@ -659,7 +659,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
                 if (!$user || !password_verify($password, $user['PasswordHash'])) {
                     sendJsonResponse([
                         'success' => false,
-                        'error' => 'Incorrect password. Please try again.'
+                        'message' => 'Incorrect password. Please try again.'
                     ]);
                     exit();
                 }
@@ -690,7 +690,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
                     throw new Exception('No fields to update');
                 }
                 
-                $types .= 'i'; // for PersonnelID
+                $types .= 's'; // for PersonnelID
                 $params[] = $userId;
                 
                 $query = "UPDATE clinicpersonnel SET " . implode(', ', $updates) . " WHERE PersonnelID = ?";
@@ -716,6 +716,51 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
                 } else {
                     throw new Exception('Failed to update user name: ' . mysqli_error($con));
                 }
+                break;
+            case 'UpdateEmail': // ------------------------------- My Profile: Update Email --------------------------------
+                $userId = $_POST['userId'];
+                $password = $_POST['password'];
+                $NewEmail = mysqli_real_escape_string($con, $_POST['NewEmail']);
+                
+                // Verify password first
+                $query = "SELECT PasswordHash FROM clinicpersonnel WHERE PersonnelID = ?";
+                $stmt = mysqli_prepare($con, $query);
+                mysqli_stmt_bind_param($stmt, 's', $userId);
+                mysqli_stmt_execute($stmt);
+                $result = mysqli_stmt_get_result($stmt);
+                $user = mysqli_fetch_assoc($result);
+                
+                if (!$user || !password_verify($password, $user['PasswordHash'])) {
+                    sendJsonResponse([
+                        'success' => false,
+                        'message' => 'Incorrect password. Please try again.'
+                    ]);
+                    exit();
+                }
+                
+                // Validate email
+                if (!filter_var($NewEmail, FILTER_VALIDATE_EMAIL)) {
+                    sendJsonResponse([
+                        'success' => false,
+                        'message' => 'Invalid email format.'
+                    ]);
+                }
+                
+                // Update user email in database
+                $query = "UPDATE clinicpersonnel SET EmailAddress = ? WHERE PersonnelID = ?";
+                $stmt = mysqli_prepare($con, $query);
+                
+                mysqli_stmt_bind_param($stmt, 'ss', $NewEmail, $userId);
+                
+                if (mysqli_stmt_execute($stmt)) {
+                    sendJsonResponse([
+                        'success' => true,
+                        'message' => 'Email updated successfully.'
+                    ]);
+                } else {
+                    throw new Exception('Failed to update email: ' . mysqli_error($con));
+                }
+                
                 break;
             case 'confirmPassword': // ------------------------------- Confirm Password --------------------------------
                 $userId = $_POST['userId'];

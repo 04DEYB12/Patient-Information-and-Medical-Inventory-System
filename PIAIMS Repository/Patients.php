@@ -1511,8 +1511,16 @@ require_once '../Functions/Queries.php';
                                         
                                         document.getElementById('EditRecordModalTitle').textContent = "Record Details";
                                         
+                                        const displayOutcome = document.getElementById('DisplayOutcome');
+                                        if (record.Status === 'Completed' || record.Status === 'COMPLETED') {
+                                            displayOutcome.classList.remove('hidden');
+                                        } else {
+                                            displayOutcome.classList.add('hidden');
+                                        }
+                                        displayOutcome.textContent = record.Outcome || 'No outcome recorded';
+                                        
+                                        // Show/hide edit outcome field based on status
                                         document.getElementById('EditOutcome').style.display = record.Status === 'In Progress' ? 'block' : 'none';
-                                        document.getElementById('DisplayOutcome').textContent = record.Outcome;
                                         
                                         document.getElementById('EditSaveBtn').style.display = record.Status === 'In Progress' ? 'block' : 'none';
                                     });

@@ -34,24 +34,78 @@
             </div>
         </div>
         <div class="flex gap-4">
-            <button id="backButton" onclick="goBackToProfile()" type="button" class="flex-1 bg-gray-200 text-gray-800 p-2 rounded-md hover:bg-gray-300 transition-colors duration-200">Back</button>
-            <button id="saveButton" onclick="saveChanges()" type="submit" class="flex-1 bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 transition-colors duration-200">Save Changes</button>
+            <button id="backButtonAtName" onclick="goBackToProfile()" type="button" class="flex-1 bg-gray-200 text-gray-800 p-2 rounded-md hover:bg-gray-300 transition-colors duration-200">Back</button>
+            <button id="saveButtonAtName" onclick="saveChanges()" type="submit" class="flex-1 bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 transition-colors duration-200">Save Changes</button>
         </div>
         
-        <div id="passwordSection" class="hidden mt-4 space-y-3">
+        <div id="passwordSectionAtName" class="hidden mt-4 space-y-3">
             <div class="flex items-center justify-between">
                 <label for="password" class="block text-sm font-medium text-gray-700">Confirm your password</label>
                 <span class="text-xs text-gray-500">Required for security</span>
             </div>
             <div class="flex gap-2">
                 <div class="relative flex-1">
-                    <input type="password" id="password" name="password" placeholder="Enter Password" class="w-full p-2 pr-10 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" required>
-                    <button type="button" id="togglePassword" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700" aria-label="Toggle password visibility">
+                    <input type="password" id="passwordAtName" name="password" placeholder="Enter Password" class="w-full p-2 pr-10 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" required>
+                    <button type="button" onclick="togglePasswordVisibility('passwordAtName', 'togglePassword')" id="togglePassword" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700" aria-label="Toggle password visibility">
                         <i class='bx bx-show text-xl'></i>
                     </button>
                 </div>
                 <button type="button" id="cancel" onclick="resetFormState()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors duration-200">Cancel</button>
-                <button type="submit" id="submit" onclick="updateName()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200">Confirm</button>
+                <button type="submit" id="submit" onclick="updateName('<?php echo $user_id; ?>')" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200">Confirm</button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="content-section" id="EmailSection">
+    <div class="flex items-center p-4 border-b border-gray-200">
+        <button id="ArrowbackButton" onclick="goBackToProfile()" class="flex items-center text-gray-600 hover:text-blue-600 transition-colors duration-200 mr-4">
+            <i class='bx bx-chevron-left text-2xl'></i>
+            <span class="ml-1 text-lg">Email</span>
+        </button>
+    </div>
+    <div class="p-6">
+        <h2 class="text-xl font-semibold mb-4">Edit Email</h2>
+        <p class="text-gray-600 mb-6">Changes to your email will be reflected across your PIAMIS Account.</p>
+        
+        <div class="flex items-center justify-center gap-2 w-full">
+            <div class="mb-4 w-full"> 
+                <label for="CurrentEmail" class="block text-sm font-medium text-gray-700 mb-1">Current Email</label>
+                <input type="text" id="CurrentEmail" class="w-full p-2 py-[10px] border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 cursor-not-allowed" disabled value="<?php echo htmlspecialchars($Email); ?>">
+            </div>
+            
+            <div class="mb-4 w-full">
+                <label for="NewEmail" class="block text-sm font-medium text-gray-700 mb-1">New Email</label>
+                <input type="text" id="NewEmail" name="NewEmail" class="w-full p-2 py-[10px] border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="Enter your New Email here." oninput="autoAppendDomain(this)">
+            </div>
+        </div>
+        
+        <div class="flex items-start gap-3 bg-blue-50 p-4 rounded-lg mb-6">
+            <i class='bx bx-info-circle text-blue-600 text-xl mt-0.5'></i>
+            <div>
+                <h2 class="text-lg font-medium text-gray-800 mb-1">Email Visibility</h2>
+                <p class="text-sm text-gray-600">Your email will be visible to Administrator within the PIAMIS system when they interact with you.</p>
+            </div>
+        </div>
+        <div class="flex gap-4">
+            <button id="backButtonAtEmail" onclick="goBackToProfile()" type="button" class="flex-1 bg-gray-200 text-gray-800 p-2 rounded-md hover:bg-gray-300 transition-colors duration-200">Back</button>
+            <button id="saveButtonAtEmail" onclick="saveChangesforEMAIL()" type="submit" class="flex-1 bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 transition-colors duration-200">Save Changes</button>
+        </div>
+        
+        <div id="passwordSectionAtEmail" class="hidden mt-4 space-y-3">
+            <div class="flex items-center justify-between">
+                <label for="password" class="block text-sm font-medium text-gray-700">Confirm your password</label>
+                <span class="text-xs text-gray-500">Required for security</span>
+            </div>
+            <div class="flex gap-2">
+                <div class="relative flex-1">
+                    <input type="password" id="passwordAtEmail" name="password" placeholder="Enter Password" class="w-full p-2 pr-10 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" required>
+                    <button type="button" onclick="togglePasswordVisibility('passwordAtEmail', 'togglePasswordAtEmail')" id="togglePasswordAtEmail" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700" aria-label="Toggle password visibility">
+                        <i class='bx bx-show text-xl'></i>
+                    </button>
+                </div>
+                <button type="button" id="cancel" onclick="resetFormState()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors duration-200">Cancel</button>
+                <button type="submit" id="submit" onclick="updateEmail('<?php echo $user_id; ?>')" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200">Confirm</button>
             </div>
         </div>
     </div>
@@ -203,6 +257,7 @@
 <script>
     function goBackToProfile() {
         document.getElementById('NameSection').classList.remove('active');
+        document.getElementById('EmailSection').classList.remove('active');
         document.getElementById('PasswordSection').classList.remove('active');
         document.getElementById('MyProfileSection').classList.add('active');
         document.getElementById('currentPassword').value = '';
@@ -266,24 +321,24 @@
         
         if(hasAnyValue) {
             // Hide the main buttons
-            document.getElementById('backButton').style.display = 'none';
-            document.getElementById('saveButton').style.display = 'none';
+            document.getElementById('backButtonAtName').style.display = 'none';
+            document.getElementById('saveButtonAtName').style.display = 'none';
             
             // Show the password section
-            document.getElementById('passwordSection').classList.remove('hidden');
-            document.getElementById('password').focus();
+            document.getElementById('passwordSectionAtName').classList.remove('hidden');
+            document.getElementById('passwordAtName').focus();
         }else{
-            alert('No changes detected');
+            showAlert('No changes detected', 'error');
             return;
         }
     }
     
-    function updateName() {
+    function updateName(user_id) {
         if (confirm(`Are you sure you want to save changes?`)) {
             const formData = new FormData();
             formData.append('action', 'updateUser_Name');
-            formData.append('userId', <?php echo $user_id; ?>);
-            formData.append('password', document.getElementById('password').value.trim());
+            formData.append('userId', user_id);
+            formData.append('password', document.getElementById('passwordAtName').value.trim());
             formData.append('firstName', document.getElementById('firstName').value.trim());
             formData.append('middleName', document.getElementById('middleName').value.trim());
             formData.append('lastName', document.getElementById('lastName').value.trim());
@@ -296,19 +351,78 @@
             .then(data => {
                 if (data.success) {
                     // Refresh the user list to show updated status
-                    alert('Your Name updated successfully!');
-                    window.location.reload();
+                    showAlert('Your Name updated successfully!','success');
+                    // Add delay before reload to show success message
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 5000);
                 } else {
-                    alert('Error: ' + (data.error || 'Failed to update your Name'));
+                    showAlert(data.message,'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('An error occurred while updating your Name');
+                showAlert('An error occurred while updating your Name', 'error');
             });
         }
     }
     // UPDATING NAME SCRIPTSSS ENDS HERE
+    
+    // UPDATING EMAIL SCRIPTSSS
+    function saveChangesforEMAIL(){
+        const newEmail = document.getElementById('NewEmail').value.trim();
+        
+        let hasAnyValue = false;
+        hasAnyValue = newEmail !== "";
+        
+        if(hasAnyValue) {
+            // Hide the main buttons
+            document.getElementById('backButtonAtEmail').style.display = 'none';
+            document.getElementById('saveButtonAtEmail').style.display = 'none';
+            
+            // Show the password section
+            document.getElementById('passwordSectionAtEmail').classList.remove('hidden');
+            document.getElementById('passwordAtEmail').focus();
+        }else{
+            showAlert('No changes detected', 'error');
+            return;
+        }
+    }
+    
+    function updateEmail(user_id) {
+        if (confirm(`Are you sure you want to save changes?`)) {
+            const formData = new FormData();
+            formData.append('action', 'UpdateEmail');
+            formData.append('userId', user_id);
+            formData.append('password', document.getElementById('passwordAtEmail').value.trim());
+            formData.append('NewEmail', document.getElementById('NewEmail').value.trim());
+            
+            fetch('../Functions/UserFunctions.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Refresh the user list to show updated status
+                    showAlert('Your Email updated successfully!','success');
+                    // Add delay before reload to show success message
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 5000);
+                } else {
+                    showAlert(data.message,'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('An error occurred while updating your Email', 'error');
+            });
+        }
+    }
+    // UPDATING EMAIL SCRIPTSSS ENDS HERE
+    
+    
     
     // UPDATING PASSWORD SCRIPTSSS
     // Check password strength and update UI

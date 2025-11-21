@@ -113,6 +113,13 @@
 <script>
     
     function studentCheckIn() {
+        
+        if(document.getElementById('reasonForVisit').value == ""){
+            showAlert('Select your reason for visit first.', 'error');
+            return;
+        }
+    
+    
         formData = new FormData()
         formData.append('action', 'Checkin')
         formData.append('CheckInStudentId', document.getElementById('CheckInStudentIdHidden').value)
@@ -128,15 +135,21 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('Check-in successful!')
-                window.location.reload();
+                showAlert('Student checked in successfully!', 'success');
+                // Delay reload to show success message
+                setTimeout(() => {
+                    closeModal('checkInModal');
+                    // Reset form fields
+                    document.getElementById('reasonForVisit').value = '';
+                    document.getElementById('notes').value = '';
+                }, 5000);
             } else {
-                alert('Check-in failed: ' + data.message)
+                showAlert('Check-in failed: ' + data.message, 'error');
             }
         })
         .catch(error => {
             console.error('Error:', error)
-            alert('An error occurred while checking in the student')
+            showAlert('An error occurred while checking in the student', 'error');
         })
     }
     
