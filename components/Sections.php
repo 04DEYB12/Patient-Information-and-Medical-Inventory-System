@@ -170,6 +170,60 @@
     </div>
 </section>
 
+<section class="content-section" id="AddressSection">
+    <div class="flex items-center p-4 border-b border-gray-200">
+        <button id="ArrowbackButton" onclick="goBackToProfile()" class="flex items-center text-gray-600 hover:text-blue-600 transition-colors duration-200 mr-4">
+            <i class='bx bx-chevron-left text-2xl'></i>
+            <span class="ml-1 text-lg">Address</span>
+        </button>
+    </div>
+    <div class="p-6">
+        <h2 class="text-xl font-semibold mb-4">Edit Address</h2>
+        <p class="text-gray-600 mb-6">Changes to your address will be reflected across your PIAMIS Account.</p>
+        
+        <div class="flex items-center justify-center gap-2 w-full">
+            <div class="mb-4 w-full"> 
+                <label for="CurrentAddress" class="block text-sm font-medium text-gray-700 mb-1">Current Address</label>
+                <input type="text" id="CurrentAddress" class="w-full p-2 py-[10px] border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 cursor-not-allowed" disabled value="<?php echo htmlspecialchars($Address); ?>">
+            </div>
+            
+            <div class="mb-4 w-full">
+                <label for="NewAddress" class="block text-sm font-medium text-gray-700 mb-1">New Address</label>
+                <input type="text" id="NewAddress" name="NewAddress" class="w-full p-2 py-[10px] border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="Enter your New Address here.">
+            </div>
+        </div>
+        
+        <div class="flex items-start gap-3 bg-blue-50 p-4 rounded-lg mb-6">
+            <i class='bx bx-info-circle text-blue-600 text-xl mt-0.5'></i>
+            <div>
+                <h2 class="text-lg font-medium text-gray-800 mb-1">Address Visibility</h2>
+                <p class="text-sm text-gray-600">Your address will be visible to Administrator within the PIAMIS system when they interact with you.</p>
+            </div>
+        </div>
+        <div class="flex gap-4">
+            <button id="backButtonAtAddress" onclick="goBackToProfile()" type="button" class="flex-1 bg-gray-200 text-gray-800 p-2 rounded-md hover:bg-gray-300 transition-colors duration-200">Back</button>
+            <button id="saveButtonAtAddress" onclick="saveChangesforADDRESS()" type="submit" class="flex-1 bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 transition-colors duration-200">Save Changes</button>
+        </div>
+        
+        <div id="passwordSectionAtAddress" class="hidden mt-4 space-y-3">
+            <div class="flex items-center justify-between">
+                <label for="password" class="block text-sm font-medium text-gray-700">Confirm your password</label>
+                <span class="text-xs text-gray-500">Required for security</span>
+            </div>
+            <div class="flex gap-2">
+                <div class="relative flex-1">
+                    <input type="password" id="passwordAtAddress" name="password" placeholder="Enter Password" class="w-full p-2 pr-10 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" required>
+                    <button type="button" onclick="togglePasswordVisibility('passwordAtAddress', 'togglePasswordAtAddress')" id="togglePasswordAtAddress" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700" aria-label="Toggle password visibility">
+                        <i class='bx bx-show text-xl'></i>
+                    </button>
+                </div>
+                <button type="button" id="cancel" onclick="resetFormState()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors duration-200">Cancel</button>
+                <button type="button" id="submit" onclick="updateAddress('<?php echo $user_id; ?>')" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200">Confirm</button>
+            </div>
+        </div>
+    </div>
+</section>
+
 <section class="content-section" id="PasswordSection">
     <div class="flex items-center p-4 border-b border-gray-200">
         <button id="ArrowbackButton" onclick="goBackToProfile()" class="flex items-center text-gray-600 hover:text-blue-600 transition-colors duration-200 mr-4">
@@ -370,7 +424,7 @@
         }
     }
     
-    // UPDATING NAME SCRIPTSSS
+    // UPDATING NAME SCRIPTSSS ----------------------
     function saveChanges() {
         const firstName = document.getElementById('firstName').value.trim();
         const middleName = document.getElementById('middleName').value.trim();
@@ -426,9 +480,64 @@
             });
         }
     }
-    // UPDATING NAME SCRIPTSSS ENDS HERE
+    // UPDATING NAME SCRIPTSSS ENDS HERE ------------
     
-    // UPDATING PHONE NUMBER SCRIPTSSS
+    
+    // UPDATING EMAIL SCRIPTSSS ---------------------
+    function updateEmail(user_id) {
+        if (confirm(`Are you sure you want to save changes?`)) {
+            const formData = new FormData();
+            formData.append('action', 'UpdateEmail');
+            formData.append('userId', user_id);
+            formData.append('password', document.getElementById('passwordAtEmail').value.trim());
+            formData.append('NewEmail', document.getElementById('NewEmail').value.trim());
+            
+            fetch('../Functions/UserFunctions.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Refresh the user list to show updated status
+                    showAlert('Your Email updated successfully!','success');
+                    // Add delay before reload to show success message
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 5000);
+                } else {
+                    showAlert(data.message,'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('An error occurred while updating your Email', 'error');
+            });
+        }
+    }
+
+    function saveChangesforEMAIL(){
+        const newEmail = document.getElementById('NewEmail').value.trim();
+        
+        let hasAnyValue = false;
+        hasAnyValue = newEmail !== "";
+        
+        if(hasAnyValue) {
+            // Hide the main buttons
+            document.getElementById('backButtonAtEmail').style.display = 'none';
+            document.getElementById('saveButtonAtEmail').style.display = 'none';
+            
+            // Show the password section
+            document.getElementById('passwordSectionAtEmail').classList.remove('hidden');
+            document.getElementById('passwordAtEmail').focus();
+        }else{
+            showAlert('No changes detected', 'error');
+            return;
+        }
+    }
+    // UPDATING EMAIL SCRIPTSSS ENDS HERE ----------    
+    
+    // UPDATING PHONE NUMBER SCRIPTSSS -------------
     function saveChangesforPHONE(){
         const newPhone = document.getElementById('NewPhone').value.trim();
         
@@ -444,7 +553,7 @@
             document.getElementById('passwordSectionAtPhone').classList.remove('hidden');
             document.getElementById('passwordAtPhone').focus();
         }else{
-            showAlert('Input your new phone number', 'error');
+            showAlert('Enter your new phone number first.', 'error');
             return;
         }
     }
@@ -481,17 +590,36 @@
             });
         }
     }
-    // UPDATING PHONE NUMBER SCRIPTSSS ENDS HERE
+    // UPDATING PHONE NUMBER SCRIPTSSS ENDS HERE ---
     
-    // UPDATING EMAIL SCRIPTSSS
+    // UPDATING ADDRESS SCRIPTSSS
+    function saveChangesforADDRESS(){
+        const newAddress = document.getElementById('NewAddress').value.trim();
+        
+        let hasAnyValue = false;
+        hasAnyValue = newAddress !== "";
+        
+        if(hasAnyValue) {
+            // Hide the main buttons
+            document.getElementById('backButtonAtAddress').style.display = 'none';
+            document.getElementById('saveButtonAtAddress').style.display = 'none';
+            
+            // Show the password section
+            document.getElementById('passwordSectionAtAddress').classList.remove('hidden');
+            document.getElementById('passwordAtAddress').focus();
+        }else{
+            showAlert('Enter your new address first.', 'error');
+            return;
+        }
+    }
     
-    function updateEmail(user_id) {
+    function updateAddress(user_id){
         if (confirm(`Are you sure you want to save changes?`)) {
             const formData = new FormData();
-            formData.append('action', 'UpdateEmail');
+            formData.append('action', 'UpdateAddress');
             formData.append('userId', user_id);
-            formData.append('password', document.getElementById('passwordAtEmail').value.trim());
-            formData.append('NewEmail', document.getElementById('NewEmail').value.trim());
+            formData.append('password', document.getElementById('passwordAtAddress').value.trim());
+            formData.append('NewAddress', document.getElementById('NewAddress').value.trim());
             
             fetch('../Functions/UserFunctions.php', {
                 method: 'POST',
@@ -501,45 +629,23 @@
             .then(data => {
                 if (data.success) {
                     // Refresh the user list to show updated status
-                    showAlert('Your Email updated successfully!','success');
+                    showAlert('Your Address updated successfully!','success');
                     // Add delay before reload to show success message
                     setTimeout(() => {
                         window.location.reload();
                     }, 5000);
                 } else {
                     showAlert(data.message,'error');
+                    document.getElementById('passwordAtAddress').classList.add('border-red-500');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                showAlert('An error occurred while updating your Email', 'error');
+                showAlert('An error occurred while updating your Address', 'error');
             });
         }
     }
-    // UPDATING EMAIL SCRIPTSSS ENDS HERE
-    
-    // UPDATING PHONE NUMBER SCRIPTSSS
-    function saveChangesforEMAIL(){
-        const newEmail = document.getElementById('NewEmail').value.trim();
-        
-        let hasAnyValue = false;
-        hasAnyValue = newEmail !== "";
-        
-        if(hasAnyValue) {
-            // Hide the main buttons
-            document.getElementById('backButtonAtEmail').style.display = 'none';
-            document.getElementById('saveButtonAtEmail').style.display = 'none';
-            
-            // Show the password section
-            document.getElementById('passwordSectionAtEmail').classList.remove('hidden');
-            document.getElementById('passwordAtEmail').focus();
-        }else{
-            showAlert('No changes detected', 'error');
-            return;
-        }
-    }
-    
-    
+    // UPDATING ADDRESS SCRIPTSSS ENDS HERE ---
     
     
     // UPDATING PASSWORD SCRIPTSSS

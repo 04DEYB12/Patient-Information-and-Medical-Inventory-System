@@ -143,14 +143,18 @@ require_once '../Functions/Queries.php';
                                 <label class="w-full max-w-[200px]">Home</label>
                                 <span class="font-normal text-gray-800 ml-[295px]"><?php echo $Address; ?></span>
                             </div>
-                            <i class="bx bx-chevron-right font-bold text-2xl"></i>
+                            <button id="AddressSectionbtn" onclick="showSection('AddressSection')" type="button" class="px-10 text-gray-500 hover:text-blue-600 transition-colors duration-200">
+                                <i class="bx bx-chevron-right font-bold text-2xl"></i>
+                            </button>
                         </div>
                         <div class="infodata p-4 px-6 flex items-center justify-between">
                             <div class="flex items-center w-full">
                                 <label class="w-full max-w-[200px]">Office</label>
                                 <span class="font-normal text-gray-800 ml-[295px]"><?php echo $Office; ?></span>
                             </div>
-                            <i class="bx bx-chevron-right font-bold text-2xl"></i>
+                            <button id="OfficeSectionbtn" onclick="showSection('OfficeSection')" type="button" class="px-10 text-gray-500 hover:text-blue-600 transition-colors duration-200">
+                                <i class="bx bx-chevron-right font-bold text-2xl"></i>
+                            </button>
                         </div>
                     </div>
 

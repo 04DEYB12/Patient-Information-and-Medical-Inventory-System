@@ -796,7 +796,42 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
                 } else {
                     throw new Exception('Failed to update phone number: ' . mysqli_error($con));
                 }
+                break;
+            case 'UpdateAddress': // ------------------------------- My Profile: Update Home Address --------------------------------
+                $userId = $_POST['userId'];
+                $password = $_POST['password'];
+                $NewAddress = mysqli_real_escape_string($con, $_POST['NewAddress']);
                 
+                // Verify password first
+                $query = "SELECT PasswordHash FROM clinicpersonnel WHERE PersonnelID = ?";
+                $stmt = mysqli_prepare($con, $query);
+                mysqli_stmt_bind_param($stmt, 's', $userId);
+                mysqli_stmt_execute($stmt);
+                $result = mysqli_stmt_get_result($stmt);
+                $user = mysqli_fetch_assoc($result);
+                
+                if (!$user || !password_verify($password, $user['PasswordHash'])) {
+                    sendJsonResponse([
+                        'success' => false,
+                        'message' => 'Incorrect password. Please try again.'
+                    ]);
+                    exit();
+                }
+                
+                // Update user phone number in database
+                $query = "UPDATE clinicpersonnel SET Address = ? WHERE PersonnelID = ?";
+                $stmt = mysqli_prepare($con, $query);
+                
+                mysqli_stmt_bind_param($stmt, 'ss', $NewAddress, $userId);
+                
+                if (mysqli_stmt_execute($stmt)) {
+                    sendJsonResponse([
+                        'success' => true,
+                        'message' => 'Address updated successfully.'
+                    ]);
+                } else {
+                    throw new Exception('Failed to update address: ' . mysqli_error($con));
+                }
                 break;
             case 'confirmPassword': // ------------------------------- Confirm Password --------------------------------
                 $userId = $_POST['userId'];
