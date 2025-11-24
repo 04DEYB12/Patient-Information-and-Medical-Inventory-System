@@ -3,7 +3,7 @@ session_start();
 include '../Landing Repository/Connection.php';
 
 if (!isset($_SESSION['User_ID'])) {
-    echo "<script>alert('Please login first!'); window.location.href = '../Landing Repository/LandingPage.php';</script>";
+    echo "<script>window.location.href = '../components/Error401.php';</script>";
     exit();
 }
 

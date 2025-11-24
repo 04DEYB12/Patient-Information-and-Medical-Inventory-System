@@ -60,8 +60,6 @@ Completed Task:
 ✅ Edit Office (Logic and UI)
 ✅ Enhance Password Management (Change Password, Validation)
 
-
-
 ------------------ PAPER TASK -------------------------
 
 ✅ Entity Relationship Diagram (ERD)
@@ -69,3 +67,12 @@ Completed Task:
 ✅ Use Case Diagram
 ✅ Class Diagram
 ✅ Sequence Diagram
+
+
+--------------------- NEW TASK -------------------
+
+✅ HTTP Error 401 Unauthorized : Login Required
+✅ HTTP Error 403 Forbidden : Access Denied
+- USER MANAGEMENT: Super Admin - for changing ng role and status ng mga accounts. Admin Can't do that
+- PATIENT/STUDENT: Data Process - For Student check-ups dapat may date tayo kung kelan follow up
+                                 check-ups nila (can send sa email na din) and more Dynamic status (Lapsed, Follow-up, Completed)

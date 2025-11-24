@@ -13,7 +13,7 @@ if (!isset($con) || $con->connect_error) {
 
 // Redirect if user not logged in
 if (!isset($_SESSION['User_ID'])) {
-    echo "<script>alert('Please login first!'); window.location.href = 'Loginpage.php';</script>";
+    echo "<script>window.location.href = '../components/Error401.php';</script>";
     exit();
 }
 
