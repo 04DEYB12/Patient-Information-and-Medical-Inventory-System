@@ -12,8 +12,8 @@ $role = $_SESSION['role'];
 
 require_once '../Functions/Queries.php';
 
-if ($role != 'Administrator') {
-    echo "<script>window.location.href = '../components/Error404.php';</script>";
+if ($role != 'Administrator' && $role != 'Super Administrator') {
+    echo "<script>window.location.href = '../components/Error403.php';</script>";
     exit();
 }
 

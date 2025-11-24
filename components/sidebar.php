@@ -26,7 +26,7 @@
                 <li class="nav-item <?php echo strpos($_SERVER['PHP_SELF'], 'Dashboard.php') !== false ? 'active' : ''; ?>">
                     <a href="../PIAIMS Repository/Dashboard.php"><i class='bx bx-pulse'></i><span>Dashboard</span></a>
                 </li>
-                <li style="display: <?php echo $role == 'Administrator' ? 'block' : 'none'; ?>;" class="nav-item <?php echo strpos($_SERVER['PHP_SELF'], 'AccountManagement.php') !== false ? 'active' : ''; ?>">
+                <li style="display: <?php echo $role == 'Administrator' || $role == 'Super Administrator' ? 'block' : 'none'; ?>;" class="nav-item <?php echo strpos($_SERVER['PHP_SELF'], 'AccountManagement.php') !== false ? 'active' : ''; ?>">
                     <a href="../PIAIMS Repository/AccountManagement.php"><i class='bx bx-user'></i><span>User Management</span></a>
                 </li>
                 <li class="nav-item <?php echo strpos($_SERVER['PHP_SELF'], 'Patients.php') !== false ? 'active' : ''; ?>">
@@ -35,7 +35,7 @@
                 <li class="nav-item <?php echo strpos($_SERVER['PHP_SELF'], 'Inventory.php') !== false ? 'active' : ''; ?>">
                     <a href="../PIAIMS Repository/Inventory.php"><i class='bx bx-package'></i><span>Inventory</span></a>
                 </li>
-                <li style="display: <?php echo $role == 'Administrator' ? 'block' : 'none'; ?>;" class="nav-item <?php echo strpos($_SERVER['PHP_SELF'], 'AuditLogs.php') !== false ? 'active' : ''; ?>">
+                <li style="display: <?php echo $role == 'Administrator' || $role == 'Super Administrator' ? 'block' : 'none'; ?>;" class="nav-item <?php echo strpos($_SERVER['PHP_SELF'], 'AuditLogs.php') !== false ? 'active' : ''; ?>">
                     <a href="../PIAIMS Repository/AuditLogs.php"><i class='bx bx-history'></i><span>Audit Logs</span></a>
                 </li>
             </ul>

@@ -10,8 +10,8 @@ if (!isset($_SESSION['User_ID'])) {
 $user_id = $_SESSION['User_ID'];
 require_once '../Functions/Queries.php';
 
-if ($_SESSION['role'] != 'Administrator') {
-    echo "<script>window.location.href = '../components/Error404.php';</script>";
+if ($_SESSION['role'] !== 'Administrator' && $_SESSION['role'] !== 'Super Administrator') {
+    echo "<script>window.location.href = '../components/Error403.php';</script>";
     exit();
 }
 

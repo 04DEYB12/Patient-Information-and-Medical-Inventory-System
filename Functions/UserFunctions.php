@@ -869,13 +869,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
                     throw new Exception('Failed to update office: ' . mysqli_error($con));
                 }
                 break;
-            case 'confirmPassword': // ------------------------------- Confirm Password --------------------------------
+            case 'confirmPassword': // ------------------------------- Confirm Password --------------------------------    
                 $userId = $_POST['userId'];
                 $currentPassword = $_POST['currentPassword'];
                 
                 $query = "SELECT PasswordHash FROM clinicpersonnel WHERE PersonnelID = ?";
                 $stmt = mysqli_prepare($con, $query);
-                mysqli_stmt_bind_param($stmt, 'i', $userId);
+                mysqli_stmt_bind_param($stmt, 's', $userId);
                 mysqli_stmt_execute($stmt);
                 $result = mysqli_stmt_get_result($stmt);
                 $user = mysqli_fetch_assoc($result);
@@ -927,7 +927,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
                     exit();
                 }
                 
-                mysqli_stmt_bind_param($stmt, 'ssi', $hashedPassword, $PasswordChangeDT, $userId);
+                mysqli_stmt_bind_param($stmt, 'sss', $hashedPassword, $PasswordChangeDT, $userId);
                 $result = mysqli_stmt_execute($stmt);
                 
                 if ($result) {

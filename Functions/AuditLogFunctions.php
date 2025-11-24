@@ -22,7 +22,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 // Check if user is logged in and is an administrator
-if (!isset($_SESSION['User_ID']) || $_SESSION['role'] != 'Administrator') {
+if (!isset($_SESSION['User_ID']) || ($_SESSION['role'] !== 'Administrator' && $_SESSION['role'] !== 'Super Administrator')) {
     http_response_code(403);
     echo json_encode([
         'success' => false,
