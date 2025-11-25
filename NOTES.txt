@@ -1,5 +1,7 @@
 
 📌 ACCOUNT PASSWORDS
+
+Anya : @Anya123 - Super Admin
 Adele : @Adella123 - Admin
 Dave : Dave147532689 - Staff
 
@@ -71,8 +73,30 @@ Completed Task:
 
 --------------------- NEW TASK -------------------
 
+SECURITY:
 ✅ HTTP Error 401 Unauthorized : Login Required
 ✅ HTTP Error 403 Forbidden : Access Denied
-- USER MANAGEMENT: Super Admin - for changing ng role and status ng mga accounts. Admin Can't do that
-- PATIENT/STUDENT: Data Process - For Student check-ups dapat may date tayo kung kelan follow up
-                                 check-ups nila (can send sa email na din) and more Dynamic status (Lapsed, Follow-up, Completed)
+
+MY PROFILE:
+✅ Change Password Bug fixed
+✅ Blurred Other Preferences Setting for Upcomming feature
+
+USER MANAGEMENT:
+✅ Super Admin account and permission
+✅ Self cards did'nt display
+✅ If the user is an Admin, they can't see other admin cards
+✅ Only Super Admins can modify user roles and statuses
+✅ Convert alerts to Toast Notifications
+
+PATIENT/STUDENT:
+✅ Data Process: For Student check-ups dapat may date tayo kung kelan follow up
+                check-ups nila (can send sa email na din) and more Dynamic status (Lapsed, Follow-up, Completed)
+✅ Edit Record Modal Revision
+✅ Email for Follow-up Assessment Schedule 
+✅ Mark as Done
+✅ Dynamic Check-up statuses
+✅ Modal for In progress and Follow-up statuses
+✅ Modal for Lapsed and Completed statuses
+                                  
+AUDIT LOGS:
+✅ Role Filter 

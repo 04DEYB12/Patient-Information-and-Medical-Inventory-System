@@ -4,7 +4,7 @@
         <div style="padding: 1.5rem; border-bottom: 1px solid #e5e7eb; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <h2 style="font-size: 1.5rem; font-weight: 600; color: white; margin: 0;">
-                    <i class="fas fa-user-plus" style="margin-right: 10px;"></i>Student Check-in
+                    <i class="fas fa-user-plus" style="margin-right: 10px;"></i>Student Check-up
                 </h2>
                 <button onclick="closeModal('checkInModal')" style="background: rgba(255,255,255,0.2); border: none; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; font-size: 1.25rem; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
                     &times;

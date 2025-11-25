@@ -8,6 +8,9 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
 /**
  * Send JSON response (for GET requests)
  */
@@ -179,7 +182,9 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['action'])) {
                 }
                 
                 // Query to get check-in records for the student
-                $query = "SELECT * FROM studentcheckins WHERE ID = '$recordId' AND StudentID = '$studentId'";
+                $query = "SELECT sc.*, cp.FirstName, cp.LastName, sc.Status AS Status FROM studentcheckins sc 
+                         JOIN clinicpersonnel cp ON sc.StaffID = cp.PersonnelID 
+                         WHERE sc.ID = '$recordId' AND sc.StudentID = '$studentId'";
                 
                 $result = mysqli_query($con, $query);
                 
@@ -197,6 +202,9 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['action'])) {
                         'Notes' => $row['Notes'],
                         'Status' => $row['Status'],
                         'Outcome' => $row['Outcome'],
+                        'UpdatedAt' => $row['UpdatedAt'],
+                        'FollowUpDate' => $row['FollowUpDate'],
+                        'AssistBy' => $row['FirstName'] . ' ' . $row['LastName']
                     ];
                 }
                 
@@ -535,33 +543,95 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         case 'updateCheckInRecord': // --------------------------------------- UPDATE CHECKIN ---------------------------------------
             $recordId = $_POST['recordId'];
             $studentId = str_replace('ID: ', '', $_POST['studentId']);
-            $updatedAt = $_POST['updatedAt'];
-            $outcome = $_POST['outcome'];
+            $FollowUpDate_record = $_POST['FollowUpDate_record'];
+            $checkup_reason_record = $_POST['checkup_reason_record'];
+            $Notes_record = $_POST['Notes_record'];
             
-            // Update user status in database
-            $query = "UPDATE studentcheckins SET Status = 'completed', Outcome = ?, UpdatedAt = ? WHERE id = ?";
-            $stmt = mysqli_prepare($con, $query);
             
-            if ($stmt === false) {
-                throw new Exception('Failed to prepare statement: ' . mysqli_error($con));
+            $query = "UPDATE studentcheckins ";
+            if(!empty($FollowUpDate_record)){
+                $query .= "SET Status = 'Follow-up', Reason = ?, Notes = ?, FollowUpDate = ? WHERE id = ?";
+                $stmt = mysqli_prepare($con, $query);
+                if ($stmt === false) {
+                    throw new Exception('Failed to prepare statement: ' . mysqli_error($con));
+                }
+                mysqli_stmt_bind_param($stmt, 'sssi', $checkup_reason_record, $Notes_record, $FollowUpDate_record, $recordId);
+            } else {
+                $query .= "SET Reason = ?, Notes = ? WHERE id = ?";
+                $stmt = mysqli_prepare($con, $query);
+                if ($stmt === false) {
+                    throw new Exception('Failed to prepare statement: ' . mysqli_error($con));
+                }
+                mysqli_stmt_bind_param($stmt, 'ssi', $checkup_reason_record, $Notes_record, $recordId);
             }
             
-            mysqli_stmt_bind_param($stmt, 'ssi', $outcome, $updatedAt, $recordId);
-            
             if (mysqli_stmt_execute($stmt)) {
+            
+                if(!empty($FollowUpDate_record)){
+                
+                    // Get student's email from database
+                    $emailQuery = "SELECT * FROM student WHERE School_ID = ?";
+                    $emailStmt = mysqli_prepare($con, $emailQuery);
+                    mysqli_stmt_bind_param($emailStmt, 's', $studentId);
+                    mysqli_stmt_execute($emailStmt);
+                    $emailResult = mysqli_stmt_get_result($emailStmt);
+                    $studentData = mysqli_fetch_assoc($emailResult);
+                    $studentEmail = $studentData['StudentEmailAddress'] ?? null;
+                    $studentName = $studentData['FirstName'] . " ". $studentData['MiddleName'] . " " . $studentData['LastName'];
+                    
+                    // Send email
+                    require '../phpmailer/src/Exception.php';
+                    require '../phpmailer/src/PHPMailer.php';
+                    require '../phpmailer/src/SMTP.php';
+                    $mail = new PHPMailer(true);
+
+                    try {
+                        $mail->isSMTP();
+                        $mail->Host = 'smtp.gmail.com';
+                        $mail->SMTPAuth = true;
+                        $mail->Username = 'davemalaran2004@gmail.com';
+                        $mail->Password = 'tgjtrujoubpihahl'; 
+                        $mail->SMTPSecure = 'ssl';
+                        $mail->Port = 465;
+
+                        $mail->setFrom('davemalaran2004@gmail.com', 'Patient Information & Medical Inventory System');
+                        $mail->addAddress($studentEmail);
+                        $mail->isHTML(true);
+
+                        $mail->Subject = "Follow-up Assessment Scheduled";
+                        $mail->Body = "
+                            <h3>Follow-up Assessment Confirmation</h3>
+                            <p>Dear " . nl2br(htmlspecialchars($studentName)) . ",</p>
+                            <p>Your follow-up assessment has been scheduled for: <strong>" . date('F j, Y \a\t g:i A', strtotime($FollowUpDate_record)) . "</strong></p>
+                            <p><strong>Reason for Follow-up:</strong> " . htmlspecialchars($checkup_reason_record) . "</p>
+                            <p><strong>Notes:</strong> " . nl2br(htmlspecialchars($Notes_record)) . "</p>
+                            <p>Please arrive 10 minutes before your scheduled time. If you need to reschedule, please contact the clinic in advance.</p>
+                            <p>Best regards,<br>Granby Colleges of Science and Technology - PIAMIS</p>
+                        ";
+
+                        if (!$mail->send()) {
+                            sendJsonResponse(['success' => false, 'message' => 'Failed to send Follow-up email.']);
+                        } else {
+                            sendJsonResponse(['success' => true, 'message' => 'Follow-up email sent successfully.']);
+                        }
+                    } catch (Exception $e) {
+                        sendJsonResponse(['success' => false, 'message' => 'Follow-up email could not be sent.']);
+                    }
+                }
+            
                 $user_id = $_SESSION['User_ID'];
                 $actionType = 'UPDATE';
                 $tableName = 'studentcheckins';
                 $recordId = $studentId;
-                $actionDetails = "Check-in updated: $studentId";
+                $actionDetails = "Check-up updated: $studentId";
                 
                 audit($user_id, $actionType, $tableName, $recordId, $actionDetails);
                 sendJsonResponse([
                     'success' => true,
-                    'message' => 'Check-in record updated successfully!'
+                    'message' => 'Check-up record updated successfully!'
                 ]);
             } else {
-                throw new Exception('Failed to update Check-in record: ' . mysqli_error($con));
+                throw new Exception('Failed to update Check-up record: ' . mysqli_error($con));
             }
             break;
         case 'updateStudentStatus': // --------------------------------------- UPDATE STUDENT STATUS ---------------------------------------
@@ -585,6 +655,36 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ]);
             } else {
                 throw new Exception('Failed to update student status: ' . mysqli_error($con));
+            }
+            break;
+        case 'MarkasDone_Record': // --------------------------------------- MARK AS DONE ---------------------------------------
+            $recordId = $_POST['recordId'];
+            $studentId = str_replace('ID: ', '', $_POST['studentId']);
+            $Outcome = $_POST['Outcome'];
+            
+            $query = "UPDATE studentcheckins SET Status = 'Completed', Outcome = ? WHERE id = ?";
+            $stmt = mysqli_prepare($con, $query);
+            
+            if ($stmt === false) {
+                throw new Exception('Failed to prepare statement: ' . mysqli_error($con));
+            }
+            
+            mysqli_stmt_bind_param($stmt, 'ss', $Outcome, $recordId);
+            
+            if (mysqli_stmt_execute($stmt)) {
+                $user_id = $_SESSION['User_ID'];
+                $actionType = 'UPDATE';
+                $tableName = 'studentcheckins';
+                $recordId = $studentId;
+                $actionDetails = "Check-up marked as done: $studentId";
+                
+                audit($user_id, $actionType, $tableName, $recordId, $actionDetails);
+                sendJsonResponse([
+                    'success' => true,
+                    'message' => 'Check-up record marked as done successfully!'
+                ]);
+            } else {
+                throw new Exception('Failed to mark check-up record as done: ' . mysqli_error($con));
             }
             break;
     }    

@@ -188,7 +188,11 @@ require_once '../Functions/Queries.php';
                                 <span class="font-normal text-gray-800">Last changed <?php echo $PasswordChangeDT; ?></span>
                             </div>
                         </div>
-                        <div class="portion w-full border-[1px] border-gray-200 rounded-lg p-4">
+                        <div class="portion w-full border-[1px] border-gray-200 rounded-lg p-4 relative overflow-hidden">
+                            <div class="absolute inset-0 bg-white bg-opacity-5 backdrop-blur-sm z-10 flex items-center justify-center">
+                                <span class="text-xl font-bold text-gray-600 uppercase tracking-wider bg-white/90 px-4 py-2 rounded-md border-2 border-dashed border-gray-400 transform rotate-[-5deg] shadow-md">Upcoming Feature</span>
+                            </div>
+                            <div class="opacity-100">
                             <div class="md:w-2/3 p-2 px-4">
                                 <h1 class="font-normal text-gray-800 mb-4 text-2xl">Other Preference</h1>
                                 <p class="text-gray-600 mb-6 text-xm">Ways to verify your authenticity and verifications.</p>

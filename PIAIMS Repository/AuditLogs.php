@@ -12,8 +12,8 @@ $role = $_SESSION['role'];
 
 require_once '../Functions/Queries.php';
 
-if ($role != 'Administrator') {
-    echo "<script>window.location.href = '../components/Error404.php';</script>";
+if ($role != 'Administrator' && $role != 'Super Administrator') {
+    echo "<script>window.location.href = '../components/Error403.php';</script>";
     exit();
 }
 
@@ -99,6 +99,7 @@ if ($role != 'Administrator') {
                                                 class="pl-3 pr-8 py-2 border border-gray-300 rounded-md bg-white text-gray-600 cursor-pointer appearance-none min-w-[150px] focus:ring-2 focus:ring-yellow-400 focus:outline-none"
                                             >
                                                 <option value="">All Roles</option>
+                                                <option value="Super Administrator">Super Administrator</option>
                                                 <option value="Administrator">Administrator</option>
                                                 <option value="Staff">Staff</option>
                                             </select>

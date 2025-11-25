@@ -22,7 +22,7 @@ require_once '../Functions/Queries.php';
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="../Stylesheet/Design.css">
-    <script src="../Functions/scripts.js"></script>
+        <script src="../Functions/scripts.js"></script>
     <!-- TailwindCSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -585,9 +585,9 @@ require_once '../Functions/Queries.php';
                                                 </div>
                                             </div>
                                             <div class='flex flex-row gap-2'>
-                                                <button onclick=\"openCheckInModal('{$student_id}')\" title='Check In' ".($student_status === 'Active' ? '' : 'style="cursor: not-allowed;" disabled')."
+                                                <button onclick=\"openCheckInModal('{$student_id}')\" title='Check Up' ".($student_status === 'Active' ? '' : 'style="cursor: not-allowed;" disabled')."
                                                     class='px-3 py-2 bg-".$color."-600 text-white rounded-lg hover:bg-".$color."-700 text-sm flex items-center gap-1'>
-                                                    <i class=\"bx bx-user-check\"></i> Check in
+                                                    <i class=\"bx bx-user-check\"></i> Check Up
                                                 </button>
                                                 <button onclick=\"openViewModal('{$student_id}')\" title='View Profile' 
                                                     class='px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm flex items-center gap-1'>
@@ -868,121 +868,6 @@ require_once '../Functions/Queries.php';
             updatePagination();
         };
     });
-
-    
-    
-    // Handle View Record button click
-    function viewStudentRecord(studentId) {
-        openModal('RecordModal');
-        
-        // Show loading state
-        console.log('Loading student data for ID:', studentId);
-        document.getElementById('RecordStudentName').textContent = 'Loading...';
-        document.getElementById('RecordStudentID').textContent = 'ID: ' + studentId;
-        
-        
-        fetch(`../Functions/patientFunctions.php?action=getStudent&id=${studentId}`)
-            .then(response => {
-                console.log('Response status:', response.status);
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Received data:', data);
-                if (data.success) {
-                    const student = data.student;
-                    
-                    // Update header
-                    document.getElementById('RecordStudentName').textContent = `${student.FirstName || ''} ${student.LastName || ''}`.trim();
-                    // Update the hidden input value
-                    // document.getElementById('RecordStudentIdHidden').value = studentId;
-                    // document.getElementById('RecordStaffIdHidden').value = <?php //echo $_SESSION['User_ID']; ?>;
-                    
-                    
-                    // Show loading state in table
-                    const tbody = document.getElementById('recordTableBody');
-                    tbody.innerHTML = `
-                        <tr>
-                            <td colspan="5" style="padding: 1.5rem; text-align: center; color: #6b7280;">
-                                Loading records...
-                            </td>
-                        </tr>`;
-                    
-                    // Fetch check-in records for this student
-                    fetch(`../Functions/patientFunctions.php?action=getCheckInRecords&studentId=${studentId}`)
-                        .then(response => response.json())
-                        .then(data => {
-                            console.log('Check-in records:', data);
-                            
-                            if (data.success && data.records && data.records.length > 0) {
-                                // Clear loading message
-                                tbody.innerHTML = '';
-                                
-                                // Add each record to the table
-                                data.records.forEach(record => {
-                                    const row = document.createElement('tr');
-                                    const date = new Date(record.DateTime);
-                                    const formattedDate = date.toLocaleDateString();
-                                    const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                                    const statusClass = record.Status === 'active' ? 'status-active' : 
-                                                        record.Status === 'Completed' ? 'status-completed' : 'status-pending';
-                                    
-                                    // Add clickable styles and behavior
-                                    row.style.cursor = 'pointer';
-                                    row.style.transition = 'background-color 0.2s';
-                                    row.onmouseover = function() { this.style.backgroundColor = '#f9fafb'; };
-                                    row.onmouseout = function() { this.style.backgroundColor = ''; };
-                                    row.onclick = function() {
-                                        console.log('Record clicked:', record);
-                                        viewRecordDetails(record.id, record.StudentID);
-                                    };
-                                    
-                                    row.innerHTML = `
-                                        <td style="padding: 0.75rem 1rem;">
-                                            <div style="font-weight: 500;">${formattedDate}</div>
-                                            <div style="font-size: 0.75rem; color: #6b7280;">${formattedTime}</div>
-                                        </td>
-                                        <td style="padding: 0.75rem 1rem;">${record.Reason || 'N/A'}</td>
-                                        <td style="padding: 0.75rem 1rem;">
-                                            <span class="${statusClass}">${record.Status || 'N/A'}</span>
-                                        </td>
-                                        <td style="padding: 0.75rem 1rem;">${record.Outcome || 'N/A'}</td>
-                                        <td style="padding: 0.75rem 1rem;">${record.staff_name || 'N/A'}</td>
-                                    `;
-                                    tbody.appendChild(row);
-                                });
-                            } else {
-                                tbody.innerHTML = `
-                                    <tr>
-                                        <td colspan="5" style="padding: 1.5rem; text-align: center; color: #6b7280;">
-                                            No check-in records found for this student.
-                                        </td>
-                                    </tr>`;
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error loading check-in records:', error);
-                            tbody.innerHTML = `
-                                <tr>
-                                    <td colspan="5" style="padding: 1.5rem; text-align: center; color: #ef4444;">
-                                        Error loading records. Please try again.
-                                    </td>
-                                </tr>`;
-                        });
-                    
-                } else {
-                    alert('Failed to load student data: ' + (data.message || 'Unknown error'));
-                    closeModal('RecordModal');
-                }
-            })
-            .catch(error => {
-                console.error('Error loading student data:', error);
-                alert('Failed to load student data. Please try again.');
-                closeModal('RecordModal');
-            });
-    }
     
     // Open modal
     function openModal(modal) {
@@ -1010,7 +895,8 @@ require_once '../Functions/Queries.php';
             "viewStudentModal",
             "checkInModal",
             "RecordModal",
-            "EditRecordModal"
+            "EditRecordModal",
+            "ViewRecordModal"
         ];
 
         modalIds.forEach(id => {
@@ -1316,7 +1202,7 @@ require_once '../Functions/Queries.php';
                         spanval = "<span class='w-2 h-2 rounded-full bg-red-500 mr-1.5'></span>";
                         document.getElementById('profileLocked').style.display = 'block';
                         document.getElementById('profileButtons').style.display = 'none';
-                    }
+                        }
                     statusBtn.innerHTML = `${spanval} ${student.Status}`;                   
                     // Update header
                     const firstInitial = student.FirstName ? student.FirstName[0] : '';
@@ -1460,86 +1346,278 @@ require_once '../Functions/Queries.php';
         initEditMode(studentId);
     };
     
+     // Handle View Record button click
+    function viewStudentRecord(studentId) {
+    
+        openModal('RecordModal');
+        
+        // Show loading state
+        console.log('Loading student data for ID:', studentId);
+        document.getElementById('RecordStudentName').textContent = 'Loading...';
+        document.getElementById('RecordStudentID').textContent = 'ID: ' + studentId;
+        
+        
+        fetch(`../Functions/patientFunctions.php?action=getStudent&id=${studentId}`)
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Received data:', data);
+                if (data.success) {
+                    const student = data.student;
+                    
+                    // Update header
+                    document.getElementById('RecordStudentName').textContent = `${student.FirstName || ''} ${student.LastName || ''}`.trim();
+                    // Update the hidden input value
+                    // document.getElementById('RecordStudentIdHidden').value = studentId;
+                    // document.getElementById('RecordStaffIdHidden').value = <?php //echo $_SESSION['User_ID']; ?>;
+                    
+                    
+                    // Show loading state in table
+                    const tbody = document.getElementById('recordTableBody');
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" style="padding: 1.5rem; text-align: center; color: #6b7280;">
+                                Loading records...
+                            </td>
+                        </tr>`;
+                    
+                    // Fetch check-in records for this student
+                    fetch(`../Functions/patientFunctions.php?action=getCheckInRecords&studentId=${studentId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log('Check-in records:', data);
+                            
+                            if (data.success && data.records && data.records.length > 0) {
+                                // Clear loading message
+                                tbody.innerHTML = '';
+                                
+                                // Add each record to the table
+                                data.records.forEach(record => {
+                                    const row = document.createElement('tr');
+                                    const date = new Date(record.DateTime);
+                                    const formattedDate = date.toLocaleDateString();
+                                    const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                                    const statusClass = record.Status === 'In-Progress' ? 'status-in-progress' : 
+                                                        record.Status === 'Follow-up' ? 'status-follow-up' :
+                                                        record.Status === 'Lapsed' ? 'status-lapsed' :
+                                                        record.Status === 'Completed' ? 'status-completed' : 'status-in-progress';
+                                    
+                                    // Add clickable styles and behavior
+                                    row.style.cursor = 'pointer';
+                                    row.style.transition = 'background-color 0.2s';
+                                    row.onmouseover = function() { this.style.backgroundColor = '#f9fafb'; };
+                                    row.onmouseout = function() { this.style.backgroundColor = ''; };
+                                    row.onclick = function() {
+                                        console.log('Record clicked:', record);
+                                        viewRecordDetails(record.id, record.StudentID, record.Status);
+                                    };
+                                    
+                                    row.innerHTML = `
+                                        <td style="padding: 0.75rem 1rem;">
+                                            <div style="font-weight: 500;">${formattedDate}</div>
+                                            <div style="font-size: 0.75rem; color: #6b7280;">${formattedTime}</div>
+                                        </td>
+                                        <td style="padding: 0.75rem 1rem;">${record.Reason || 'N/A'}</td>
+                                        <td style="padding: 0.75rem 1rem;">
+                                            <span class="${statusClass}">${record.Status || 'N/A'}</span>
+                                        </td>
+                                        <td style="padding: 0.75rem 1rem;">${record.Outcome || 'N/A'}</td>
+                                        <td style="padding: 0.75rem 1rem;">${record.staff_name || 'N/A'}</td>
+                                    `;
+                                    tbody.appendChild(row);
+                                });
+                            } else {
+                                tbody.innerHTML = `
+                                    <tr>
+                                        <td colspan="5" style="padding: 1.5rem; text-align: center; color: #6b7280;">
+                                            No check-in records found for this student.
+                                        </td>
+                                    </tr>`;
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error loading check-in records:', error);
+                            tbody.innerHTML = `
+                                <tr>
+                                    <td colspan="5" style="padding: 1.5rem; text-align: center; color: #ef4444;">
+                                        Error loading records. Please try again.
+                                    </td>
+                                </tr>`;
+                        });
+                    
+                } else {
+                    alert('Failed to load student data: ' + (data.message || 'Unknown error'));
+                    closeModal('RecordModal');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading student data:', error);
+                alert('Failed to load student data. Please try again.');
+                closeModal('RecordModal');
+            });
+    }
+    
     // View Record Details
-    function viewRecordDetails(recordId, studentId) {
+    function viewRecordDetails(recordId, studentId, recordStatus) {
         closeModal('RecordModal');
-        openModal('EditRecordModal');
+        
+        if(recordStatus == "In Progress" || recordStatus == "Follow-up"){
+            openModal('EditRecordModal');
+            isInProgress_or_FollowUp(recordId, studentId);
+        }else if(recordStatus == "Lapsed" || recordStatus == "Completed"){
+            openModal('ViewRecordModal');
+            isLapsed_or_Completed(recordId, studentId);
+        }
         
         // Show loading state
         console.log('Loading student data for ID:', studentId);
         document.getElementById('EditStudentName').textContent = 'Loading...';
         document.getElementById('EditStudentID').textContent = 'ID: ' + studentId;
         
-        fetch(`../Functions/patientFunctions.php?action=getStudent&id=${studentId}`)
-                .then(response => {
-                    console.log('Response status:', response.status);
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Received data:', data);
-                    if (data.success) {
-                        const student = data.student;
-                        
-                        // Update header
-                        document.getElementById('EditStudentName').textContent = `${student.FirstName || ''} ${student.LastName || ''}`.trim();
-                        document.getElementById('EditAvatar').textContent = student.FirstName[0] + student.LastName[0];
-                        
-                        // Fetch check-in records for this student
-                        fetch(`../Functions/patientFunctions.php?action=getRecords&studentId=${studentId}&recordId=${recordId}`)
-                            .then(response => response.json())
-                            .then(data => {
-                                console.log('Check-in records:', data);
-                                
-                                if (data.success && data.records && data.records.length > 0) {
-                                    
-                                    // Add each record to the table
-                                    data.records.forEach(record => {
-                                        const date = new Date(record.DateTime);
-                                        const formattedDate = date.toLocaleDateString();
-                                        const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                                        const statusClass = record.Status === 'active' ? 'status-active' : 
-                                                            record.Status === 'completed' ? 'status-completed' : 'status-pending';
-                                        
-                                        document.getElementById('EditCheckInDateTime').textContent = `${formattedDate} ${formattedTime}`;
-                                        document.getElementById('EditReason').textContent = record.Reason;
-                                        document.getElementById('EditNotes').textContent = record.Notes;
-                                        document.getElementById('EditStatus').textContent = record.Status;
-                                        document.getElementById('recordID').value = record.id;
-                                        
-                                        document.getElementById('EditRecordModalTitle').textContent = "Record Details";
-                                        
-                                        const displayOutcome = document.getElementById('DisplayOutcome');
-                                        if (record.Status === 'Completed' || record.Status === 'COMPLETED') {
-                                            displayOutcome.classList.remove('hidden');
-                                        } else {
-                                            displayOutcome.classList.add('hidden');
-                                        }
-                                        displayOutcome.textContent = record.Outcome || 'No outcome recorded';
-                                        
-                                        // Show/hide edit outcome field based on status
-                                        document.getElementById('EditOutcome').style.display = record.Status === 'In Progress' ? 'block' : 'none';
-                                        
-                                        document.getElementById('EditSaveBtn').style.display = record.Status === 'In Progress' ? 'block' : 'none';
-                                    });
-                                }
-                            })
-                            .catch(error => {
-                                console.error('Error loading check-in records:', error);
-                            });
-                    } else {
-                        alert('Failed to load student data: ' + (data.message || 'Unknown error'));
-                        closeModal('EditRecordModal');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading student data:', error);
-                    alert('Failed to load student data. Please try again.');
-                    closeModal('EditRecordModal');
-                });
+        
     }
+    
+    
+    function isInProgress_or_FollowUp(recordId, studentId){
+        fetch(`../Functions/patientFunctions.php?action=getStudent&id=${studentId}`)
+        .then(response => {
+            console.log('Response status:', response.status);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Received data:', data);
+            if (data.success) {
+                const student = data.student;
+                
+                // Update header
+                document.getElementById('EditStudentName').textContent = `${student.FirstName || ''} ${student.LastName || ''}`.trim();
+                document.getElementById('EditAvatar').textContent = student.FirstName[0] + student.LastName[0];
+                
+                // Fetch check-in records for this student
+                fetch(`../Functions/patientFunctions.php?action=getRecords&studentId=${studentId}&recordId=${recordId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Check-in records:', data);
+                        
+                        if (data.success && data.records && data.records.length > 0) {
+                            
+                            // Add each record to the table
+                            data.records.forEach(record => {
+                                const date = new Date(record.DateTime);
+                                const formattedDate = date.toLocaleDateString();
+                                const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                                const statusClass = record.Status === 'In Progress' ? 'status-in-progress' : 
+                                                    record.Status === 'Follow-up' ? 'status-follow-up' :
+                                                    record.Status === 'Lapsed' ? 'status-lapsed' :
+                                                    record.Status === 'Completed' ? 'status-completed' : 'status-in-progress';
+                                
+                                document.getElementById('CheckInDateTime_record').textContent = `${formattedDate} ${formattedTime}`;
+                                document.getElementById('Status_record').textContent = record.Status;
+                                document.getElementById('DateTime_record').textContent = record.UpdatedAt;
+                                document.getElementById('FollowUpDate_record').value = record.FollowUpDate || 'N/A';
+                                document.getElementById('checkup_reason_record').value = record.Reason;
+                                document.getElementById('Notes_record').value = record.Notes;
+                                document.getElementById('recordID').value = record.id;
+                                
+                                document.getElementById('EditRecordModalTitle').textContent = "Record Details";
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error loading check-in records:', error);
+                    });
+            } else {
+                alert('Failed to load student data: ' + (data.message || 'Unknown error'));
+                closeModal('EditRecordModal');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading student data:', error);
+            alert('Failed to load student data. Please try again.');
+            closeModal('EditRecordModal');
+        });
+    }
+    
+    function isLapsed_or_Completed(recordId, studentId){
+        fetch(`../Functions/patientFunctions.php?action=getStudent&id=${studentId}`)
+        .then(response => {
+            console.log('Response status:', response.status);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Received data:', data);
+            if (data.success) {
+                const student = data.student;
+                
+                let MiddleName = (!student || !student.MiddleName) ? "" : student.MiddleName;
+                
+                // Update header
+                document.getElementById('ViewRecord_StudentName').textContent = student.FirstName + ' ' + MiddleName + ' ' + student.LastName;
+                document.getElementById('ViewRecord_StudentID').textContent = student.School_ID;
+                document.getElementById('ViewRecord_StudentAddress').textContent = student.Address;
+                document.getElementById('ViewRecord_StudentGender').textContent = student.Gender;
+                document.getElementById('ViewRecord_StudentAge').textContent = student.Age;
+                document.getElementById('ViewRecord_StudentDepartment').textContent = student.Department;
+                document.getElementById('ViewRecord_StudentGradeLevel').textContent = student.GradeLevel;
+                document.getElementById('ViewRecord_StudentSection').textContent = student.Section;
+                document.getElementById('ViewRecord_StudentContactNumber').textContent = student.StudentContactNumber;
+                document.getElementById('ViewRecord_StudentEmail').textContent = student.StudentEmailAddress;
+                
+                // Fetch check-in records for this student
+                fetch(`../Functions/patientFunctions.php?action=getRecords&studentId=${studentId}&recordId=${recordId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Check-in records:', data);
+                        
+                        if (data.success && data.records && data.records.length > 0) {
+                            
+                            // Add each record to the table
+                            data.records.forEach(record => {
+                                const date = new Date(record.DateTime);
+                                const formattedDate = date.toLocaleDateString();
+                                const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                                const statusClass = record.Status === 'In Progress' ? 'status-in-progress' : 
+                                                    record.Status === 'Follow-up' ? 'status-follow-up' :
+                                                    record.Status === 'Lapsed' ? 'status-lapsed' :
+                                                    record.Status === 'Completed' ? 'status-completed' : 'status-in-progress';
+                                
+                                document.getElementById('ViewRecord_DateTime').textContent = `${formattedDate} ${formattedTime}`;
+                                document.getElementById('ViewRecord_Status').textContent = record.Status;
+                                document.getElementById('ViewRecord_FollowUpDate').textContent = record.FollowUpDate || 'N/A';
+                                document.getElementById('ViewRecord_Reason').textContent = record.Reason;
+                                document.getElementById('ViewRecord_Notes').textContent = record.Notes;
+                                document.getElementById('ViewRecord_Outcome').textContent = record.Outcome;
+                                document.getElementById('ViewRecord_AssistBy').textContent = record.AssistBy;
+                                
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error loading check-in records:', error);
+                    });
+            } else {
+                alert('Failed to load student data: ' + (data.message || 'Unknown error'));
+                closeModal('EditRecordModal');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading student data:', error);
+            alert('Failed to load student data. Please try again.');
+            closeModal('EditRecordModal');
+        });
+    }
+    
     
     // Update account status
     function updateStatus(SchoolID, currentStatus) {

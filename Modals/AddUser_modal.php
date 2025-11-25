@@ -130,93 +130,124 @@ document.addEventListener('DOMContentLoaded', function() {
             <span class="close" onclick="closeModal('addUserModal')" style="font-size: 1.5rem; font-weight: bold; color: #6b7280; cursor: pointer;">&times;</span>
         </div>
         <div class="modal-body">
-            <form id="addUserForm" method="POST" action="../Functions/userFunctions.php">
-                <div class="form-row" style="display: flex; gap: 1rem; margin-bottom: 1rem;">
-                    <div class="form-group" style="flex: 1; margin-bottom: 0;">
-                        <label for="firstName" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151;">First Name <span style="color: #ef4444;">*</span></label>
-                        <input type="text" id="firstName" name="firstName" required 
-                               style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem;">
-                    </div>
-                    <div class="form-group" style="flex: 1; margin-bottom: 0;">
-                        <label for="lastName" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151;">Last Name <span style="color: #ef4444;">*</span></label>
-                        <input type="text" id="lastName" name="lastName" required 
-                               style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem;">
-                    </div>
-                </div>
-                
-                <div class="form-group" style="margin-bottom: 1rem;">
-                    <label for="middleName" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151;">Middle Name <span clas="text-gray-300">(Optional)</span></label>
-                    <input type="text" id="middleName" name="middleName" 
+            <div class="form-row" style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                    <label for="firstName" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151;">First Name <span style="color: #ef4444;">*</span></label>
+                    <input type="text" id="firstName" name="firstName" required 
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem;">
                 </div>
-                
-                <div class="form-row" style="display: flex; gap: 1rem; margin-bottom: 1rem;">
-                    <div class="form-group" style="flex: 1; margin-bottom: 0;">
-                        <label for="contactNumber" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151;">Contact Number <span style="color: #ef4444;">*</span></label>
-                        <input type="tel" id="contactNumber" name="contactNumber" required 
-                               pattern="[0-9]{11}" title="Please enter a valid 11-digit phone number"
-                               style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem;">
-                    </div>
-                    <div class="form-group" style="flex: 1; margin-bottom: 0;">
-                        <label for="role" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151;">Role <span style="color: #ef4444;">*</span></label>
-                        <input type="text" id="role" name="role" placeholder="Staff" disabled
-                               style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; cursor: not-allowed; background-color: #f3f4f6;">
-                    </div>
-                </div>
-                
-                <div class="form-group" style="margin-bottom: 1rem;">
-                    <label for="email" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151;">Email Address <span style="color: #ef4444;">*</span></label>
-                    <input type="email" id="email" name="email" required 
+                <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                    <label for="lastName" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151;">Last Name <span style="color: #ef4444;">*</span></label>
+                    <input type="text" id="lastName" name="lastName" required 
                            style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem;">
                 </div>
-                
-                <div class="form-group" style="margin-bottom: 1.5rem;">
-                    <label for="password" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151;">Password <span style="color: #ef4444;">*</span></label>
-                    <input type="password" id="password" name="password" disabled placeholder="Auto-Generated and Sent VIA email" 
-                               style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; cursor: not-allowed; background-color: #f3f4f6;">
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label for="middleName" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151;">Middle Name <span clas="text-gray-300">(Optional)</span></label>
+                <input type="text" id="middleName" name="middleName" 
+                       style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem;">
+            </div>
+            
+            <div class="form-row" style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                    <label for="contactNumber" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151;">Contact Number <span style="color: #ef4444;">*</span></label>
+                    <input type="tel" id="contactNumber" name="contactNumber" required 
+                           pattern="[0-9]{11}" title="Please enter a valid 11-digit phone number"
+                           style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem;">
                 </div>
-                
-                <input type="hidden" name="action" value="addUser">
-                
-                <div class="form-actions" style="display: flex; justify-content: flex-end; gap: 0.75rem;">
-                    <button type="button" id="cancelBtn" onclick="closeModal('addUserModal')" 
-                            style="padding: 0.5rem 1rem; background-color: #f3f4f6; border: 1px solid #d1d5db; border-radius: 0.375rem; color: #374151; cursor: pointer; font-weight: 500;">
-                        Cancel
-                    </button>
-                    <button type="submit" id="submitBtn" name="send"
-                            style="display: inline-flex; align-items: center; justify-content: center; padding: 0.5rem 1rem; background-color: #4f46e5; border: none; border-radius: 0.375rem; color: white; font-weight: 500; cursor: pointer; min-width: 100px;">
-                        <span id="submitText">Add User</span>
-                        <span id="submitSpinner" style="display: none; margin-left: 8px;">
-                            <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                        </span>
-                    </button>
-                    <script>
-                    document.getElementById('addUserForm').addEventListener('submit', function(e) {
-                        const submitBtn = document.getElementById('submitBtn');
-                        const submitText = document.getElementById('submitText');
-                        const submitSpinner = document.getElementById('submitSpinner');
-                        const cancelBtn = document.getElementById('cancelBtn');
-                        
-                        // Disable the button and show spinner
-                        submitBtn.disabled = true;
-                        submitText.textContent = 'Adding...';
-                        submitSpinner.style.display = 'inline-flex';
-                        cancelBtn.disabled = true;
-                        
-                        // Re-enable if form submission fails
-                        window.addEventListener('unhandledrejection', function() {
-                            submitBtn.disabled = false;
-                            submitText.textContent = 'Add User';
-                            submitSpinner.style.display = 'none';
-                            cancelBtn.disabled = false;
-                        });
-                    });
-                    </script>
+                <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                    <label for="role" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151;">Role <span style="color: #ef4444;">*</span></label>
+                    <input type="text" id="role" name="role" placeholder="Staff" disabled
+                           style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; cursor: not-allowed; background-color: #f3f4f6;">
                 </div>
-            </form>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label for="email" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151;">Email Address <span style="color: #ef4444;">*</span></label>
+                <input type="email" id="email" name="email" required 
+                       style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem;">
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label for="password" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151;">Password <span style="color: #ef4444;">*</span></label>
+                <input type="password" id="password" name="password" disabled placeholder="Auto-Generated and Sent VIA email" 
+                           style="width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; cursor: not-allowed; background-color: #f3f4f6;">
+            </div>
+            
+            <div class="form-actions" style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+                <button type="button" id="cancelBtn" onclick="closeModal('addUserModal')" 
+                        style="padding: 0.5rem 1rem; background-color: #f3f4f6; border: 1px solid #d1d5db; border-radius: 0.375rem; color: #374151; cursor: pointer; font-weight: 500;">
+                    Cancel
+                </button>
+                <button type="submit" id="submitBtn" name="send" onclick="addUser()"
+                        style="display: inline-flex; align-items: center; justify-content: center; padding: 0.5rem 1rem; background-color: #4f46e5; border: none; border-radius: 0.375rem; color: white; font-weight: 500; cursor: pointer; min-width: 100px;">
+                    <span id="submitText">Add User</span>
+                    <span id="submitSpinner" style="display: none; margin-left: 8px;">
+                        <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </span>
+                </button>
+            </div>
         </div>
     </div>
 </div>
+
+<script>
+    function addUser(){
+        const submitBtn = document.getElementById('submitBtn');
+        const submitText = document.getElementById('submitText');
+        const submitSpinner = document.getElementById('submitSpinner');
+        
+        // Set loading state
+        submitBtn.disabled = true;
+        submitText.textContent = 'Adding...';
+        submitSpinner.style.display = 'inline-block';
+        
+        const formData = new FormData();
+        formData.append('action', 'addUser');
+        formData.append('firstName', document.getElementById('firstName').value);
+        formData.append('lastName', document.getElementById('lastName').value);
+        formData.append('middleName', document.getElementById('middleName').value);
+        formData.append('contactNumber', document.getElementById('contactNumber').value);
+        formData.append('email', document.getElementById('email').value);
+
+        fetch('../Functions/userFunctions.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Reset button state
+            submitBtn.disabled = false;
+            submitText.textContent = 'Add User';
+            submitSpinner.style.display = 'none';
+            
+            if (data.success) {
+                showAlert(data.message, 'success');
+                // Delay reload to show success message
+                setTimeout(() => {
+                    closeModal('addUserModal');
+                    // Reset form fields
+                    document.getElementById('firstName').value = '';
+                    document.getElementById('lastName').value = '';
+                    document.getElementById('middleName').value = '';
+                    document.getElementById('contactNumber').value = '';
+                    document.getElementById('email').value = '';
+                }, 5000);
+            } else {
+                showAlert(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            // Reset button state on error
+            submitBtn.disabled = false;
+            submitText.textContent = 'Add User';
+            submitSpinner.style.display = 'none';
+            showAlert('An error occurred while adding the user. Please try again.', 'error');
+            console.error('Error:', error);
+        });
+    }
+</script>

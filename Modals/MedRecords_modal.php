@@ -8,16 +8,20 @@
     .record-table-container table tbody tr:not(:last-child) {
         border-bottom: 1px solid #e5e7eb;
     }
-    .status-active {
-        color: #10B981;
+    .status-in-progress {
+        color: #2f7bf5ff;  
+        font-weight: 500;
+    }
+    .status-follow-up {
+        color: #d07907ff; 
+        font-weight: 500;
+    }
+    .status-lapsed {
+        color: #EF4444; 
         font-weight: 500;
     }
     .status-completed {
-        color: #3B82F6;
-        font-weight: 500;
-    }
-    .status-pending {
-        color: #F59E0B;
+        color: #10B981; 
         font-weight: 500;
     }
 </style>
@@ -105,102 +109,18 @@
     </div>
 </div>
     
+<!-- Modal for Check-up Status: In Progress, Follow-up -->
+<?php include '../Modals/InProgress_FollowUp_recordModal.php'; ?>
 
-<div id="EditRecordModal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); backdrop-filter: blur(2px);">
-    <div class="modal-content" style="background-color: #ffffff; margin: 5% auto; padding: 2rem; border-radius: 0.75rem; width: 90%; max-width: 700px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); border: 1px solid #e5e7eb;">
-        <!-- Modal Header -->
-        <div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-100">
-            <div>
-                <h2 class="text-xl font-semibold text-gray-800" id="EditRecordModalTitle">Medical Record Details</h2>
-                <p class="text-sm text-gray-500 mt-1">Review and update patient information</p>
-            </div>
-            <button onclick="closeModal('EditRecordModal')" class="text-gray-400 hover:text-gray-600 transition-colors">
-                <i class='bx bx-x text-2xl'></i>
-            </button>
-        </div>
-        
-        <!-- Patient Profile Section -->
-        <div class="flex items-center gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
-            <div id="EditAvatar" class="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 text-2xl font-semibold" id="studentAvatar">
-                JD
-            </div>
-            <div>
-                <h3 class="text-lg font-semibold text-gray-800" id="EditStudentName">Loading...</h3>
-                <p class="text-sm text-gray-500" id="EditStudentID">ID: Loading...</p>
-            </div>
-        </div>
-        
-        <input type="hidden" id="recordID" name="recordID">
-
-        <!-- Form Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <!-- Left Column -->
-            <div class="space-y-4">
-                <div class="form-group">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Check-in Date & Time</label>
-                    <div class="p-2.5 bg-gray-50 rounded border border-gray-200 text-gray-700" id="EditCheckInDateTime">Loading...</div>
-                </div>
-                
-                <div class="form-group">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Reason for Visit</label>
-                    <div class="p-2.5 bg-gray-50 rounded border border-gray-200 text-gray-700 min-h-[42px]" id="EditReason">Loading...</div>
-                </div>
-                
-                <div class="form-group">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                    <div class="p-2.5 bg-gray-50 rounded border border-gray-200 text-gray-700" id="EditStatus">Loading...</div>
-                </div>
-            </div>
-            
-            <!-- Right Column -->
-            <div class="space-y-4">
-                <div class="form-group">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                    <div class="p-2.5 bg-gray-50 rounded border border-gray-200 text-gray-700 min-h-[100px] max-h-[150px] overflow-y-auto" id="EditNotes">
-                        <p class="m-0">Loading...</p>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Last Updated</label>
-                    <input type="datetime-local" id="EditDateTime" name="EditDateTime" readonly
-                        class="w-full p-2.5 bg-gray-50 rounded border border-gray-200 text-gray-500 cursor-not-allowed"
-                        value="<?php 
-                            date_default_timezone_set('Asia/Manila');
-                            echo date('Y-m-d\TH:i');
-                        ?>">
-                </div>
-            </div>
-        </div>
-
-        <!-- Outcome Section -->
-        <div class="mb-6">
-            <label for="EditOutcome" class="block text-sm font-medium text-gray-700 mb-2">Treatment Outcome</label>
-            <textarea id="EditOutcome" name="EditOutcome" rows="3" required
-                class="w-full p-3 text-sm rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                placeholder="Enter detailed treatment outcome..."></textarea>
-            <div id="DisplayOutcome" class="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200 text-sm text-gray-600 hidden"></div>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
-            <button type="button" onclick="closeModal('EditRecordModal')"
-                class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
-                Cancel
-            </button>
-            <button type="button" id="EditSaveBtn"
-                class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
-                Save Changes
-            </button>
-        </div>
-    </div>
-</div>
+<!-- Modal for Check-up Status: Lapsed, Completed -->
+<?php include '../Modals/Lapsed_Completed_recordModal.php'; ?>
 
 <!-- Add jsPDF library -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <script>
+
     // download modal as PDF
     function downloadAsPDF() {
         // Create a clone of the modal content for PDF generation
@@ -295,40 +215,4 @@
         });
     }
     
-    // edit check-in record
-    const EditSaveBtn = document.getElementById('EditSaveBtn');
-    EditSaveBtn.addEventListener('click', function() {
-        if (confirm('Are you sure you want to update this check-in record?')) {
-            const recordId = document.getElementById('recordID').value;
-            const studentId = document.getElementById('EditStudentID').textContent;
-            const updatedAt = document.getElementById('EditDateTime').value;
-            const outcome = document.getElementById('EditOutcome').value;
-            
-            const formData = new FormData();
-            formData.append('action', 'updateCheckInRecord');
-            formData.append('recordId', recordId);
-            formData.append('studentId', studentId);
-            formData.append('updatedAt', updatedAt);
-            formData.append('outcome', outcome);
-            
-            fetch('../Functions/patientFunctions.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Refresh the user list to show updated status
-                    alert('Check-in record updated successfully!');
-                    window.location.reload();
-                } else {
-                    alert('Error: ' + (data.error || 'Failed to update check-in record'));
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while updating check-in record');
-            });
-        }
-    });
 </script>

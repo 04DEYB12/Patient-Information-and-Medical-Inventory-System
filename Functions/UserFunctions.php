@@ -87,6 +87,13 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['action'])) {
                     sendJsonResponse(['error' => 'Unauthorized'], 401);
                 }
                 
+                $additionalQuery = "";
+                if($_SESSION['role'] == "Administrator"){
+                    $additionalQuery = " and cp.RoleID != 1 ";
+                }else{
+                    $additionalQuery = "";
+                }
+                
                 $query = "SELECT 
                             PersonnelID as id,
                             CONCAT(FirstName, ' ', COALESCE(MiddleName, ''), ' ', LastName) as name,
@@ -96,9 +103,13 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['action'])) {
                             HireDate as hiredate,
                             Status as status
                         FROM clinicpersonnel cp 
-                        JOIN userrole ur ON cp.RoleID = ur.RoleID";
-                
-                $result = mysqli_query($con, $query);
+                        JOIN userrole ur ON cp.RoleID = ur.RoleID
+                        WHERE cp.PersonnelID != ? and cp.PersonnelID != 'PIAMIS0003' $additionalQuery ORDER BY ur.RoleID ASC;";
+                        
+                $stmt = $con->prepare($query);
+                $stmt->bind_param("s", $_SESSION['User_ID']);
+                $stmt->execute();
+                $result = $stmt->get_result();
                 
                 if ($result === false) {
                     throw new Exception('Query failed: ' . mysqli_error($con));
@@ -338,7 +349,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
                 $result = mysqli_query($con, $query);
                 
                 if (mysqli_num_rows($result) > 0) {
-                    sendAlertAndRedirect('Email already exists');
+                    sendJsonResponse([
+                        'success' => false,
+                        'message' => 'Email already exists.'
+                    ]);
                 }
 
                 // Insert new user
@@ -402,11 +416,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
                         $actionDetails = "New user added: $firstName $lastName";
                         
                         audit($user_id, $actionType, $tableName, $recordId, $actionDetails);
-                        sendAlertAndRedirect('User added successfully');
+                        sendJsonResponse([
+                            'success' => true,
+                            'message' => 'User added successfully.'
+                        ]);
                         
                         } catch (Exception $e) {
                             error_log('Mailer Error: ' . $mail->ErrorInfo);
-                            sendAlertAndRedirect('User added, but failed to send email: ' . $mail->ErrorInfo);
+                            sendJsonResponse([
+                                'success' => false,
+                                'message' => 'User added, but failed to send email: ' . $mail->ErrorInfo
+                            ]);
                         }
                 } else {
                     throw new Exception('Failed to add user: ' . mysqli_error($con));
@@ -869,13 +889,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
                     throw new Exception('Failed to update office: ' . mysqli_error($con));
                 }
                 break;
-            case 'confirmPassword': // ------------------------------- Confirm Password --------------------------------
+            case 'confirmPassword': // ------------------------------- Confirm Password --------------------------------    
                 $userId = $_POST['userId'];
                 $currentPassword = $_POST['currentPassword'];
                 
                 $query = "SELECT PasswordHash FROM clinicpersonnel WHERE PersonnelID = ?";
                 $stmt = mysqli_prepare($con, $query);
-                mysqli_stmt_bind_param($stmt, 'i', $userId);
+                mysqli_stmt_bind_param($stmt, 's', $userId);
                 mysqli_stmt_execute($stmt);
                 $result = mysqli_stmt_get_result($stmt);
                 $user = mysqli_fetch_assoc($result);
@@ -927,7 +947,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
                     exit();
                 }
                 
-                mysqli_stmt_bind_param($stmt, 'ssi', $hashedPassword, $PasswordChangeDT, $userId);
+                mysqli_stmt_bind_param($stmt, 'sss', $hashedPassword, $PasswordChangeDT, $userId);
                 $result = mysqli_stmt_execute($stmt);
                 
                 if ($result) {

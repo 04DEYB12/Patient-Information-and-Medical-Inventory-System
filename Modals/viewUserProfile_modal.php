@@ -350,20 +350,38 @@
                         </div>
 
                         <!-- ----- User Join Date ----- -->
-                        <div class="modern-detail-row mb-6">
+                        <div class="modern-detail-row">
                             <div class="modern-detail-label">
                                 <i class='bx bx-calendar'></i> 
                                 <span>Join Date</span>
                             </div>
                             <div class="modern-detail-value" id="userJoinDate"></div>
                         </div>  
+                        
+                        <!-- ----- User Role ----- -->
+                        <div class="modern-detail-row" style="display: <?php echo $_SESSION['role'] === 'Administrator' ? '' : 'none'; ?>;">
+                            <div class="modern-detail-label">
+                                <i class='bx bx-briefcase'></i> 
+                                <span>Role</span>
+                            </div>
+                            <div class="modern-detail-value" id="userRole1"></div>
+                        </div> 
+                        
+                        <!-- ----- User Account Status ----- -->
+                        <div class="modern-detail-row mb-6" style="display: <?php echo $_SESSION['role'] === 'Administrator' ? '' : 'none'; ?>;">
+                            <div class="modern-detail-label">
+                                <i class='bx bx-toggle-left'></i> 
+                                <span>Account Status</span>
+                            </div>
+                            <div class="modern-detail-value" id="userStatus1"></div>
+                        </div> 
                     </div>
 
                     <p class="border-top-2 border-gray-200 p-2"> Actions:</p>
 
                     <div class="modern-divider">
                         <!-- ----- User Role ----- -->
-                        <div class="modern-detail-row">
+                        <div class="modern-detail-row" style="display: <?php echo $_SESSION['role'] === 'Super Administrator' ? '' : 'none'; ?>;">
                             <div class="modern-detail-label">
                                 <i class='bx bx-briefcase'></i> 
                                 <span>Role</span>
@@ -376,7 +394,7 @@
                         </div>
                         
                         <!-- ----- User Account Status ----- -->
-                        <div class="modern-detail-row">
+                        <div class="modern-detail-row" style="display: <?php echo $_SESSION['role'] === 'Super Administrator' ? '' : 'none'; ?>;">
                             <div class="modern-detail-label">
                                 <i class='bx bx-toggle-left'></i> 
                                 <span>Account Status</span>
@@ -602,15 +620,18 @@ function toggleUserStatus(userId, newStatus) {
         .then(data => {
             if (data.success) {
                 // Refresh the user list to show updated status
-                alert('User status updated successfully!');
-                window.location.reload();
+                showAlert(data.message, 'success');
+                // Delay reload to show success message
+                setTimeout(() => {
+                    window.location.reload();
+                }, 5000);
             } else {
-                alert('Error: ' + (data.error || 'Failed to update user status'));
+                showAlert('Error: ' + (data.error || 'Failed to update user status'), 'error');
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred while updating user status');
+            showAlert('An error occurred while updating user status', 'error');
         });
     }
 }
@@ -631,15 +652,18 @@ function toggleUserRole(userId, newRole) {
         .then(data => {
             if (data.success) {
                 // Refresh the user list to show updated Role
-                alert('User Role updated successfully!');
-                window.location.reload();
+                showAlert(data.message, 'success');
+                // Delay reload to show success message
+                setTimeout(() => {
+                    window.location.reload();
+                }, 5000);
             } else {
-                alert('Error: ' + (data.error || 'Failed to update user role'));
+                showAlert('Error: ' + (data.error || 'Failed to update user role'), 'error');
             }
         })
         .catch(error => {
             console.error('Error updating user role:', error);
-            alert('An error occurred while updating user role: ' + error.message);
+            showAlert('An error occurred while updating user role: ' + error.message, 'error');
         });
     }
 }
