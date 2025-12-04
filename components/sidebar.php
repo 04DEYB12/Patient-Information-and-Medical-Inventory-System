@@ -67,8 +67,9 @@
                 </div>
                 <div class="dropdown-divider"></div>
                 <ul class="dropdown-menu">
-                    <li><a href="../components/myProfile.php"><i class='bx bx-user'></i> Profile</a></li>
-                    <li><a href="#settings"><i class='bx bx-cog'></i> Settings</a></li>
+                    <li><a href="../components/myProfile.php"><i class='bx bx-user' style='color:#d57a25'></i> Profile</a></li>
+                    <!-- <li><a href="#settings"><i class='bx bx-cog' style='color:#d57a25'></i> Settings</a></li> -->
+                    <li><a href="../components/UserGuide.php"><i class='bx  bx-book-open' style='color:#d57a25'></i> User Guide</a></li>
                     <div class="dropdown-divider"></div>
                     <li><a href="../Landing Repository/logout.php" class="logout"><i class='bx bx-log-out'></i> Log out</a></li>
                 </ul>

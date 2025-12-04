@@ -233,7 +233,7 @@ $audit_result = $con->query($audit_sql);
                             <!-- Students Checked-in Today -->
                             <div class="flex-1 max-w-[200px] bg-white rounded-2xl shadow-lg p-6 border-2 border-indigo-600 flex flex-col justify-between">
                                 <div class="flex justify-between items-center mb-6">
-                                    <h3 class="font-semibold text-gray-700 text-sm leading-tight">STUDENTS CHECKED-IN TODAY</h3>
+                                    <h3 class="font-semibold text-gray-700 text-sm leading-tight">STUDENTS CHECKED-UP TODAY</h3>
                                     <div class="h-10 w-10 text-white bg-indigo-600 p-2 rounded-full flex items-center justify-center shadow-lg">
                                         <i class='bx bx-calendar-check text-xl'></i>
                                     </div>
@@ -303,7 +303,7 @@ $audit_result = $con->query($audit_sql);
                         <button 
                             class="page-btn active-btn bg-white hover:shadow-lg text-gray-700 font-semibold px-6 py-2 border border-blue-600 transition-all"
                             data-target="clinic-page">
-                            Clinic Check-in Visits
+                            Clinic Check-up Visits
                         </button>
 
                         <button 
@@ -323,7 +323,7 @@ $audit_result = $con->query($audit_sql);
                                     <div class="w-full flex items-center justify-between">
                                         <h3 class="text-xl font-bold text-gray-700 mb-4 flex items-center">
                                             <i class='bx bxs-time-five text-purple-600 mr-2 text-2xl'></i>
-                                            Clinic Check-in Visits
+                                            Clinic Check-up Visits
                                         </h3>
                                         <div class="flex items-center gap-2">
                                             <span class="text-gray-600 text-sm text-nowrap">Show:</span>

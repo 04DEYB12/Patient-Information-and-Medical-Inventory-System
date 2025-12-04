@@ -100,3 +100,12 @@ PATIENT/STUDENT:
                                   
 AUDIT LOGS:
 ✅ Role Filter 
+
+USER GUIDE: For every User/Entity
+- Quick Scan
+✅ Dashboard
+- User Management
+- Patients/Students
+- Inventory
+- Audit Logs
+- My Profile
