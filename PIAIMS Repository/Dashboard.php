@@ -549,6 +549,8 @@ $audit_result = $con->query($audit_sql);
             </div>
         </main>
     </div>
+    <!-- Check-in Modal -->
+    <?php include '../Modals/Checkin_modal.php'; ?>
 </body>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

@@ -222,7 +222,7 @@ require_once '../Functions/Queries.php';
                     </div>
                     <span>Dashboard</span>
                 </a>
-                <a href="#user-management" class="flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                <a href="#user-management" id="user-management-nav" class="hidden flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors">
                     <div class="bg-purple-100 p-2 rounded-lg mr-3">
                         <i class='bx bx-user text-purple-600 text-xl'></i>
                     </div>
@@ -258,26 +258,52 @@ require_once '../Functions/Queries.php';
             <h2 class="text-2xl md:text-3xl font-bold text-gray-800">Quick Scan</h2>
         </div>
         <div class="flex flex-col lg:flex-row gap-8 items-start">
-            <div class="w-full lg:w-1/2">
-                <img src="../Images/System Screenshots/Dashboard-demo.png" class="w-full h-auto rounded-xl shadow-md border border-gray-200" alt="Quick Scan Demo" class="rounded-lg shadow-md mb-4">
+            <div class="w-full lg:w-1/2 group">
+                <div class="carousel relative overflow-hidden rounded-xl shadow-md border border-gray-200">
+                    <!-- Slides -->
+                    <div class="carousel-inner flex transition-transform duration-300 ease-in-out">
+                        <div class="carousel-item w-full flex-shrink-0">
+                            <img src="../Images/System Screenshots/QuickScan-demo.png" class="w-full h-auto" alt="Quick Scan">
+                            <p class="text-center text-sm text-gray-500 p-2 bg-white">Quick Scan</p>
+                        </div>
+                        <div class="carousel-item w-full flex-shrink-0">
+                            <img src="../Images/System Screenshots/QuickScan-Check-up-demo.png" class="w-full h-auto" alt="Check-up modal">
+                            <p class="text-center text-sm text-gray-500 p-2 bg-white">Check-up modal</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Navigation buttons -->
+                    <button class="carousel-prev absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 p-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <i class='bx bx-chevron-left text-xl'></i>
+                    </button>
+                    <button class="carousel-next absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 p-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <i class='bx bx-chevron-right text-xl'></i>
+                    </button>
+                    
+                    <!-- Indicators -->
+                    <div class="absolute bottom-2 left-0 right-0 flex justify-center space-x-2">
+                        <button class="carousel-indicator w-2 h-2 rounded-full bg-blue-400/70 hover:bg-blue-500 transition-colors"></button>
+                        <button class="carousel-indicator w-2 h-2 rounded-full bg-blue-400/70 hover:bg-blue-500 transition-colors"></button>
+                    </div>
+                </div>
             </div>
             <div class="w-full lg:w-1/2">
                 <p class="text-gray-600 mb-6 text-lg leading-relaxed">
-                    The Quick Scan feature allows you to quickly look up patients or inventory items by scanning their QR codes or entering their IDs manually.
+                    The Quick Scan feature allows you to quickly check up patients by scanning their QR codes.
                 </p>
                 <ul class="list-disc pl-5 text-gray-700 space-y-3">
                     <li class="flex items-start">
                         <i class='bx bx-chevron-right text-primary-500 mt-1 mr-2 text-lg'></i>
-                        <span>Click on the scan input field or press <kbd class="bg-gray-100 border border-gray-200 px-2 py-1 rounded-md text-sm font-mono">Ctrl + Q</kbd> to focus</span></li>
+                        <span>Scan QR Code from the student ID card</span>
+                    </li>
                     <li class="flex items-start">
                         <i class='bx bx-chevron-right text-primary-500 mt-1 mr-2 text-lg'></i>
-                        <span>Scan a QR code or type the ID manually</span></li>
+                        <span>Anywhere in Navigation can Trigger Quick Scan</span>
+                    </li>
                     <li class="flex items-start">
                         <i class='bx bx-chevron-right text-primary-500 mt-1 mr-2 text-lg'></i>
-                        <span>Press <kbd class="bg-gray-100 border border-gray-200 px-2 py-1 rounded-md text-sm font-mono">Enter</kbd> to search</span></li>
-                    <li class="flex items-start">
-                        <i class='bx bx-chevron-right text-primary-500 mt-1 mr-2 text-lg'></i>
-                        <span>Matching results will be displayed automatically</span></li>
+                        <span>Check-up modal will show</span>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -320,9 +346,9 @@ require_once '../Functions/Queries.php';
                     
                     <!-- Indicators -->
                     <div class="absolute bottom-2 left-0 right-0 flex justify-center space-x-2">
-                        <button class="carousel-indicator w-2 h-2 rounded-full bg-white/50 hover:bg-white transition-colors"></button>
-                        <button class="carousel-indicator w-2 h-2 rounded-full bg-white/50 hover:bg-white transition-colors"></button>
-                        <button class="carousel-indicator w-2 h-2 rounded-full bg-white/50 hover:bg-white transition-colors"></button>
+                        <button class="carousel-indicator w-2 h-2 rounded-full bg-blue-400/70 hover:bg-blue-500 transition-colors"></button>
+                        <button class="carousel-indicator w-2 h-2 rounded-full bg-blue-400/70 hover:bg-blue-500 transition-colors"></button>
+                        <button class="carousel-indicator w-2 h-2 rounded-full bg-blue-400/70 hover:bg-blue-500 transition-colors"></button>
                     </div>
                 </div>
             </div>
@@ -332,32 +358,32 @@ require_once '../Functions/Queries.php';
                 </p>
                 <ul class="list-disc pl-5 text-gray-700 space-y-3">
                     <li class="flex items-start">
-                        <i class='bx bx-package text-primary-500 mt-1 mr-2 text-lg'></i>
-                        <span><strong>Inventory Summary</strong> - View current stock levels and low inventory alerts</span>
+                        <i class='bx bx-chevron-right text-primary-500 mt-1 mr-2 text-lg'></i>
+                        <span>View current stock levels and low inventory alerts</span>
                     </li>
                     <li class="flex items-start">
-                        <i class='bx bx-group text-primary-500 mt-1 mr-2 text-lg'></i>
-                        <span><strong>Users Overview</strong> - See active users and their roles at a glance</span>
+                        <i class='bx bx-chevron-right text-primary-500 mt-1 mr-2 text-lg'></i>
+                        <span>See active users and their roles at a glance</span>
                     </li>
                     <li class="flex items-start">
-                        <i class='bx bx-calendar-check text-primary-500 mt-1 mr-2 text-lg'></i>
-                        <span><strong>Today's Check-ups</strong> - Monitor scheduled and completed student visits</span>
+                        <i class='bx bx-chevron-right text-primary-500 mt-1 mr-2 text-lg'></i>
+                        <span>Monitor how many students check up today.</span>
                     </li>
                     <li class="flex items-start">
-                        <i class='bx bx-bar-chart-alt-2 text-primary-500 mt-1 mr-2 text-lg'></i>
-                        <span><strong>Medicine Usage</strong> - Visual charts of most frequently used medications</span>
+                        <i class='bx bx-chevron-right text-primary-500 mt-1 mr-2 text-lg'></i>
+                        <span>Visual charts of most frequently used medications</span>
                     </li>
                     <li class="flex items-start">
-                        <i class='bx bx-clipboard text-primary-500 mt-1 mr-2 text-lg'></i>
-                        <span><strong>Common Ailments</strong> - Track frequent health concerns and symptoms</span>
+                        <i class='bx bx-chevron-right text-primary-500 mt-1 mr-2 text-lg'></i>
+                        <span>Track frequent health concerns and symptoms</span>
                     </li>
                     <li class="flex items-start">
-                        <i class='bx bx-clinic text-primary-500 mt-1 mr-2 text-lg'></i>
-                        <span><strong>Visit Logs</strong> - Detailed records of all clinic visits and consultations</span>
+                        <i class='bx bx-chevron-right text-primary-500 mt-1 mr-2 text-lg'></i>
+                        <span>Detailed records of all clinic visits and consultations</span>
                     </li>
                     <li class="flex items-start">
-                        <i class='bx bx-history text-primary-500 mt-1 mr-2 text-lg'></i>
-                        <span><strong>Inventory History</strong> - Complete transaction logs for all stock movements</span>
+                        <i class='bx bx-chevron-right text-primary-500 mt-1 mr-2 text-lg'></i>
+                        <span>Complete transaction logs for all stock movements</span>
                     </li>
                 </ul>
             </div>
@@ -365,7 +391,7 @@ require_once '../Functions/Queries.php';
     </div>
 
     <!-- User Management Section -->
-    <div id="user-management" class="bg-white rounded-2xl shadow-lg p-8 mb-12 transform transition-all duration-300 hover:shadow-xl animate-slide-up">
+    <div id="user-management" class="hidden bg-white rounded-2xl shadow-lg p-8 mb-12 transform transition-all duration-300 hover:shadow-xl animate-slide-up">
         <div class="flex items-center mb-6">
             <div class="bg-purple-100 p-3 rounded-xl mr-4">
                 <i class='bx bx-user text-purple-600 text-3xl'></i>
@@ -373,8 +399,39 @@ require_once '../Functions/Queries.php';
             <h2 class="text-2xl md:text-3xl font-bold text-gray-800">User Management</h2>
         </div>
         <div class="flex flex-col lg:flex-row gap-8 items-start">
-            <div class="w-full lg:w-1/2">
-                <img src="../Images/System Screenshots/Dashboard-demo.png" class="w-full h-auto rounded-xl shadow-md border border-gray-200" alt="User Management Demo" class="rounded-lg shadow-md mb-4">
+            <div class="w-full lg:w-1/2 group">
+                <div class="carousel relative overflow-hidden rounded-xl shadow-md border border-gray-200">
+                    <!-- Slides -->
+                    <div class="carousel-inner flex transition-transform duration-300 ease-in-out">
+                        <div class="carousel-item w-full flex-shrink-0">
+                            <img src="../Images/System Screenshots/UserManagement-demo.png" class="w-full h-auto" alt="User Management">
+                            <p class="text-center text-sm text-gray-500 p-2 bg-white">User Management</p>
+                        </div>
+                        <div class="carousel-item w-full flex-shrink-0">
+                            <img src="../Images/System Screenshots/UserManagement-NewUser-demo.png" class="w-full h-auto" alt="New User">
+                            <p class="text-center text-sm text-gray-500 p-2 bg-white">New User Modal</p>
+                        </div>
+                        <div class="carousel-item w-full flex-shrink-0">
+                            <img src="../Images/System Screenshots/UserManagement-ManageAccount-demo.png" class="w-full h-auto" alt="Edit User">
+                            <p class="text-center text-sm text-gray-500 p-2 bg-white">User Profile Modal</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Navigation buttons -->
+                    <button class="carousel-prev absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 p-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <i class='bx bx-chevron-left text-xl'></i>
+                    </button>
+                    <button class="carousel-next absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 p-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <i class='bx bx-chevron-right text-xl'></i>
+                    </button>
+                    
+                    <!-- Indicators -->
+                    <div class="absolute bottom-2 left-0 right-0 flex justify-center space-x-2">
+                        <button class="carousel-indicator w-2 h-2 rounded-full bg-blue-400/70 hover:bg-blue-500 transition-colors"></button>
+                        <button class="carousel-indicator w-2 h-2 rounded-full bg-blue-400/70 hover:bg-blue-500 transition-colors"></button>
+                        <button class="carousel-indicator w-2 h-2 rounded-full bg-blue-400/70 hover:bg-blue-500 transition-colors"></button>
+                    </div>
+                </div>
             </div>
             <div class="w-full lg:w-1/2">
                 <p class="text-gray-600 mb-6 text-lg leading-relaxed">
@@ -383,16 +440,19 @@ require_once '../Functions/Queries.php';
                 <ul class="list-disc pl-5 text-gray-700 space-y-3">
                     <li class="flex items-start">
                         <i class='bx bx-chevron-right text-primary-500 mt-1 mr-2 text-lg'></i>
-                        <span>Add, edit, or deactivate user accounts</span></li>
-                    <li class="flex items-start">
+                        <span>Add new user accounts</span></li>
+                    <li id="user-management-assign" class="hidden flex items-start">
                         <i class='bx bx-chevron-right text-primary-500 mt-1 mr-2 text-lg'></i>
                         <span>Assign roles and permissions</span></li>
+                    <li id="user-management-status" class="hidden flex items-start">
+                        <i class='bx bx-chevron-right text-primary-500 mt-1 mr-2 text-lg'></i>
+                        <span>Manage account status</span></li>
                     <li class="flex items-start">
                         <i class='bx bx-chevron-right text-primary-500 mt-1 mr-2 text-lg'></i>
-                        <span>Reset passwords and manage access</span></li>
+                        <span>Reset passwords to default and send via email</span></li>
                     <li class="flex items-start">
                         <i class='bx bx-chevron-right text-primary-500 mt-1 mr-2 text-lg'></i>
-                        <span>View user activity logs</span></li>
+                        <span>Change user email upon request</span></li>
                 </ul>
             </div>
         </div>
@@ -407,8 +467,64 @@ require_once '../Functions/Queries.php';
             <h2 class="text-2xl md:text-3xl font-bold text-gray-800">Patients / Students</h2>
         </div>
         <div class="flex flex-col lg:flex-row gap-8 items-start">
-            <div class="w-full lg:w-1/2">
-                <img src="../Images/System Screenshots/Dashboard-demo.png" class="w-full h-auto rounded-xl shadow-md border border-gray-200" alt="Patients Demo" class="rounded-lg shadow-md mb-4">
+            <div class="w-full lg:w-1/2 group">
+                <div class="carousel relative overflow-hidden rounded-xl shadow-md border border-gray-200">
+                    <!-- Slides -->
+                    <div class="carousel-inner flex transition-transform duration-300 ease-in-out">
+                        <div class="carousel-item w-full flex-shrink-0">
+                            <img src="../Images/System Screenshots/Patient-demo.png" class="w-full h-auto" alt="User Management">
+                            <p class="text-center text-sm text-gray-500 p-2 bg-white">Patient / Student</p>
+                        </div>
+                        <div class="carousel-item w-full flex-shrink-0">
+                            <img src="../Images/System Screenshots/Patient-AddStudent-demo.png" class="w-full h-auto" alt="New User">
+                            <p class="text-center text-sm text-gray-500 p-2 bg-white">New Student Modal</p>
+                        </div>
+                        <div class="carousel-item w-full flex-shrink-0">
+                            <img src="../Images/System Screenshots/Patient-Checkup-demo.png" class="w-full h-auto" alt="Edit User">
+                            <p class="text-center text-sm text-gray-500 p-2 bg-white">Checkup Modal</p>
+                        </div>
+                        <div class="carousel-item w-full flex-shrink-0">
+                            <img src="../Images/System Screenshots/Patient-Profile-demo.png" class="w-full h-auto" alt="Edit User">
+                            <p class="text-center text-sm text-gray-500 p-2 bg-white">Student Profile Modal</p>
+                        </div>
+                        <div class="carousel-item w-full flex-shrink-0">
+                            <img src="../Images/System Screenshots/Patient-InformGuardian-demo.png" class="w-full h-auto" alt="Edit User">
+                            <p class="text-center text-sm text-gray-500 p-2 bg-white">Inform Guardian Modal</p>
+                        </div>
+                        <div class="carousel-item w-full flex-shrink-0">
+                            <img src="../Images/System Screenshots/Patient-RecordHistory-demo.png" class="w-full h-auto" alt="Edit User">
+                            <p class="text-center text-sm text-gray-500 p-2 bg-white">Record History Modal</p>
+                        </div>
+                        <div class="carousel-item w-full flex-shrink-0">
+                            <img src="../Images/System Screenshots/Patient-RecordDetails-demo.png" class="w-full h-auto" alt="Edit User">
+                            <p class="text-center text-sm text-gray-500 p-2 bg-white">Record Details Modal</p>
+                        </div>
+                        <div class="carousel-item w-full flex-shrink-0">
+                            <img src="../Images/System Screenshots/Patient-MedicalRecord-demo.png" class="w-full h-auto" alt="Edit User">
+                            <p class="text-center text-sm text-gray-500 p-2 bg-white">Medical Record Modal</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Navigation buttons -->
+                    <button class="carousel-prev absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 p-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <i class='bx bx-chevron-left text-xl'></i>
+                    </button>
+                    <button class="carousel-next absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 p-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <i class='bx bx-chevron-right text-xl'></i>
+                    </button>
+                    
+                    <!-- Indicators -->
+                    <div class="absolute bottom-2 left-0 right-0 flex justify-center space-x-2">
+                        <button class="carousel-indicator w-2 h-2 rounded-full bg-blue-400/70 hover:bg-blue-500 transition-colors"></button>
+                        <button class="carousel-indicator w-2 h-2 rounded-full bg-blue-400/70 hover:bg-blue-500 transition-colors"></button>
+                        <button class="carousel-indicator w-2 h-2 rounded-full bg-blue-400/70 hover:bg-blue-500 transition-colors"></button>
+                        <button class="carousel-indicator w-2 h-2 rounded-full bg-blue-400/70 hover:bg-blue-500 transition-colors"></button>
+                        <button class="carousel-indicator w-2 h-2 rounded-full bg-blue-400/70 hover:bg-blue-500 transition-colors"></button>
+                        <button class="carousel-indicator w-2 h-2 rounded-full bg-blue-400/70 hover:bg-blue-500 transition-colors"></button>
+                        <button class="carousel-indicator w-2 h-2 rounded-full bg-blue-400/70 hover:bg-blue-500 transition-colors"></button>
+                        <button class="carousel-indicator w-2 h-2 rounded-full bg-blue-400/70 hover:bg-blue-500 transition-colors"></button>
+                    </div>
+                </div>
             </div>
             <div class="w-full lg:w-1/2">
                 <p class="text-gray-600 mb-6 text-lg leading-relaxed">
@@ -420,13 +536,22 @@ require_once '../Functions/Queries.php';
                         <span>Add new patient/student records</span></li>
                     <li class="flex items-start">
                         <i class='bx bx-chevron-right text-primary-500 mt-1 mr-2 text-lg'></i>
-                        <span>Search and filter existing records</span></li>
+                        <span>Check up on students' reasons for visits</span></li>
                     <li class="flex items-start">
                         <i class='bx bx-chevron-right text-primary-500 mt-1 mr-2 text-lg'></i>
-                        <span>View medical history and visit logs</span></li>
+                        <span>Manage student profile information</span></li>
                     <li class="flex items-start">
                         <i class='bx bx-chevron-right text-primary-500 mt-1 mr-2 text-lg'></i>
-                        <span>Generate reports and export data</span></li>
+                        <span>Inform guardians via email</span></li>
+                    <li class="flex items-start">
+                        <i class='bx bx-chevron-right text-primary-500 mt-1 mr-2 text-lg'></i>
+                        <span>Manage medical records</span></li>
+                    <li class="flex items-start">
+                        <i class='bx bx-chevron-right text-primary-500 mt-1 mr-2 text-lg'></i>
+                        <span>Schedule student follow-up assessments</span></li>
+                    <li class="flex items-start">
+                        <i class='bx bx-chevron-right text-primary-500 mt-1 mr-2 text-lg'></i>
+                        <span>Generate PDF reports</span></li>
                 </ul>
             </div>
         </div>
@@ -441,8 +566,49 @@ require_once '../Functions/Queries.php';
             <h2 class="text-2xl md:text-3xl font-bold text-gray-800">Inventory Management</h2>
         </div>
         <div class="flex flex-col lg:flex-row gap-8 items-start">
-            <div class="w-full lg:w-1/2">
-                <img src="../Images/System Screenshots/Dashboard-demo.png" class="w-full h-auto rounded-xl shadow-md border border-gray-200" alt="Inventory Demo" class="rounded-lg shadow-md mb-4">
+            <div class="w-full lg:w-1/2 group">
+                <div class="carousel relative overflow-hidden rounded-xl shadow-md border border-gray-200">
+                    <!-- Slides -->
+                    <div class="carousel-inner flex transition-transform duration-300 ease-in-out">
+                        <div class="carousel-item w-full flex-shrink-0">
+                            <img src="../Images/System Screenshots/Inventory-demo.png" class="w-full h-auto" alt="User Management">
+                            <p class="text-center text-sm text-gray-500 p-2 bg-white">Medicine Inventory</p>
+                        </div>
+                        <div class="carousel-item w-full flex-shrink-0">
+                            <img src="../Images/System Screenshots/Inventory-NewMedicine-demo.png" class="w-full h-auto" alt="New User">
+                            <p class="text-center text-sm text-gray-500 p-2 bg-white">Add New Medicine Modal</p>
+                        </div>
+                        <div class="carousel-item w-full flex-shrink-0">
+                            <img src="../Images/System Screenshots/Inventory-Restock-demo.png" class="w-full h-auto" alt="Edit User">
+                            <p class="text-center text-sm text-gray-500 p-2 bg-white">Restock Modal</p>
+                        </div>
+                        <div class="carousel-item w-full flex-shrink-0">
+                            <img src="../Images/System Screenshots/Inventory-Deduct-demo.png" class="w-full h-auto" alt="Edit User">
+                            <p class="text-center text-sm text-gray-500 p-2 bg-white">Deduct Modal</p>
+                        </div>
+                        <div class="carousel-item w-full flex-shrink-0">
+                            <img src="../Images/System Screenshots/Inventory-Dispose-demo.png" class="w-full h-auto" alt="Edit User">
+                            <p class="text-center text-sm text-gray-500 p-2 bg-white">Dispose Modal</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Navigation buttons -->
+                    <button class="carousel-prev absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 p-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <i class='bx bx-chevron-left text-xl'></i>
+                    </button>
+                    <button class="carousel-next absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 p-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <i class='bx bx-chevron-right text-xl'></i>
+                    </button>
+                    
+                    <!-- Indicators -->
+                    <div class="absolute bottom-2 left-0 right-0 flex justify-center space-x-2">
+                        <button class="carousel-indicator w-2 h-2 rounded-full bg-blue-400/70 hover:bg-blue-500 transition-colors"></button>
+                        <button class="carousel-indicator w-2 h-2 rounded-full bg-blue-400/70 hover:bg-blue-500 transition-colors"></button>
+                        <button class="carousel-indicator w-2 h-2 rounded-full bg-blue-400/70 hover:bg-blue-500 transition-colors"></button>
+                        <button class="carousel-indicator w-2 h-2 rounded-full bg-blue-400/70 hover:bg-blue-500 transition-colors"></button>
+                        <button class="carousel-indicator w-2 h-2 rounded-full bg-blue-400/70 hover:bg-blue-500 transition-colors"></button>
+                    </div>
+                </div>
             </div>
             <div class="w-full lg:w-1/2">
                 <p class="text-gray-600 mb-6 text-lg leading-relaxed">
@@ -451,19 +617,19 @@ require_once '../Functions/Queries.php';
                 <ul class="list-disc pl-5 text-gray-700 space-y-3">
                     <li class="flex items-start">
                         <i class='bx bx-chevron-right text-primary-500 mt-1 mr-2 text-lg'></i>
-                        <span>View current stock levels</span></li>
+                        <span>View current stock levels and expiration dates</span></li>
                     <li class="flex items-start">
                         <i class='bx bx-chevron-right text-primary-500 mt-1 mr-2 text-lg'></i>
-                        <span>Add new inventory items</span></li>
+                        <span>Add new medicine to inventory</span></li>
                     <li class="flex items-start">
                         <i class='bx bx-chevron-right text-primary-500 mt-1 mr-2 text-lg'></i>
-                        <span>Update stock quantities</span></li>
+                        <span>Restock existing medicine</span></li>
                     <li class="flex items-start">
                         <i class='bx bx-chevron-right text-primary-500 mt-1 mr-2 text-lg'></i>
-                        <span>Set up low stock alerts</span></li>
+                        <span>Deduct medicine from inventory</span></li>
                     <li class="flex items-start">
                         <i class='bx bx-chevron-right text-primary-500 mt-1 mr-2 text-lg'></i>
-                        <span>Generate inventory reports</span></li>
+                        <span>Dispose of expired or damaged medicine</span></li>
                 </ul>
             </div>
         </div>
@@ -479,7 +645,7 @@ require_once '../Functions/Queries.php';
         </div>
         <div class="flex flex-col lg:flex-row gap-8 items-start">
             <div class="w-full lg:w-1/2">
-                <img src="../Images/System Screenshots/Dashboard-demo.png" class="w-full h-auto rounded-xl shadow-md border border-gray-200" alt="Audit Logs Demo" class="rounded-lg shadow-md mb-4">
+                <img src="../Images/System Screenshots/AuditLogs-demo.png" class="w-full h-auto rounded-xl shadow-md border border-gray-200" alt="Audit Logs Demo" class="rounded-lg shadow-md mb-4">
             </div>
             <div class="w-full lg:w-1/2">
                 <p class="text-gray-600 mb-6 text-lg leading-relaxed">
@@ -491,7 +657,7 @@ require_once '../Functions/Queries.php';
                         <span>View detailed activity logs</span></li>
                     <li class="flex items-start">
                         <i class='bx bx-chevron-right text-primary-500 mt-1 mr-2 text-lg'></i>
-                        <span>Filter logs by date, user, or action type</span></li>
+                        <span>Filter logs by roles and modules</span></li>
                     <li class="flex items-start">
                         <i class='bx bx-chevron-right text-primary-500 mt-1 mr-2 text-lg'></i>
                         <span>Export logs for record-keeping</span></li>
@@ -522,8 +688,8 @@ require_once '../Functions/Queries.php';
                 </div>
                 <div>
                     <h3 class="text-lg font-semibold mb-4">Contact</h3>
-                    <p class="text-gray-300">Email: support@piaims.com</p>
-                    <p class="text-gray-300">Phone: (123) 456-7890</p>
+                    <p class="text-gray-300">Email: davemalaran2004@gmail.com</p>
+                    <p class="text-gray-300">Phone: 0951 457 2814</p>
                 </div>
             </div>
             <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
@@ -577,92 +743,112 @@ require_once '../Functions/Queries.php';
 <script>
 // Carousel functionality
 document.addEventListener('DOMContentLoaded', function() {
-    const carousel = document.querySelector('.carousel');
-    if (!carousel) return;
+
+    const userManagement = document.getElementById('user-management');
+    const userManagementNav = document.getElementById('user-management-nav');
+    const userManagementAssign = document.getElementById('user-management-assign');
+    const userManagementStatus = document.getElementById('user-management-status');
     
-    const inner = carousel.querySelector('.carousel-inner');
-    const items = carousel.querySelectorAll('.carousel-item');
-    const prevBtn = carousel.querySelector('.carousel-prev');
-    const nextBtn = carousel.querySelector('.carousel-next');
-    const indicators = carousel.querySelectorAll('.carousel-indicator');
-    
-    let currentIndex = 0;
-    const totalItems = items.length;
-    let autoSlide;
-    
-    function updateCarousel() {
-        // Update slide position
-        inner.style.transform = `translateX(-${currentIndex * 100}%`;
+    if (userManagement) {
+        const userRole = '<?php echo addslashes(htmlspecialchars($_SESSION['role'] ?? '', ENT_QUOTES, 'UTF-8')); ?>';
+        const allowedRoles = ['Super Administrator', 'Administrator'];
         
-        // Update active indicator
-        indicators.forEach((indicator, index) => {
-            if (index === currentIndex) {
-                indicator.classList.add('bg-white');
-                indicator.classList.remove('bg-white/50');
-            } else {
-                indicator.classList.remove('bg-white');
-                indicator.classList.add('bg-white/50');
-            }
-        });
+        if (allowedRoles.includes(userRole)) {
+            userManagement.classList.remove('hidden');
+            userManagementNav.classList.remove('hidden');
+        }
+        
+        if(userRole == 'Super Administrator'){
+            userManagementAssign.classList.remove('hidden');
+            userManagementStatus.classList.remove('hidden');
+        }
     }
+
+    // Get all carousels
+    const carousels = document.querySelectorAll('.carousel');
     
-    // Initialize carousel
-    function initCarousel() {
-        // Set initial active state
-        updateCarousel();
+    carousels.forEach(carousel => {
+        const inner = carousel.querySelector('.carousel-inner');
+        const items = carousel.querySelectorAll('.carousel-item');
+        const prevBtn = carousel.querySelector('.carousel-prev');
+        const nextBtn = carousel.querySelector('.carousel-next');
+               const indicators = carousel.querySelectorAll('.carousel-indicator');
         
-        // Previous button click
-        prevBtn.addEventListener('click', () => {
-            currentIndex = (currentIndex - 1 + totalItems) % totalItems;
+        let currentIndex = 0;
+        const totalItems = items.length;
+        let autoSlide;
+        
+        function updateCarousel() {
+            inner.style.transform = `translateX(-${currentIndex * 100}%)`;
+            
+            // Update indicators
+            indicators.forEach((indicator, index) => {
+                if (index === currentIndex) {
+                    indicator.classList.remove('bg-blue-400');
+                    indicator.classList.remove('bg-white/50');
+                    indicator.classList.add('bg-green-600');
+                } else {
+                    indicator.classList.remove('bg-green-600');
+                    indicator.classList.add('bg-blue-400');
+                }
+            });
+        }
+        
+        // Initialize carousel
+        function initCarousel() {
             updateCarousel();
-            resetAutoSlide();
-        });
-        
-        // Next button click
-        nextBtn.addEventListener('click', () => {
-            currentIndex = (currentIndex + 1) % totalItems;
-            updateCarousel();
-            resetAutoSlide();
-        });
-        
-        // Indicator clicks
-        indicators.forEach((indicator, index) => {
-            indicator.addEventListener('click', () => {
-                currentIndex = index;
+            
+            // Previous button click
+            prevBtn.addEventListener('click', () => {
+                currentIndex = (currentIndex - 1 + totalItems) % totalItems;
                 updateCarousel();
                 resetAutoSlide();
             });
-        });
-        
-        // Start auto-slide
-        startAutoSlide();
-        
-        // Pause auto-slide on hover
-        carousel.addEventListener('mouseenter', () => {
-            clearInterval(autoSlide);
-        });
-        
-        // Resume auto-slide when mouse leaves
-        carousel.addEventListener('mouseleave', () => {
+            
+            // Next button click
+            nextBtn.addEventListener('click', () => {
+                currentIndex = (currentIndex + 1) % totalItems;
+                updateCarousel();
+                resetAutoSlide();
+            });
+            
+            // Indicator clicks
+            indicators.forEach((indicator, index) => {
+                indicator.addEventListener('click', () => {
+                    currentIndex = index;
+                    updateCarousel();
+                    resetAutoSlide();
+                });
+            });
+            
+            // Start auto-slide
             startAutoSlide();
-        });
-    }
-    
-    function startAutoSlide() {
-        clearInterval(autoSlide);
-        autoSlide = setInterval(() => {
-            currentIndex = (currentIndex + 1) % totalItems;
-            updateCarousel();
-        }, 5000);
-    }
-    
-    function resetAutoSlide() {
-        clearInterval(autoSlide);
-        startAutoSlide();
-    }
-    
-    // Initialize the carousel
-    initCarousel();
+            
+            // Pause auto-slide on hover
+            carousel.addEventListener('mouseenter', () => {
+                clearInterval(autoSlide);
+            });
+            
+            // Resume auto-slide when mouse leaves
+            carousel.addEventListener('mouseleave', () => {
+                startAutoSlide();
+            });
+        }
+        
+        function startAutoSlide() {
+            clearInterval(autoSlide);
+            autoSlide = setInterval(() => {
+                currentIndex = (currentIndex + 1) % totalItems;
+                updateCarousel();
+            }, 5000); // Change slide every 5 seconds
+        }
+        
+        function resetAutoSlide() {
+            startAutoSlide();
+        }
+        
+        initCarousel();
+    });
 });
 </script>
 
