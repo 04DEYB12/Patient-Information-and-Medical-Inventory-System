@@ -97,7 +97,7 @@ PATIENT/STUDENT:
 ✅ Dynamic Check-up statuses
 ✅ Modal for In progress and Follow-up statuses
 ✅ Modal for Lapsed and Completed statuses
-                                  
+
 AUDIT LOGS:
 ✅ Role Filter 
 ✅ Export to Excell

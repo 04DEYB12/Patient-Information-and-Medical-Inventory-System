@@ -567,6 +567,10 @@ require_once '../Functions/Queries.php';
                                         $student_status = $student_row['Status'];
                                         $color = $student_status === 'Active' ? 'green' : 'slate';
                                         $text_color = $student_status === 'Active' ? 'green' : 'red';
+                                        
+                                        $with_Caution = !empty($student_row['KnownAllergies']) || 
+                                                        !empty($student_row['ChronicConditions']) || 
+                                                        !empty($student_row['CurrentMedications']);
 
                                         echo "
                                         <div class='flex mt-2 flex-col w-full max-w-[360px] h-[280px] flex-row items-center justify-between rounded-lg shadow-sm hover:shadow-md transition bg-white border-[1px] border-gray-300 shadow-lg patient-card rounded-xl'
@@ -591,7 +595,10 @@ require_once '../Functions/Queries.php';
                                                 </button>
                                                 <button onclick=\"openViewModal('{$student_id}')\" title='View Profile' 
                                                     class='px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm flex items-center gap-1'>
-                                                    <i class=\"bx bx-user\"></i>Profile
+                                                    <div class=\"relative\">
+                                                        <i class=\"bx bx-user\"></i>Profile
+                                                        <span id='allergyDot_atUsercards' class='absolute -top-4 -right-2 bg-red-600 h-4 w-4 flex items-center justify-center text-[10px] text-white font-bold rounded-full animate-heartbeat " . ($with_Caution ? '' : 'hidden') . "'>!</span>
+                                                    </div>
                                                 </button>
                                                     <button onclick=\"viewStudentRecord('{$student_id}')\" title='View Record' 
                                                     class='px-3 py-2 bg-teal-700 text-white rounded-lg hover:bg-teal-800 text-sm flex items-center gap-1'>
@@ -1244,7 +1251,7 @@ require_once '../Functions/Queries.php';
                     
                     // Known Allergies + heartbeat dot
                     const knownAllergiesEl = document.getElementById('KnownAllergies');
-                    const allergyDot = document.getElementById('allergyDot'); // add this span in your HTML
+                    const allergyDot = document.getElementById('allergyDot');
 
                     knownAllergiesEl.textContent = student.KnownAllergies || 'None';
                     if (student.KnownAllergies && student.KnownAllergies !== 'None') {
