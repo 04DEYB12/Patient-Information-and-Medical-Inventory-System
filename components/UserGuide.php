@@ -697,7 +697,7 @@ require_once '../Functions/Queries.php';
                             <span>Filter logs by roles and modules</span></li>
                         <li class="flex items-start">
                             <i class='bx bx-chevron-right text-primary-500 mt-1 mr-2 text-lg'></i>
-                            <span>Export logs for record-keeping</span></li>
+                            <span>Export logs to Excel for record-keeping</span></li>
                         <li class="flex items-start">
                             <i class='bx bx-chevron-right text-primary-500 mt-1 mr-2 text-lg'></i>
                             <span>Monitor system security and compliance</span></li>
