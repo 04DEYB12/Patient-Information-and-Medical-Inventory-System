@@ -525,19 +525,34 @@
     <p class="text-gray-900 mb-12 max-w-3xl">Dedicated professionals committed to improving healthcare management.</p>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl">
       <div class="p-8 bg-green-800 opacity-80 rounded-xl animated-card">
-        <div class="text-5xl mb-4">👩‍⚕️</div>
-        <h3 class="text-xl font-bold mt-2">Dr. Ana</h3>
-        <p class="text-sm text-gray-300">Chief Medical Officer</p>
+        <img src="../Images/Our Teams/Tumbado.jpg" class="text-5xl mb-4"></img>
+        <h3 class="text-xl font-bold mt-2">Jobert Tumbado</h3>
+        <p class="text-sm text-gray-300">Project Manager</p>
       </div>
       <div class="p-8 bg-green-800 opacity-80 rounded-xl animated-card">
-        <div class="text-5xl mb-4">👨‍⚕️</div>
-        <h3 class="text-xl font-bold mt-2">Dr. Luis</h3>
-        <p class="text-sm text-gray-300">Lead Software Architect</p>
+        <img src="../Images/Our Teams/Malaran.jpg" class="text-5xl mb-4"></img>
+        <h3 class="text-xl font-bold mt-2">Dave Malaran</h3>
+        <p class="text-sm text-gray-300">Software Engineer</p>
       </div>
       <div class="p-8 bg-green-800 opacity-80 rounded-xl animated-card">
-        <div class="text-5xl mb-4">👩‍⚕️</div>
-        <h3 class="text-xl font-bold mt-2">Dr. Carla</h3>
-        <p class="text-sm text-gray-300">Client Relations Manager</p>
+        <img src="../Images/Our Teams/Arisgado.jpg" class="text-5xl mb-4"></img>
+        <h3 class="text-xl font-bold mt-2">Anthony Arisgado</h3>
+        <p class="text-sm text-gray-300">Software Engineer</p>
+      </div>
+      <div class="p-8 bg-green-800 opacity-80 rounded-xl animated-card">
+        <img src="../Images/Our Teams/DelaCruz.jpg" class="text-5xl mb-4"></img>
+        <h3 class="text-xl font-bold mt-2">Elmar Reymond Dela Cruz</h3>
+        <p class="text-sm text-gray-300">Research & Documentation Engineer</p>
+      </div>
+      <div class="p-8 bg-green-800 opacity-80 rounded-xl animated-card">
+        <img src="../Images/Our Teams/Sumaylo.jpg" class="text-5xl mb-4"></img>
+        <h3 class="text-xl font-bold mt-2">Mark Jhone Sumaylo</h3>
+        <p class="text-sm text-gray-300">Documentation Support</p>
+      </div>
+      <div class="p-8 bg-green-800 opacity-80 rounded-xl animated-card">
+        <img src="../Images/Our Teams/GCST.jpg" class="text-5xl mb-4"></img>
+        <h3 class="text-xl font-bold mt-2">GCST</h3>
+        <p class="text-sm text-gray-300">Granby Colleges of Science and Technology</p>
       </div>
     </div>
   </section>
