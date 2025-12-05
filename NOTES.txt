@@ -100,7 +100,7 @@ PATIENT/STUDENT:
                                   
 AUDIT LOGS:
 ✅ Role Filter 
-- Export to Excell
+✅ Export to Excell
 
 USER GUIDE: For every User/Entity
 ✅ Quick Scan

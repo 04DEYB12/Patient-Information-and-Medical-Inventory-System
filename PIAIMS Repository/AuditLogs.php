@@ -120,6 +120,12 @@ if ($role != 'Administrator' && $role != 'Super Administrator') {
                                             </select>
                                             <i class='bx bx-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none'></i>
                                         </div>
+                                        
+                                        <!-- Export to Excel -->
+                                        <button onclick="Export_toExcel()" class="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                                            <i class='bx bx-export text-lg'></i>
+                                            <span>Export to Excel</span>
+                                        </button>
                                     </div>
                                 </div>
 
@@ -170,6 +176,9 @@ if ($role != 'Administrator' && $role != 'Super Administrator') {
             </div>
         </main>
     </div>
+
+<script src="https://cdn.sheetjs.com/xlsx-0.18.12/package/dist/xlsx.full.min.js"></script>
+    
 <script>
 // Function to format timestamp
 function formatTimestamp(timestamp) {
@@ -349,6 +358,60 @@ function debounce(func, wait) {
         timeout = setTimeout(later, wait);
     };
 }
+
+// Export to Excel
+// Export to Excel
+async function Export_toExcel() {
+    try {
+        // Get current filter values
+        const searchQuery = document.getElementById('searchInput').value;
+        const roleFilter = document.getElementById('roleFilter').value;
+        const moduleFilter = document.getElementById('moduleFilter').value;
+        
+        // Show loading state
+        const button = event.currentTarget;
+        const originalHTML = button.innerHTML;
+        button.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Exporting...';
+        button.disabled = true;
+
+        // Fetch data with current filters
+        const response = await fetch('../Functions/AuditLogFunctions.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `export_excel=1&search=${encodeURIComponent(searchQuery)}&role=${encodeURIComponent(roleFilter)}&module=${encodeURIComponent(moduleFilter)}&action=export_excel`
+        });
+
+        if (!response.ok) throw new Error('Network response was not ok');
+        
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.message || 'Failed to export data');
+        }
+
+        // Create workbook and worksheet
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(data.data);
+        
+        // Add worksheet to workbook
+        XLSX.utils.book_append_sheet(wb, ws, 'Audit Logs');
+        
+        // Generate Excel file and trigger download
+        const date = new Date().toISOString().split('T')[0];
+        XLSX.writeFile(wb, `Audit_Logs_${date}.xlsx`);
+        
+        if (button) {
+            button.innerHTML = originalHTML;
+            button.disabled = false;
+        }
+    } catch (error) {
+        console.error('Export failed:', error);
+        showAlert(`Export failed: ${error.message}`, 'error');
+    }
+}
+
 </script>
 
     <!-- Check-in Modal -->
