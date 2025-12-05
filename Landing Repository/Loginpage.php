@@ -431,7 +431,7 @@ include 'Connection.php';
     .then(data => {
         if (data.success) {
             // Refresh the user list to show updated Role
-            alert('Login successfully!');
+            // alert('Login successfully!');
             window.location.href = data.redirect;
         } else {
           document.getElementById('Validation_ErrorMessage').textContent = 'Error: ' + (data.error || 'Failed to login');

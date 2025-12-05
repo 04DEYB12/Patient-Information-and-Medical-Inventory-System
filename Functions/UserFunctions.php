@@ -167,6 +167,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
                         if($user_data['Status'] == 'Active') {
                             $_SESSION['User_ID'] = $user_data['PersonnelID'];
                             $_SESSION['role'] = $user_data['RoleName'];
+                            $_SESSION['LoginSuccess'] = true;
                             session_regenerate_id(true);
                             
                             sendJsonResponse([

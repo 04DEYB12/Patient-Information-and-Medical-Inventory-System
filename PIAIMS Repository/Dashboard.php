@@ -556,8 +556,19 @@ $audit_result = $con->query($audit_sql);
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 
+// Show login success notification if applicable
+<?php if (isset($_SESSION['LoginSuccess']) && $_SESSION['LoginSuccess'] === true): ?>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            showAlert('Login Successful!', 'success');
+        });
+    </script>
+    <?php $_SESSION['LoginSuccess'] = false; ?>
+<?php endif; ?>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+    
         // DOM Elements
         const sidebar = document.getElementById('sidebar');
         const sidebarToggle = document.getElementById('sidebarToggle');
