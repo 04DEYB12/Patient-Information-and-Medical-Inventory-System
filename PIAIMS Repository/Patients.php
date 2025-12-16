@@ -531,7 +531,7 @@ require_once '../Functions/Queries.php';
                         </div>
                         
                         <!-- Visit Status Filter -->
-                        <div class="relative">
+                        <!-- <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-blue-500">
                                 <i class='bx bx-calendar-check text-xl'></i>
                             </div>
@@ -539,8 +539,10 @@ require_once '../Functions/Queries.php';
                                 <option value="">Visit Status</option>
                                 <option value="Inprogress">Inprogress</option>
                                 <option value="Completed">Completed</option>
+                                <option value="Follow-up">Follow up</option>
+                                <option value="Lapsed">Lapsed</option>
                             </select>
-                        </div>
+                        </div> -->
                     </div>
 
                     <!-- Content -->

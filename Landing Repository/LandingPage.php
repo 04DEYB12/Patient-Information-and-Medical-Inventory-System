@@ -247,7 +247,7 @@
   <!-- Add inside your header -->
 <header class="w-full flex p-6 p-2 sm:px-6 md:px-20 items-center justify-between bg-white/80 backdrop-blur-md fixed top-0 z-50">
   <div class="flex items-center gap-3">
-    <h3 class="text-yellow-400 font-semibold text-2xl">PIAMIS</h3>
+    <h3 class="text-green-400 font-semibold text-2xl">PIAMIS</h3>
     <span class="text-green-600 text-2xl">/</span>
   </div>
 
@@ -583,13 +583,13 @@
       </div>
       <div>
         <h4 class="text-lg font-semibold mb-4">Contact Info</h4>
-        <p class="text-gray-400 mb-2">123 Health Ave, Wellness City</p>
-        <p class="text-gray-400 mb-2">support@piaims.com</p>
-        <p class="text-gray-400">+1 (555) 123-4567</p>
+        <p class="text-gray-400 mb-2">Granby Colleges of Science and Technology</p>
+        <p class="text-gray-400 mb-2">davemalaran2004@gmail.com</p>
+        <p class="text-gray-400">0951 457 2814</p>
       </div>
     </div>
     <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-500 text-sm">
-      <p>&copy; 2025 PIAIMS. All rights reserved. Powered by Granby Colleges of Science and Technology.</p>
+      <p>&copy; 2025 PIAMIS. Developed by Granby Colleges of Science and Technology 4th year students.</p>
     </div>
   </footer>
 

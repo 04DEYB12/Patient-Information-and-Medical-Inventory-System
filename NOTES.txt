@@ -1,9 +1,9 @@
 
-📌 ACCOUNT PASSWORDS
+📌 SYSTEM ACCOUNTS
 
-Anya : @Anya123 - Super Admin
-Adele : @Adella123 - Admin
-Dave : Dave147532689 - Staff
+Super Admin: davemalaran2004@gmail.com | @PIAMIS123
+Admin: malarandave041204@gmail.com | @Dave123
+Staff: arisgadoanthony5@gmail.com | @Anthony123
 
 📌 NOTE!!: I add cp_ID as PK and PersonnelID as UK in clinicpersonnel table
 

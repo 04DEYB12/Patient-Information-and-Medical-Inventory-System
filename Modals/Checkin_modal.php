@@ -99,11 +99,17 @@
                     onmouseout="this.style.backgroundColor='#f1f5f9'">
                     <i class="fas fa-times"></i> Cancel
                 </button>
-                <button type="button" onclick="studentCheckIn()" 
+                <button type="button" onclick="studentCheckIn()" id="checkin_btn"
                     style="padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; transition: all 0.2s; display: flex; align-items: center; gap: 0.5rem; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);"
                     onmouseover="this.style.opacity='0.9'; this.style.boxShadow='0 4px 6px -1px rgba(37, 99, 235, 0.3)'"
                     onmouseout="this.style.opacity='1'; this.style.boxShadow='0 4px 6px -1px rgba(37, 99, 235, 0.2)'">
-                    <i class="fas fa-check"></i> Check In
+                    <i class="fas fa-check"></i> <span id="checkin_text">Check Up</span>
+                    <span id="submitSpinner" style="display: none; margin-left: 8px;">
+                        <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </span>
                 </button>
             </div>
         </div>
@@ -118,6 +124,12 @@
             showAlert('Select your reason for visit first.', 'error');
             return;
         }
+        
+        const submitBtn = document.getElementById('checkin_btn');
+        const submitText = document.getElementById('checkin_text');
+        const submitSpinner = document.getElementById('submitSpinner');
+        
+        
     
     
         formData = new FormData()
@@ -135,6 +147,11 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
+                    // Set loading state
+                    submitBtn.disabled = true;
+                    submitText.textContent = 'processing...';
+                    submitSpinner.style.display = 'inline-block';
+                
                 showAlert('Student checked in successfully!', 'success');
                 // Delay reload to show success message
                 setTimeout(() => {
@@ -142,12 +159,20 @@
                     // Reset form fields
                     document.getElementById('reasonForVisit').value = '';
                     document.getElementById('notes').value = '';
+                    // Reset button state
+                    submitBtn.disabled = false;
+                    submitText.textContent = 'Check up';
+                    submitSpinner.style.display = 'none';
                 }, 5000);
             } else {
                 showAlert('Check-in failed: ' + data.message, 'error');
             }
         })
         .catch(error => {
+            // Reset button state on error
+            submitBtn.disabled = false;
+            submitText.textContent = 'Check up';
+            submitSpinner.style.display = 'none';
             console.error('Error:', error)
             showAlert('An error occurred while checking in the student', 'error');
         })

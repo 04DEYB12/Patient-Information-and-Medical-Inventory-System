@@ -89,9 +89,9 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['action'])) {
                 
                 $additionalQuery = "";
                 if($_SESSION['role'] == "Administrator"){
-                    $additionalQuery = " and cp.RoleID != 1 ";
+                    $additionalQuery = " and cp.RoleID NOT IN(1,3) ";
                 }else{
-                    $additionalQuery = "";
+                    $additionalQuery = " ";
                 }
                 
                 $query = "SELECT 
@@ -104,7 +104,7 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['action'])) {
                             Status as status
                         FROM clinicpersonnel cp 
                         JOIN userrole ur ON cp.RoleID = ur.RoleID
-                        WHERE cp.PersonnelID != ? and cp.PersonnelID != 'PIAMIS0003' $additionalQuery ORDER BY ur.RoleID ASC;";
+                        WHERE cp.PersonnelID != ? $additionalQuery ORDER BY ur.RoleID ASC;";
                         
                 $stmt = $con->prepare($query);
                 $stmt->bind_param("s", $_SESSION['User_ID']);
@@ -325,6 +325,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
                 $middleName = isset($_POST['middleName']) ? mysqli_real_escape_string($con, $_POST['middleName']) : '';
                 $contactNumber = mysqli_real_escape_string($con, $_POST['contactNumber']);
                 $email = mysqli_real_escape_string($con, $_POST['email']);
+                
+                if(empty($firstName) || empty($lastName) || empty($contactNumber) || empty($email)){
+                    sendJsonResponse([
+                        'success' => false,
+                        'message' => 'Please fill up all required fields'
+                    ]);
+                    break;
+                }
+                
                 $password = "PIAMIS" . str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
                 $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
                 $role = 2;

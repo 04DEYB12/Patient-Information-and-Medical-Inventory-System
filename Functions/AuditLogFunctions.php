@@ -52,7 +52,7 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['action'])) {
                 // Build the query
                 $query = "SELECT 
                             atl.*,
-                            CONCAT(cp.FirstName, ' ', cp.MiddleName, ' ', cp.LastName) as user_name,
+                            CONCAT_WS(' ', cp.FirstName, cp.MiddleName, cp.LastName) as user_name,
                             ur.RoleName as user_role
                           FROM audit_trail atl
                           LEFT JOIN clinicpersonnel cp ON atl.user_id = cp.PersonnelID
