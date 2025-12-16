@@ -351,6 +351,16 @@ $audit_result = $con->query($audit_sql);
 
                                         <div class="flex gap-4 items-center">
                                             <div class="flex items-center gap-2">
+                                                <span class="text-gray-600 text-sm">Status:</span>
+                                                <select id="checkupStatusFilter" class="border rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-400">
+                                                    <option value="all">All</option>
+                                                    <option value="Inprogress">Inprogress</option>
+                                                    <option value="Completed">Completed</option>
+                                                    <option value="Follow-up">Follow up</option>
+                                                    <option value="Lapsed">Lapsed</option>
+                                                </select>
+                                            </div>
+                                            <div class="flex items-center gap-2">
                                                 <span class="text-gray-600 text-sm">Date:</span>
                                                 <select id="clinicDateFilter" class="border rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-400">
                                                     <option value="all">All</option>
@@ -622,6 +632,7 @@ $audit_result = $con->query($audit_sql);
     // Clinic Visits Table Filtering Logic
     const searchInput = document.getElementById('studentSearch');
     const entriesFilter = document.getElementById('entriesFilter');
+    const checkupStatusFilter = document.getElementById('checkupStatusFilter');
     const clinicDateFilter = document.getElementById('clinicDateFilter'); // Corrected ID
     const staffFilter = document.getElementById('staffFilter');
     const clinicTable = document.getElementById('clinicTable');
@@ -630,6 +641,7 @@ $audit_result = $con->query($audit_sql);
     if (tableBody) {
         function filterTable() {
             const searchText = searchInput.value.toLowerCase();
+            const selectedStatus = checkupStatusFilter.value
             const selectedDate = clinicDateFilter.value; 
             const selectedStaff = staffFilter.value;
 
@@ -648,12 +660,16 @@ $audit_result = $con->query($audit_sql);
                 // Get data from data-attributes (set in PHP) and cell content
                 const studentName = row.cells[3].textContent.toLowerCase();
                 const studentID = row.cells[2].textContent.toLowerCase();
+                const rowStatus = row.cells[5].textContent;
                 const rowStaff = row.dataset.staff; 
                 const rowDate = new Date(row.dataset.date); 
 
                 // Search filter: Checks student name and ID
                 let matchSearch = studentName.includes(searchText) || studentID.includes(searchText);
 
+                // Status filter
+                let matchStatus = (selectedStatus === 'all' || rowStatus === selectedStatus);
+                
                 // Staff filter
                 let matchStaff = (selectedStaff === 'all' || rowStaff === selectedStaff);
 
@@ -677,7 +693,7 @@ $audit_result = $con->query($audit_sql);
                     matchDate = rowDate >= oneMonthAgo;
                 }
 
-                if(matchSearch && matchStaff && matchDate && visibleCount < maxEntries){
+                if(matchSearch && matchStatus &&  matchStaff && matchDate && visibleCount < maxEntries){
                     row.style.display = '';
                     visibleCount++;
                 } else {
@@ -691,6 +707,7 @@ $audit_result = $con->query($audit_sql);
         entriesFilter.addEventListener('change', filterTable);
         clinicDateFilter.addEventListener('change', filterTable); 
         staffFilter.addEventListener('change', filterTable);
+        checkupStatusFilter.addEventListener('change', filterTable);
 
         // Initial filter
         filterTable();
