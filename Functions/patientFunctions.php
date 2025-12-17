@@ -119,7 +119,7 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['action'])) {
                 }
                 
                 // Query to get check-in records for the student
-                $query = "SELECT c.id, c.StudentID, c.DateTime, c.Reason, c.Status, c.Outcome, 
+                $query = "SELECT c.id, c.StudentID, c.DateTime, c.Reason, c.Status, c.Outcome, c.FollowUpDate,
                         CONCAT(cp.FirstName, ' ', cp.LastName) as staff_name 
                         FROM studentcheckins c 
                         LEFT JOIN clinicpersonnel cp ON c.StaffID = cp.PersonnelID 
@@ -141,6 +141,7 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['action'])) {
                         'Reason' => $row['Reason'],
                         'Status' => $row['Status'],
                         'Outcome' => $row['Outcome'],
+                        'FollowUpDate' => $row['FollowUpDate'],
                         'staff_name' => $row['staff_name']
                     ];
                 }

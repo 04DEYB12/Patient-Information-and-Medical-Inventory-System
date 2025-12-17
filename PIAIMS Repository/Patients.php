@@ -1407,6 +1407,20 @@ require_once '../Functions/Queries.php';
                                 
                                 // Add each record to the table
                                 data.records.forEach(record => {
+                                
+                                    // Set status to 'Lapsed' if FollowUpDate is in the past
+                                    if (record.FollowUpDate) {
+                                        const followUpDate = new Date(record.FollowUpDate);
+                                        const currentDate = new Date();
+                                        if (followUpDate < currentDate) {
+                                            record.Status = 'Lapsed';
+                                        } else {
+                                            record.Status = record.Status;
+                                        }
+                                    } else {
+                                        record.Status = record.Status;
+                                    }
+                                    
                                     const row = document.createElement('tr');
                                     const date = new Date(record.DateTime);
                                     const formattedDate = date.toLocaleDateString();
@@ -1593,6 +1607,20 @@ require_once '../Functions/Queries.php';
                             
                             // Add each record to the table
                             data.records.forEach(record => {
+                                
+                                // Set status to 'Lapsed' if FollowUpDate is in the past
+                                if (record.FollowUpDate) {
+                                    const followUpDate = new Date(record.FollowUpDate);
+                                    const currentDate = new Date();
+                                    if (followUpDate < currentDate) {
+                                        record.Status = 'Lapsed';
+                                    } else {
+                                        record.Status = record.Status;
+                                    }
+                                } else {
+                                    record.Status = record.Status;
+                                }
+                            
                                 const date = new Date(record.DateTime);
                                 const formattedDate = date.toLocaleDateString();
                                 const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
