@@ -41,13 +41,15 @@ $response = [
 // Handle GET requests (API-like endpoints)
 if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['action'])) {
     try {
-
         switch ($_GET['action']) {
             case 'get_logs':
-                // Get filter parameters
-                $search = $_GET['search'] ?? '';
-                $role = $_GET['role'] ?? '';
-                $module = $_GET['module'] ?? '';
+                // Get filter parameters with proper sanitization
+                $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+                $role = isset($_GET['role']) ? trim($_GET['role']) : '';
+                $module = isset($_GET['module']) ? trim($_GET['module']) : '';
+                $action_type = isset($_GET['action_type']) ? trim($_GET['action_type']) : '';
+                $start_date = isset($_GET['start_date']) ? trim($_GET['start_date']) : '';
+                $end_date = isset($_GET['end_date']) ? trim($_GET['end_date']) : '';
                 
                 // Build the query
                 $query = "SELECT 
@@ -66,14 +68,17 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['action'])) {
                 if (!empty($search)) {
                     $query .= " AND (
                         CONCAT(cp.FirstName, ' ', cp.LastName) LIKE ?
+                        OR cp.FirstName LIKE ?
+                        OR cp.LastName LIKE ?
                         OR atl.action_type LIKE ?
                         OR atl.table_name LIKE ?
                         OR atl.record_id LIKE ?
                         OR atl.action_details LIKE ?
+                        OR atl.user_id LIKE ?
                     )";
                     $searchTerm = "%$search%";
-                    $params = array_merge($params, array_fill(0, 5, $searchTerm));
-                    $types .= str_repeat('s', 5);
+                    $params = array_merge($params, array_fill(0, 8, $searchTerm));
+                    $types .= str_repeat('s', 8);
                 }
                 
                 // Add role filter
@@ -90,19 +95,63 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['action'])) {
                     $types .= 's';
                 }
                 
+                // Add action type filter - FIXED
+                if (!empty($action_type)) {
+                    $query .= " AND atl.action_type = ?";
+                    $params[] = $action_type;
+                    $types .= 's';
+                }
+                
+                // Add date filters - FIXED
+                if (!empty($start_date)) {
+                    $query .= " AND DATE(atl.created_at) >= ?";
+                    $params[] = $start_date;
+                    $types .= 's';
+                }
+                
+                if (!empty($end_date)) {
+                    $query .= " AND DATE(atl.created_at) <= ?";
+                    $params[] = $end_date;
+                    $types .= 's';
+                }
+                
                 // Add sorting
                 $query .= " ORDER BY atl.created_at DESC";
                 
-                // Add pagination
+                // Get total count for pagination (without LIMIT)
+                $countQuery = str_replace(
+                    "SELECT atl.*, CONCAT_WS(' ', cp.FirstName, cp.MiddleName, cp.LastName) as user_name, ur.RoleName as user_role",
+                    "SELECT COUNT(*) as total",
+                    $query
+                );
+                
+                // Remove ORDER BY from count query
+                $countQuery = preg_replace("/ORDER BY.*$/i", "", $countQuery);
+                
+                // Execute count query
+                if (!empty($params)) {
+                    $countStmt = $con->prepare($countQuery);
+                    $countStmt->bind_param($types, ...$params);
+                    $countStmt->execute();
+                    $countResult = $countStmt->get_result();
+                    $totalRow = $countResult->fetch_assoc();
+                    $total = $totalRow['total'];
+                } else {
+                    $total = $con->query("SELECT COUNT(*) as total FROM audit_trail")->fetch_assoc()['total'];
+                }
+                
+                // Add pagination to main query
                 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-                $perPage = 20;
+                $perPage = 50; // Default to match frontend
                 $offset = ($page - 1) * $perPage;
                 $query .= " LIMIT ? OFFSET ?";
+                
+                // Add pagination parameters
                 $params[] = $perPage;
                 $params[] = $offset;
                 $types .= 'ii';
                 
-                // Prepare and execute the query
+                // Prepare and execute the main query
                 $stmt = $con->prepare($query);
                 
                 if (!empty($params)) {
@@ -135,29 +184,6 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['action'])) {
                         'record_id' => $row['record_id'],
                         'details' => $row['action_details']
                     ];
-                }
-                
-                // Get total count for pagination
-                $countQuery = "SELECT COUNT(*) as total FROM audit_trail atl";
-                if (!empty($search) || !empty($role) || !empty($module)) {
-                    $countQuery = str_replace("SELECT * FROM audit_trail", 
-                                           "SELECT COUNT(*) as total FROM audit_trail atl", 
-                                           $query);
-                    $countQuery = preg_replace("/ORDER BY.*$|LIMIT.*$/i", "", $countQuery);
-                    
-                    $countStmt = $con->prepare($countQuery);
-                    if (!empty($params)) {
-                        // Remove the limit and offset params for the count query
-                        $countParams = array_slice($params, 0, -2);
-                        $countTypes = substr($types, 0, -2);
-                        if (!empty($countParams)) {
-                            $countStmt->bind_param($countTypes, ...$countParams);
-                        }
-                    }
-                    $countStmt->execute();
-                    $total = $countStmt->get_result()->fetch_assoc()['total'];
-                } else {
-                    $total = $con->query("SELECT COUNT(*) as total FROM audit_trail")->fetch_assoc()['total'];
                 }
                 
                 $response = [
@@ -204,6 +230,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
                 $search = $_POST['search'] ?? '';
                 $role = $_POST['role'] ?? '';
                 $module = $_POST['module'] ?? '';
+                $action_type = $_POST['action_type'] ?? '';
+                $start_date = $_POST['start_date'] ?? '';
+                $end_date = $_POST['end_date'] ?? '';
 
                 // Build the query
                 $query = "SELECT 
@@ -245,6 +274,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
                 if (!empty($module)) {
                     $query .= " AND atl.table_name = ?";
                     $params[] = $module;
+                    $types .= 's';
+                }
+                
+                // Add action type filter
+                if (!empty($action_type)) {
+                    $query .= " AND atl.action_type = ?";
+                    $params[] = $action_type;
+                    $types .= 's';
+                }
+                
+                // Add date filters
+                if (!empty($start_date)) {
+                    $query .= " AND DATE(atl.created_at) >= ?";
+                    $params[] = $start_date;
+                    $types .= 's';
+                }
+                
+                if (!empty($end_date)) {
+                    $query .= " AND DATE(atl.created_at) <= ?";
+                    $params[] = $end_date;
                     $types .= 's';
                 }
                 

@@ -509,14 +509,14 @@ require_once '../Functions/Queries.php';
                         </div>
                         
                         <!-- Section Filter -->
-                        <div class="relative">
+                        <!-- <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-blue-500">
                                 <i class='bx bx-group text-xl'></i>
                             </div>
                             <select id="Section" class="pl-10 pr-3 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-colors">
                                 <option value="">All Sections</option>
                             </select>
-                        </div>
+                        </div> -->
                         
                         <!-- Account Status Filter -->
                         <div class="relative">

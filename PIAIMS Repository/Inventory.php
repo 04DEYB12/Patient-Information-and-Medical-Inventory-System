@@ -424,22 +424,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['single_dispose'])) {
 
 // --- Multiple Dispose Functionality ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['multiple_dispose'])) {
+
     if (empty($_POST['dispose_items'])) {
         send_response($is_ajax, 'error', 'Please select at least one medicine to dispose.');
+        exit;
     }
 
     $con->begin_transaction();
 
     try {
+        $disposedCount = 0;
+
         foreach ($_POST['dispose_items'] as $med_id => $dispose_data) {
+
             $med_id = filter_var($med_id, FILTER_VALIDATE_INT);
             $quantity_to_dispose = filter_var($dispose_data['quantity'], FILTER_VALIDATE_INT);
-            
+
+            // ❌ Skip invalid entries
             if ($med_id === false || $quantity_to_dispose === false || $quantity_to_dispose <= 0) {
                 continue;
             }
 
-            $stmt_select = $con->prepare("SELECT quantity, name, description FROM medicine WHERE med_id = ? FOR UPDATE");
+            // 🔒 Lock row
+            $stmt_select = $con->prepare(
+                "SELECT quantity, name, description FROM medicine WHERE med_id = ? FOR UPDATE"
+            );
             $stmt_select->bind_param("i", $med_id);
             $stmt_select->execute();
             $result = $stmt_select->get_result();
@@ -447,43 +456,66 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['multiple_dispose'])) 
             $stmt_select->close();
 
             if (!$medicine) {
-                throw new Exception("Medicine with ID $med_id not found.");
+                throw new Exception("Medicine with ID {$med_id} not found.");
             }
 
             $current_stock = (int)$medicine['quantity'];
+
             if ($current_stock < $quantity_to_dispose) {
-                throw new Exception("Not enough stock for " . htmlspecialchars($medicine['name']));
+                throw new Exception("Not enough stock for {$medicine['name']}.");
             }
 
+            // ➖ Update stock
             $new_stock = $current_stock - $quantity_to_dispose;
 
-            $update_stmt = $con->prepare("UPDATE medicine SET quantity = ? WHERE med_id = ?");
+            $update_stmt = $con->prepare(
+                "UPDATE medicine SET quantity = ? WHERE med_id = ?"
+            );
             $update_stmt->bind_param("ii", $new_stock, $med_id);
-            $update_stmt->execute();
+
+            if (!$update_stmt->execute()) {
+                throw new Exception($update_stmt->error);
+            }
             $update_stmt->close();
-            
+
+            // ➕ Insert disposal record
+            $status = 'expired';
+            $reason = 'Bulk disposal';
+
             $disposal_stmt = $con->prepare("
-                INSERT INTO disposed_medicines 
+                INSERT INTO disposed_medicines
                 (med_id, name, status, quantity, description, reason, disposed_by, disposed_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
             ");
+
             $disposal_stmt->bind_param(
                 "ississs",
                 $med_id,
                 $medicine['name'],
-                'expired',
+                $status,
                 $quantity_to_dispose,
                 $medicine['description'],
-                'Bulk disposal',
+                $reason,
                 $disposed_by_user
             );
-            $disposal_stmt->execute();
+
+            if (!$disposal_stmt->execute()) {
+                throw new Exception($disposal_stmt->error);
+            }
             $disposal_stmt->close();
-            
-            $details = "Disposed $quantity_to_dispose of " . $medicine['name'];
+
+            // 📝 Audit log
+            $details = "Disposed {$quantity_to_dispose} of {$medicine['name']}";
             log_audit_trail($con, $user_id, 'DISPOSE', 'medicine', $med_id, $details);
+
+            $disposedCount++;
         }
-        
+
+        // ❌ Nothing disposed
+        if ($disposedCount === 0) {
+            throw new Exception('No valid medicines were disposed.');
+        }
+
         $con->commit();
         send_response($is_ajax, 'success', 'Bulk disposal successful!');
 
@@ -491,6 +523,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['multiple_dispose'])) 
         $con->rollback();
         send_response($is_ajax, 'error', 'Disposal error: ' . $e->getMessage());
     }
+
+    exit;
 }
 
 // --- Edit Medicine: Name, Type, Description (with purposes/severity) ---
@@ -2070,7 +2104,7 @@ sort($categories);
                             </div>
                         </div>
 
-                        <div class="stat-card bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl shadow-md p-5 flex flex-col justify-between hover:shadow-lg transition" onclick="showUsageModal()">
+                        <div class="stat-card bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl shadow-md p-5 flex flex-col justify-between hover:shadow-lg transition">
                             <div class="stat-header flex justify-between items-center">
                             <h3 class="font-semibold text-lg">This Month Usage</h3>
                             <i class='bx bx-trending-up text-3xl'></i>

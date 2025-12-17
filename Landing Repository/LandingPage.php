@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PIAIMS | Landing Page</title>
+  <title>PIAMIS | Landing Page</title>
   <link rel="icon" type="image/x-icon" href="../Images/webbackg.png">
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -344,8 +344,8 @@
   </section>
   
   <section id="why-choose-us" class="py-20 px-6 md:px-16 bg-white text-center min-h-screen flex flex-col items-center justify-center">
-    <h2 class="text-4xl font-bold mb-4">Why Choose PIAIMS?</h2>
-    <p class="text-gray-600 mb-12 max-w-3xl">Discover the benefits that make PIAIMS the leading choice for modern healthcare management.</p>
+    <h2 class="text-4xl font-bold mb-4">Why Choose PIAMIS?</h2>
+    <p class="text-gray-600 mb-12 max-w-3xl">Discover the benefits that make PIAMIS the leading choice for modern healthcare management.</p>
     
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8 w-full max-w-8xl">
       <div class="bg-light p-8 rounded-xl shadow-md animated-card">
@@ -560,7 +560,7 @@
   <footer class="bg-dark text-white py-12 px-6 md:px-16" id="contact">
     <div class="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
       <div>
-        <h3 class="text-2xl font-bold mb-4 text-primary">PIAIMS</h3>
+        <h3 class="text-2xl font-bold mb-4 text-primary">PIAMIS</h3>
         <p class="text-gray-400 text-sm">Empowering healthcare with smart, sustainable solutions for a healthier future.</p>
       </div>
       <div>
