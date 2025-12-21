@@ -183,7 +183,7 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['action'])) {
                 }
                 
                 // Query to get check-in records for the student
-                $query = "SELECT sc.*, cp.FirstName, cp.LastName, sc.Status AS Status FROM studentcheckins sc 
+                $query = "SELECT sc.*, cp.FirstName, cp.LastName, sc.Status AS Status, FROM studentcheckins sc 
                          JOIN clinicpersonnel cp ON sc.StaffID = cp.PersonnelID 
                          WHERE sc.ID = '$recordId' AND sc.StudentID = '$studentId'";
                 

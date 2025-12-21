@@ -30,16 +30,16 @@ require_once '../Functions/Queries.php';
                 extend: {
                     colors: {
                         primary: {
-                            50: '#F7FFF7',
-                            100: '#E8F5E8',
-                            200: '#D1E7DD',
-                            300: '#95D5B2',
-                            400: '#74C69D',
-                            500: '#52B788',
-                            600: '#40916C',
-                            700: '#2D5A3D',
-                            800: '#1B4332',
-                            900: '#081c15',
+                            50: '#F0F7FF',
+                            100: '#E0F2FE',
+                            200: '#BAE6FD',
+                            300: '#7DD3FC',
+                            400: '#38BDF8',
+                            500: '#0EA5E9',
+                            600: '#0284C7',
+                            700: '#0369A1',
+                            800: '#075985',
+                            900: '#0C4A6E',
                         },
                     },
                     fontFamily: {
@@ -246,38 +246,38 @@ require_once '../Functions/Queries.php';
                 <i class='bx bx-list-ul text-primary-600 mr-2'></i>
                 Table of Contents
             </h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <a href="#quick-scan" class="flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors">
+            <div class="flex overflow-x-auto pb-2 gap-3">
+                <a href="#quick-scan" class="flex-shrink-0 flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors border border-gray-100">
                     <div class="bg-primary-100 p-2 rounded-lg mr-3">
                         <i class='bx bx-qr-scan text-primary-600 text-xl'></i>
                     </div>
                     <span>Quick Scan</span>
                 </a>
-                <a href="#dashboard" class="flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                <a href="#dashboard" class="flex-shrink-0 flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors border border-gray-100">
                     <div class="bg-blue-100 p-2 rounded-lg mr-3">
                         <i class='bx bx-pulse text-blue-600 text-xl'></i>
                     </div>
                     <span>Dashboard</span>
                 </a>
-                <a href="#user-management" id="user-management-nav" class="hidden flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                <a href="#user-management" id="user-management-nav" class="hidden flex-shrink-0 flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors border border-gray-100">
                     <div class="bg-purple-100 p-2 rounded-lg mr-3">
                         <i class='bx bx-user text-purple-600 text-xl'></i>
                     </div>
                     <span>User Management</span>
                 </a>
-                <a href="#patients" class="flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                <a href="#patients" class="flex-shrink-0 flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors border border-gray-100">
                     <div class="bg-green-100 p-2 rounded-lg mr-3">
                         <i class='bx bx-user-plus text-green-600 text-xl'></i>
                     </div>
                     <span>Patients / Students</span>
                 </a>
-                <a href="#inventory" class="flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                <a href="#inventory" class="flex-shrink-0 flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors border border-gray-100">
                     <div class="bg-yellow-100 p-2 rounded-lg mr-3">
                         <i class='bx bx-package text-yellow-600 text-xl'></i>
                     </div>
-                    <span>Inventory Management</span>
+                    <span>Inventory</span>
                 </a>
-                <a href="#audit-logs" class="flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                <a href="#audit-logs" class="flex-shrink-0 flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors border border-gray-100">
                     <div class="bg-red-100 p-2 rounded-lg mr-3">
                         <i class='bx bx-history text-red-600 text-xl'></i>
                     </div>

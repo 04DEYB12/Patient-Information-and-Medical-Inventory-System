@@ -14,11 +14,11 @@
       theme: {
         extend: {
           colors: {
-            primary: '#4caf50',
-            secondary: '#81c784',
-            accent: '#a5d6a7',
-            dark: '#002e2d',
-            light: '#f5f8f5',
+            primary: '#0EA5E9 ',
+            secondary: '#38BDF8 ',
+            accent: '#7DD3FC ',
+            dark: '#075985 ',
+            light: '#F0F7FF ',
             // Custom colors from the image
             imageBg: '#e9f8f4', // Light greenish-blue background
             imageGreen: '#50c299', // Green for the circle and button
@@ -247,8 +247,9 @@
   <!-- Add inside your header -->
 <header class="w-full flex p-6 p-2 sm:px-6 md:px-20 items-center justify-between bg-white/80 backdrop-blur-md fixed top-0 z-50">
   <div class="flex items-center gap-3">
-    <h3 class="text-green-400 font-semibold text-2xl">PIAMIS</h3>
+    <h3 class="text-green-600 font-semibold text-2xl">PIAMIS</h3>
     <span class="text-green-600 text-2xl">/</span>
+    <h3 class="text-blue-400 font-semibold text-l">Granby Colleges of Science and Technology</h3>
   </div>
 
   <!-- Desktop Nav -->
@@ -264,10 +265,7 @@
 
   <!-- Buttons -->
   <div class="hidden md:flex gap-3">
-    <button onclick="window.location.href='Loginpage.php'" class="text-gray-800 hover:text-yellow-400 transition-colors">
-      Sign In
-    </button>
-    <button class="bg-green-500 text-white px-4 py-1 rounded-lg hover:bg-green-600 transition flex items-center">Get Started <span class="text-2xl ml-2 font-normal">></span></button>
+    <button onclick="window.location.href='Loginpage.php'" class="bg-green-500 text-white px-4 py-1 rounded-lg hover:bg-green-600 transition flex items-center">Sign In <span class="text-2xl ml-2 font-normal">></span></button>
   </div>
 
   <!-- Mobile menu button -->
@@ -307,14 +305,15 @@
       <div class="md:w-2/3 text-center md:text-left animate-fadeInUp">
         <p class="text-md sm:text-xl font-medium text-gray-700 mb-4">Start your journey</p>
         <h1 class="font-extrabold text-xl md:text-6xl lg:text-6xl leading-tight mb-6">
-        Because Every Patient<br class="hidden md:block">- <span class="animated-underline mb-2">Story Matters.</span>
+        Because Every Student<br class="hidden md:block">- <span class="animated-underline mb-2">Story Matters.</span>
         </h1>
         <p class="text-sm sm:text-lg text-gray-700 mb-10 max-w-lg mx-auto md:mx-0">
-          We believe that every patient is more than just data — our system is built to protect, organize, and honor each individual’s journey toward better health.
+          We believe that every student is more than just data — our system is built to protect, organize, and honor each individual’s journey toward better health.
         </p>
-        <button class="bg-imageGreen text-white font-semibold px-10 py-4 rounded-full text-lg hover:bg-green-700 transition duration-300 transform hover:scale-105 shadow-lg">
-          Get Started Today
-        </button>
+        <div class="flex items-center gap-4 mt-6">
+            <img src="../Images/GranbyLogo.png" class="h-32 w-auto" alt="Granby Colleges Logo">
+            <img src="../Images/PIAMISLOGO-circle.png" class="h-36 w-auto" alt="PIAMIS Logo">
+        </div>
       </div>
 
       <div class="md:w-1/2 relative flex justify-center animate-fadeIn md:mt-0 mt-12">
@@ -524,32 +523,32 @@
     <h2 class="text-4xl font-bold mb-4 text-primary">Meet Our Team</h2>
     <p class="text-gray-900 mb-12 max-w-3xl">Dedicated professionals committed to improving healthcare management.</p>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl">
-      <div class="p-8 bg-green-800 opacity-80 rounded-xl animated-card">
+      <div class="p-8 bg-blue-800 opacity-80 rounded-xl animated-card">
         <img src="../Images/Our Teams/Tumbado.jpg" class="text-5xl mb-4"></img>
         <h3 class="text-xl font-bold mt-2">Jobert Tumbado</h3>
-        <p class="text-sm text-gray-300">Project Manager</p>
+        <p class="text-sm text-gray-300">Project Manager & Technical Writer</p>
       </div>
-      <div class="p-8 bg-green-800 opacity-80 rounded-xl animated-card">
+      <div class="p-8 bg-blue-800 opacity-80 rounded-xl animated-card">
         <img src="../Images/Our Teams/Malaran.jpg" class="text-5xl mb-4"></img>
         <h3 class="text-xl font-bold mt-2">Dave Malaran</h3>
-        <p class="text-sm text-gray-300">Software Engineer</p>
+        <p class="text-sm text-gray-300">Software Engineer & Data Analyst</p>
       </div>
-      <div class="p-8 bg-green-800 opacity-80 rounded-xl animated-card">
+      <div class="p-8 bg-blue-800 opacity-80 rounded-xl animated-card">
         <img src="../Images/Our Teams/Arisgado.jpg" class="text-5xl mb-4"></img>
         <h3 class="text-xl font-bold mt-2">Anthony Arisgado</h3>
         <p class="text-sm text-gray-300">Software Engineer</p>
       </div>
-      <div class="p-8 bg-green-800 opacity-80 rounded-xl animated-card">
+      <div class="p-8 bg-blue-800 opacity-80 rounded-xl animated-card">
         <img src="../Images/Our Teams/DelaCruz.jpg" class="text-5xl mb-4"></img>
         <h3 class="text-xl font-bold mt-2">Elmar Reymond Dela Cruz</h3>
-        <p class="text-sm text-gray-300">Research & Documentation Engineer</p>
+        <p class="text-sm text-gray-300">Technical Writer & Data Analyst</p>
       </div>
-      <div class="p-8 bg-green-800 opacity-80 rounded-xl animated-card">
+      <div class="p-8 bg-blue-800 opacity-80 rounded-xl animated-card">
         <img src="../Images/Our Teams/Sumaylo.jpg" class="text-5xl mb-4"></img>
         <h3 class="text-xl font-bold mt-2">Mark Jhone Sumaylo</h3>
         <p class="text-sm text-gray-300">Documentation Support</p>
       </div>
-      <div class="p-8 bg-green-800 opacity-80 rounded-xl animated-card">
+      <div class="p-8 bg-blue-800 opacity-80 rounded-xl animated-card">
         <img src="../Images/Our Teams/GCST.jpg" class="text-5xl mb-4"></img>
         <h3 class="text-xl font-bold mt-2">GCST</h3>
         <p class="text-sm text-gray-300">Granby Colleges of Science and Technology</p>
@@ -560,8 +559,8 @@
   <footer class="bg-dark text-white py-12 px-6 md:px-16" id="contact">
     <div class="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
       <div>
-        <h3 class="text-2xl font-bold mb-4 text-primary">PIAMIS</h3>
-        <p class="text-gray-400 text-sm">Empowering healthcare with smart, sustainable solutions for a healthier future.</p>
+        <h3 class="text-2xl font-bold mb-4 text-green-400">PIAMIS</h3>
+        <p class="text-white-400 text-sm">Empowering healthcare with smart, sustainable solutions for a healthier future.</p>
       </div>
       <div>
         <h4 class="text-lg font-semibold mb-4">Quick Links</h4>
@@ -583,12 +582,12 @@
       </div>
       <div>
         <h4 class="text-lg font-semibold mb-4">Contact Info</h4>
-        <p class="text-gray-400 mb-2">Granby Colleges of Science and Technology</p>
-        <p class="text-gray-400 mb-2">davemalaran2004@gmail.com</p>
-        <p class="text-gray-400">0951 457 2814</p>
+        <p class="text-white-400 mb-2">Granby Colleges of Science and Technology</p>
+        <p class="text-white-400 mb-2">davemalaran2004@gmail.com</p>
+        <p class="text-white-400">0951 457 2814</p>
       </div>
     </div>
-    <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-500 text-sm">
+    <div class="border-t border-white-700 mt-8 pt-8 text-center text-white-500 text-sm">
       <p>&copy; 2025 PIAMIS. Developed by Granby Colleges of Science and Technology 4th year students.</p>
     </div>
   </footer>

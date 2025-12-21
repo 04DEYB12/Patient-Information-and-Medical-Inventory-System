@@ -936,16 +936,16 @@ sort($categories);
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --color-nature-green-50: #F7FFF7;
-            --color-nature-green-100: #E8F5E8;
-            --color-nature-green-200: #D1E7DD;
-            --color-nature-green-300: #95D5B2;
-            --color-nature-green-400: #74C69D;
-            --color-nature-green-500: #52B788;
-            --color-nature-green-600: #40916C;
-            --color-nature-green-700: #2D5A3D;
-            --color-nature-green-800: #1B4332;
-            --color-nature-green-900: #081C15;
+            --color-nature-green-50: #F0F7FF;
+              --color-nature-green-100: #E0F2FE;
+              --color-nature-green-200: #BAE6FD;
+              --color-nature-green-300: #7DD3FC;
+              --color-nature-green-400: #38BDF8;
+              --color-nature-green-500: #0EA5E9;
+              --color-nature-green-600: #0284C7;
+              --color-nature-green-700: #0369A1;
+              --color-nature-green-800: #075985;
+              --color-nature-green-900: #0C4A6E;
             
             --color-golden-yellow: #FFD60A;
             --color-golden-yellow-light: #FFF3B0;

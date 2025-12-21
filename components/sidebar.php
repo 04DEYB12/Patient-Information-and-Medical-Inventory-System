@@ -6,8 +6,8 @@
                 <img src="../Images/GranbyLogo.png" alt="Logo" width="50" height="50">
             </div>
             <div class="brand">
-                <h1>GCST</h1>
-                <span>Patient Information &<br>Medical Inventory System</span>
+                <h1>PIAMIS</h1>
+                <span>Granby Colleges of<br>Science and Technology</span>
             </div>
         </div>
     </div>  
