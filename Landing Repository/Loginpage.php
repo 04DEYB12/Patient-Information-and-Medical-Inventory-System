@@ -14,24 +14,40 @@ include 'Connection.php';
 <style>
   /* General Styles */
   body {
-    margin: 0; 
-    background-color:rgba(51, 109, 19, 0.3);
+    margin: 0;
+    background: url('../Images/granby_building.jpg') no-repeat center center fixed;
+    background-size: cover;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: #000;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    min-height: 100vh;
+    position: relative;
+  }
+  
+  body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(123, 103, 103, 0.34);
+    z-index: 1;
   }
   .container {
     width: 380px;
-    background:rgb(255, 255, 255);
+    background: rgba(255, 255, 255, 0.9);
     border-radius: 14px;
-    box-shadow: 0 0 5px rgba(85, 85, 85, 0.46);
-    padding: 30px 35px 70px 35px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    padding: 30px 35px 40px 35px;
+    position: relative;
+    z-index: 2;
+    backdrop-filter: blur(5px);
   }
   h2 {
-    color: darkgreen;
+    color: darkblue;
     margin-bottom: 24px;
     font-weight: 700;
     font-size: 34px;
@@ -62,9 +78,9 @@ include 'Connection.php';
     font-size: 16px;
     font-weight: 500;
     background: transparent;
-    border: 2px solid rgba(46, 117, 8, 0.56);
+    border: 2px solid rgba(8, 53, 117, 0.56);
     border-radius: 6px;
-    color: darkgreen;
+    color: darkblue;
     outline-offset: 2px;
     outline-color: transparent;
     transition: border-color 0.3s ease, outline-color 0.3s ease;
@@ -76,10 +92,10 @@ include 'Connection.php';
   input[type="tel"]:focus {
     border-color: transparent;
     outline-color: transparent;
-    border: 2px solid darkgreen;
+    border: 2px solid darkblue;
   }
   input::placeholder {
-    color: darkgreen;
+    color: #4f48d6ff;
     opacity: 1;
     font-weight: 400;
   }
@@ -97,7 +113,7 @@ include 'Connection.php';
     user-select: none;
     font-size: 14px;
     font-weight: 600;
-    color: darkgreen;
+    color: darkblue;
   }
   .show-pass-container input[type="checkbox"] {
     accent-color: yellow;
@@ -108,7 +124,7 @@ include 'Connection.php';
   }
   /* Forgot password link */
   .forgot-pass {
-    color: darkgreen;
+    color: darkblue;
     font-weight: bold;
     font-size: 14px;
     cursor: pointer;
@@ -117,14 +133,14 @@ include 'Connection.php';
     transition: color 0.3s ease;
   }
   .forgot-pass:hover {
-    color: darkgreen;
+    color: darkblue;
     font-weight: bold;
   }
   /* Buttons */
   .btn {
     width: 100%;
     padding: 14px 0;
-    background-color: darkgreen;
+    background-color: darkblue;
     border: none;
     border-radius: 7px;
     color: white;
@@ -135,7 +151,7 @@ include 'Connection.php';
     user-select: none;
   }
   .btn:hover {
-    background-color: #004d00;
+    background-color: #000a4dff;
   }
   /* OTP input container */
   .otp-container {
@@ -194,7 +210,7 @@ include 'Connection.php';
     font-size: 22px;
     font-weight: 700;
     margin-bottom: 20px;
-    color: darkgreen;
+    color: darkblue;
     user-select: none;
   }
   /* Modal close button */
@@ -205,12 +221,12 @@ include 'Connection.php';
     font-size: 22px;
     font-weight: 700;
     cursor: pointer;
-    color: darkgreen;
+    color: darkblue;
     user-select: none;
     transition: color 0.3s ease;
   }
   .modal-close:hover {
-    color: #006600;
+    color: #000966ff;
   }
   /* Modal input styles */
   .modal .input-group label {
@@ -225,9 +241,9 @@ include 'Connection.php';
     font-size: 16px;
     padding: 12px 14px;
     background: transparent;
-    border: 2px solid yellow;
+    border: 2px solid green;
     border-radius: 6px;
-    color: darkgreen;
+    color: darkblue;
     width: 100%;
     box-sizing: border-box;
     outline-offset: 2px;
@@ -237,7 +253,7 @@ include 'Connection.php';
   .modal input:focus {
     border-color: transparent;
     outline-color: transparent;
-    border: 2px solid darkgreen;
+    border: 2px solid darkblue;
   }
   /* Error text under inputs */
   .error-text {
@@ -273,7 +289,7 @@ include 'Connection.php';
   }
   .spinner {
     border: 4px solid #ccc;
-    border-top: 4px solid darkgreen;
+    border-top: 4px solid darkblue;
     border-radius: 50%;
     width: 32px;
     height: 32px;
@@ -286,7 +302,7 @@ include 'Connection.php';
   }
   .loading-text {
     font-weight: 600;
-    color: darkgreen;
+    color: darkblue;
   }
 </style>
 </head>
@@ -294,13 +310,16 @@ include 'Connection.php';
 
   <!-- Login Container -->
   <div class="container" role="main" aria-label="Login form">
-    <a href="LandingPage.php" style="text-decoration: none; color: darkgreen;"><i class='bx bx-left-arrow-alt' style="color: darkgreen; font-size: 2rem; font-weight: normal;"></i></a>
-    <h2>Login</h2>
+    <a href="LandingPage.php" style="text-decoration: none; color: darkblue;"><i class='bx bx-left-arrow-alt' style="color: darkblue; font-size: 2rem; font-weight: normal;"></i></a>
+    <div class="welcome-message">
+      <h2>Welcome Back!</h2>
+      <p class="subtitle" style="color: darkblue;">Log in to continue to your account</p>
+    </div>
     
     <div id="Validation_ErrorMessage" class="error-text" style="display:none;" role="alert" aria-live="assertive"></div>
 
     <div class="input-group">
-      <label for="login-email">Email</label>
+      <label for="login-email" style="color: darkblue;">Email</label>
       <input
         type="text"
         id="login-email"
@@ -312,7 +331,7 @@ include 'Connection.php';
     </div>
 
     <div class="input-group">
-      <label for="login-password">Password</label>
+      <label for="login-password" style="color: darkblue;">Password</label>
       <input
         type="password"
         id="login-password"
@@ -330,7 +349,7 @@ include 'Connection.php';
       <div id="login-pass-desc" class="error-text" style="display:none;"></div>
     </div>
 
-    <button class="btn" id="loginBtn" type="button" onclick="Login()">Login</button>
+    <button class="btn" id="loginBtn" type="button" onclick="Login()">Log In</button>
   </div>
 
   <!-- Modals -->

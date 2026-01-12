@@ -265,7 +265,7 @@
 
   <!-- Buttons -->
   <div class="hidden md:flex gap-3">
-    <button onclick="window.location.href='Loginpage.php'" class="bg-green-500 text-white px-4 py-1 rounded-lg hover:bg-green-600 transition flex items-center">Sign In <span class="text-2xl ml-2 font-normal">></span></button>
+    <button onclick="window.location.href='Loginpage.php'" class="bg-green-500 text-white px-4 py-1 rounded-lg hover:bg-green-600 transition flex items-center">Log In <span class="text-2xl ml-2 font-normal">></span></button>
   </div>
 
   <!-- Mobile menu button -->

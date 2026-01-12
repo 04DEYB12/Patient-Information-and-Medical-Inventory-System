@@ -109,3 +109,12 @@ USER GUIDE: For every User/Entity
 ✅ Patients/Students
 ✅ Inventory
 ✅ Audit Logs
+
+--------------------- TASK FOR APPROVAL -------------------
+
+✅ Landing Page Granby Theme
+✅ Log In Page Granby Theme
+- automatic deduct the medicine if the staff give the medicine for the patient 
+- Email Notification for Medicine Statuses (Low Stock, Expiry Date, Near Expiry Date, Out of Stock)
+- don't make it zero if you dispose the medicine (placeholder of all disposed medicines)
+- master list of medicines
