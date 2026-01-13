@@ -89,6 +89,47 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Prescription Section -->
+        <div class="flex flex-col space-y-3">
+            <div class="flex space-x-3">
+                <!-- Medicine Dropdown -->
+                <div class="flex-1">
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Medicine</label>
+                    <select id="medicine_select" onchange="loadBatches(this.value)" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                        <option value="" disabled selected>Select Medicine</option>
+                    </select>
+                </div>
+                
+                <!-- Batch Dropdown -->
+                <div class="flex-1">
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Batch</label>
+                    <select id="batch_select" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" disabled>
+                        <option value="" selected>Select Batch</option>
+                    </select>
+                </div>
+                
+                <!-- Quantity Input -->
+                <div class="flex-1">
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Quantity</label>
+                    <div class="flex rounded-md shadow-sm">
+                        <input type="number" id="quantity" min="1" value="1" class="flex-1 min-w-0 block w-full px-3 py-2 rounded-md border border-gray-300 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                    </div>
+                </div>
+                
+                <!-- Add Button -->
+                <div class="flex items-end">
+                    <button type="button" id="add_prescription" class="h-[42px] inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <i class='bx bx-plus mr-1'></i> Add
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Prescription List -->
+            <div id="prescription_list" class="mt-2 space-y-2 max-h-40 overflow-y-auto">
+                <!-- Prescription items will be added here -->
+            </div>
+        </div>
 
         <!-- Outcome Section -->
         <div class="mb-6">
@@ -126,6 +167,7 @@
 </div>
 
 <script>
+
     // toggle follow-up Date, check-up reason, notes edit
     function toggle_FollowUp_Reason_Notes_Edit(isEditable){
         const FollowUpDate = document.getElementById('FollowUpDate_record');
@@ -284,4 +326,132 @@
         }
     } 
     
+    async function loadMedicines() {
+        try {
+            const response = await fetch('../Functions/patientFunctions.php?action=getMedicines');
+            const data = await response.json();
+            
+            if (data.success) {
+                console.log(data.medicines);
+                const select = document.getElementById('medicine_select');
+                // Clear existing options except the first one
+                select.innerHTML = '<option value="" disabled selected>Select Medicine</option>';
+                
+                // Add medicine options
+                data.medicines.forEach(medicine => {
+                    if(medicine.stock_quantity != 0){
+                        const option = document.createElement('option');
+                        option.value = medicine.name;
+                        option.textContent = `${medicine.name}`;
+                        select.appendChild(option);
+                    }
+                });
+
+                // Enable the select and add change event
+                select.disabled = false;
+            } else {
+                console.error('Failed to load medicines:', data.message);
+            }
+        } catch (error) {
+            console.error('Error loading medicines:', error);
+        }
+    }
+    
+    async function loadBatches(medicine_name){
+        try{
+            const response = await fetch('../Functions/patientFunctions.php?action=LoadBatches&medicine_name=' + medicine_name);
+            const data = await response.json();
+            
+            if (data.success) {
+                console.log(data.medicines);
+                const select = document.getElementById('batch_select');
+                select.disabled = false;
+                // Clear existing options except the first one
+                select.innerHTML = '<option value="" disabled selected>Select Batch</option>';
+                
+                // Add medicine options
+                data.medicines.forEach(medicine => {
+                    if(medicine.stock_quantity != 0){
+                        const option = document.createElement('option');
+                        option.value = medicine.id + '-' + medicine.stock_quantity;
+                        option.textContent = `Id: ${medicine.id} | (${medicine.stock_quantity} available) | expiry date: ${medicine.expiry_date}`;
+                        select.appendChild(option);
+                    }
+                });
+            } else {
+                console.error('Failed to load Batches:', data.message);
+            }
+        }catch(error){
+            console.error('Error loading batches:', error);
+        }
+    }
+    
+    // Add event listener for the Add button
+document.getElementById('add_prescription').addEventListener('click', function() {
+    const medicineSelect = document.getElementById('medicine_select');
+    const batchSelect = document.getElementById('batch_select');
+    const quantityInput = document.getElementById('quantity');
+    
+    const medicineName = medicineSelect.options[medicineSelect.selectedIndex].text;
+    const batchInfo = batchSelect.options[batchSelect.selectedIndex].text;
+    const quantity = quantityInput.value;
+    const selectedOption = batchSelect.options[batchSelect.selectedIndex];
+    const [batchId, batchQuantity] = selectedOption.value.split('-');
+    
+    // Validate batch selection
+    if (!batchId || batchId === 'undefined') {
+        showAlert('Please select a valid batch', 'error');
+        return;
+    }
+
+    // Parse and validate quantity
+    const parsedQuantity = Number(quantity);
+    const availableQuantity = Number(batchQuantity);
+
+    if (isNaN(parsedQuantity) || parsedQuantity < 1) {
+        showAlert('Please enter a valid quantity (must be at least 1)', 'error');
+        return;
+    }
+
+    if (parsedQuantity > availableQuantity) {
+        showAlert(`Invalid quantity. Only ${availableQuantity} items available in this batch.`, 'error');
+        return;
+    }
+    
+    // Add to prescription list
+    const prescriptionList = document.getElementById('prescription_list');
+    const prescriptionItem = document.createElement('div');
+    prescriptionItem.className = 'flex justify-between items-center p-2 bg-gray-50 rounded border border-gray-200';
+    prescriptionItem.innerHTML = `
+        <div class="flex-1">
+            <div class="font-medium">${medicineName}</div>
+            <div class="text-sm text-gray-500">${batchInfo}</div>
+        </div>
+        <div class="flex items-center space-x-2">
+            <span class="px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded">${quantity}</span>
+            <button type="button" class="text-red-500 hover:text-red-700" onclick="this.closest('div[class*="bg-gray-50"]').remove()">
+                <i class='bx bx-trash'></i>
+            </button>
+        </div>
+    `;
+    
+    prescriptionList.appendChild(prescriptionItem);
+    
+    // Reset form
+    batchSelect.selectedIndex = 0;
+    quantityInput.value = 1;
+    batchSelect.disabled = true;
+});
+
+// Function to get all prescriptions (for form submission)
+function getPrescriptions() {
+    const prescriptions = [];
+    document.querySelectorAll('#prescription_list > div').forEach(item => {
+        const medicine = item.querySelector('div:first-child > div:first-child').textContent;
+        const batch = item.querySelector('div:first-child > div:last-child').textContent;
+        const quantity = item.querySelector('span[class*="bg-blue-100"]').textContent;
+        prescriptions.push({ medicine, batch, quantity });
+    });
+    return prescriptions;
+}
 </script>

@@ -743,6 +743,7 @@ require_once '../Functions/Queries.php';
 
     // Initialize pagination
     document.addEventListener('DOMContentLoaded', function() {
+    
         let itemsPerPage = 10;
         let currentPage = 1;
         let patientCards = Array.from(document.querySelectorAll('.patient-card'));
@@ -1491,6 +1492,7 @@ require_once '../Functions/Queries.php';
         
         if(recordStatus == "In Progress" || recordStatus == "Follow-up"){
             openModal('EditRecordModal');
+            loadMedicines();
             isInProgress_or_FollowUp(recordId, studentId);
         }else if(recordStatus == "Lapsed" || recordStatus == "Completed"){
             openModal('ViewRecordModal');

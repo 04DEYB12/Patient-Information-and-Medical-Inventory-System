@@ -183,7 +183,7 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['action'])) {
                 }
                 
                 // Query to get check-in records for the student
-                $query = "SELECT sc.*, cp.FirstName, cp.LastName, sc.Status AS Status, FROM studentcheckins sc 
+                $query = "SELECT sc.*, cp.FirstName, cp.LastName, sc.Status AS Status FROM studentcheckins sc 
                          JOIN clinicpersonnel cp ON sc.StaffID = cp.PersonnelID 
                          WHERE sc.ID = '$recordId' AND sc.StudentID = '$studentId'";
                 
@@ -249,6 +249,65 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['action'])) {
             }
             break;
             
+        case 'getMedicines': // --------------------------------------- GET MEDICINES ---------------------------------------
+            header('Content-Type: application/json');
+            try {
+                $query = "SELECT med_id, name, SUM(quantity) AS stock_quantity FROM medicine WHERE expiry_date >= CURRENT_DATE GROUP BY name";
+                $result = mysqli_query($con, $query);
+                
+                $medicines = [];
+                while ($row = mysqli_fetch_assoc($result)) {
+                    $medicines[] = [
+                        'id' => $row['med_id'],
+                        'name' => $row['name'],
+                        'stock_quantity' => $row['stock_quantity']
+                    ];
+                }
+                
+                echo json_encode([
+                    'success' => true,
+                    'medicines' => $medicines
+                ]);
+            } catch (Exception $e) {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Failed to load medicines: ' . $e->getMessage()
+                ]);
+            }
+            break;
+        case 'LoadBatches': // --------------------------------------- LOAD SPECIFIC MEDICINE BATCHES ---------------------------------------
+            header('Content-Type: application/json');
+            if (!isset($_GET['medicine_name'])) {
+                echo json_encode(['success' => false, 'message' => 'Medicine name is required']);
+                exit();
+            }
+            try {
+                $query = "SELECT med_id, name, quantity AS stock_quantity, expiry_date FROM medicine WHERE expiry_date >= CURRENT_DATE AND name = '" . mysqli_real_escape_string($con, $_GET['medicine_name']) . "' ORDER BY expiry_date ASC";
+                $result = mysqli_query($con, $query);
+                
+                $medicines = [];
+                while ($row = mysqli_fetch_assoc($result)) {
+                    $medicines[] = [
+                        'id' => $row['med_id'],
+                        'name' => $row['name'],
+                        'stock_quantity' => $row['stock_quantity'],
+                        'expiry_date' => $row['expiry_date']
+                    ];
+                }
+                
+                echo json_encode([
+                    'success' => true,
+                    'medicines' => $medicines
+                ]);
+            } catch (Exception $e) {
+                http_response_code(500);
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Failed to load batches: ' . $e->getMessage()
+                ]);
+            }
+            break;
         default:
             header('Content-Type: application/json');
             echo json_encode([
