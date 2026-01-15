@@ -249,6 +249,41 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['action'])) {
             }
             break;
             
+        case 'getPrescriptions': // --------------------------------------- GET PRESCRIPTIONS ---------------------------------------
+            header('Content-Type: application/json');
+            $recordId = $_GET['recordId'];
+            $studentId = $_GET['studentId'];
+            
+            $query = "SELECT p.*, m.expiry_date 
+                     FROM prescriptions p 
+                     LEFT JOIN medicine m ON p.medicine_id = m.med_id 
+                     WHERE p.record_id = ? AND p.student_id = ? 
+                     ORDER BY p.prescribed_date DESC";
+            
+            $stmt = mysqli_prepare($con, $query);
+            mysqli_stmt_bind_param($stmt, "is", $recordId, $studentId);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
+            
+            $prescriptions = [];
+            while ($row = mysqli_fetch_assoc($result)) {
+                $prescriptions[] = [
+                    'prescription_id' => $row['prescription_id'],
+                    'medicine_name' => $row['medicine_name'],
+                    'quantity' => $row['quantity'],
+                    'prescribed_by' => $row['prescribed_by'],
+                    'prescribed_date' => $row['prescribed_date'],
+                    'expiry_date' => $row['expiry_date'],
+                    'status' => $row['status']
+                ];
+            }
+            
+            sendJsonResponse([
+                'success' => true,
+                'prescriptions' => $prescriptions
+            ]);
+            exit;
+            break;
         case 'getMedicines': // --------------------------------------- GET MEDICINES ---------------------------------------
             header('Content-Type: application/json');
             try {
@@ -746,6 +781,89 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             } else {
                 throw new Exception('Failed to mark check-up record as done: ' . mysqli_error($con));
             }
+            break;
+        case 'PrescribeMedicine': // --------------------------------------- PRESCRIBE MEDICINE ---------------------------------------
+            $recordId = $_POST['recordId'];
+            $studentId = str_replace('ID: ', '', $_POST['studentId']);
+            $prescriptions = $_POST['prescriptions'];
+            $prescriptionsArray = json_decode($prescriptions, true);
+            
+            // Start transaction for data integrity
+            mysqli_begin_transaction($con);
+            
+            try {
+                $prescribedBy = $_SESSION['User_ID'] ?? 'Unknown';
+                
+                foreach ($prescriptionsArray as $prescription) {
+                    $medId = (int)$prescription['batchId'];
+                    $quantity = (int)$prescription['quantity'];
+                    $medicineName = $prescription['medicine'];
+                    
+                    // Check current stock
+                    $checkQuery = "SELECT quantity, name FROM medicine WHERE med_id = ? FOR UPDATE";
+                    $checkStmt = mysqli_prepare($con, $checkQuery);
+                    mysqli_stmt_bind_param($checkStmt, "i", $medId);
+                    mysqli_stmt_execute($checkStmt);
+                    $result = mysqli_stmt_get_result($checkStmt);
+                    
+                    if ($row = mysqli_fetch_assoc($result)) {
+                        $currentStock = (int)$row['quantity'];
+                        
+                        if ($currentStock < $quantity) {
+                            throw new Exception("Not enough stock for {$row['name']}. Available: $currentStock, Requested: $quantity");
+                        }
+                        
+                        // Deduct from inventory
+                        $newStock = $currentStock - $quantity;
+                        $updateQuery = "UPDATE medicine SET quantity = ? WHERE med_id = ?";
+                        $updateStmt = mysqli_prepare($con, $updateQuery);
+                        mysqli_stmt_bind_param($updateStmt, "ii", $newStock, $medId);
+                        
+                        if (!mysqli_stmt_execute($updateStmt)) {
+                            throw new Exception("Failed to update medicine stock: " . mysqli_error($con));
+                        }
+                        
+                        // Save prescription record
+                        $prescribeQuery = "INSERT INTO prescriptions (record_id, student_id, medicine_id, medicine_name, quantity, prescribed_by) VALUES (?, ?, ?, ?, ?, ?)";
+                        $prescribeStmt = mysqli_prepare($con, $prescribeQuery);
+                        mysqli_stmt_bind_param($prescribeStmt, "isisis", $recordId, $studentId, $medId, $medicineName, $quantity, $prescribedBy);
+                        mysqli_stmt_execute($prescribeStmt);
+                        
+                        // Log the usage
+                        $usageQuery = "INSERT INTO medicine_usage (med_id, quantity_used, usage_date) VALUES (?, ?, CURRENT_DATE)";
+                        $usageStmt = mysqli_prepare($con, $usageQuery);
+                        mysqli_stmt_bind_param($usageStmt, "ii", $medId, $quantity);
+                        mysqli_stmt_execute($usageStmt);
+                        
+                        // Audit log
+                        $user_id = $_SESSION['User_ID'] ?? 0;
+                        $actionType = 'DEDUCT';
+                        $tableName = 'medicine';
+                        $recordId_audit = $studentId;
+                        $actionDetails = "Prescribed $quantity units of {$row['name']} to $studentId. New stock: $newStock";
+                        
+                        audit($user_id, $actionType, $tableName, $recordId_audit, $actionDetails);
+                        
+                    } else {
+                        throw new Exception("Medicine with ID $medId not found");
+                    }
+                }
+                
+                // Commit transaction
+                mysqli_commit($con);
+                
+                sendJsonResponse([
+                    'success' => true,
+                    'message' => 'Medicine prescribed successfully and inventory updated!'
+                ]);
+                
+            } catch (Exception $e) {
+                // Rollback on error
+                mysqli_rollback($con);
+                throw new Exception('Failed to prescribe medicine: ' . $e->getMessage());
+            }
+            
+            
             break;
     }    
 }
