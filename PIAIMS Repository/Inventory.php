@@ -25,6 +25,103 @@ $disposed_by_user = htmlspecialchars($_SESSION['username'] ?? $admin_name);
 // Include external queries, assuming they don't contain handler functions
 require_once '../Functions/Queries.php'; 
 
+// --- Notification Functions ---
+
+function add_notification($con, $user_id, $type, $medicine_id, $medicine_name, $message) {
+    $stmt = $con->prepare("INSERT INTO notifications (user_id, type, medicine_id, medicine_name, message) VALUES (?, ?, ?, ?, ?)");
+    if (!$stmt) {
+        error_log("Notification prepare failed: " . $con->error);
+        return false;
+    }
+    
+    $stmt->bind_param("isiss", $user_id, $type, $medicine_id, $medicine_name, $message);
+    
+    if (!$stmt->execute()) {
+        error_log("Notification execute failed: " . $stmt->error);
+        return false;
+    }
+    $stmt->close();
+    return true;
+}
+
+function check_stock_notifications($con) {
+    $notifications = [];
+    
+    // Check low stock (less than 10 items)
+    $low_stock_query = $con->query("SELECT med_id, name, quantity FROM medicine WHERE quantity > 0 AND quantity < 10");
+    while ($row = $low_stock_query->fetch_assoc()) {
+        $notifications[] = [
+            'type' => 'low_stock',
+            'medicine_id' => $row['med_id'],
+            'medicine_name' => $row['name'],
+            'message' => "{$row['name']} is low on stock. Only {$row['quantity']} items left.",
+            'quantity' => $row['quantity']
+        ];
+    }
+    
+    // Check near expiry (within 30 days)
+    $near_expiry_query = $con->query("SELECT med_id, name, expiry_date FROM medicine WHERE expiry_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY) AND quantity > 0");
+    while ($row = $near_expiry_query->fetch_assoc()) {
+        $expiry_date = new DateTime($row['expiry_date']);
+        $today = new DateTime();
+        $days_until_expiry = $today->diff($expiry_date)->days;
+        $notifications[] = [
+            'type' => 'near_expiry',
+            'medicine_id' => $row['med_id'],
+            'medicine_name' => $row['name'],
+            'message' => "{$row['name']} is near expiry. Expires in {$days_until_expiry} days on " . $expiry_date->format('M d, Y'),
+            'expiry_date' => $row['expiry_date']
+        ];
+    }
+    
+    // Check expired medicines
+    $expired_query = $con->query("SELECT med_id, name, expiry_date FROM medicine WHERE expiry_date < CURDATE() AND quantity > 0");
+    while ($row = $expired_query->fetch_assoc()) {
+        $notifications[] = [
+            'type' => 'expired',
+            'medicine_id' => $row['med_id'],
+            'medicine_name' => $row['name'],
+            'message' => "{$row['name']} has expired. Please dispose immediately.",
+            'expiry_date' => $row['expiry_date']
+        ];
+    }
+    
+    return $notifications;
+}
+
+// Check for new notifications every 2 hours (or on force check)
+$last_notification_check = $_SESSION['last_notification_check'] ?? 0;
+$current_time = time();
+$notification_check_interval = 2 * 60 * 60; // 2 hours in seconds
+
+if (($current_time - $last_notification_check) >= $notification_check_interval || isset($_GET['force_notify'])) {
+    $stock_notifications = check_stock_notifications($con);
+    foreach ($stock_notifications as $notification) {
+        // Check if similar notification exists in last 24 hours
+        $check_stmt = $con->prepare("SELECT id FROM notifications WHERE medicine_id = ? AND type = ? AND created_at > DATE_SUB(NOW(), INTERVAL 24 HOUR)");
+        $check_stmt->bind_param("is", $notification['medicine_id'], $notification['type']);
+        $check_stmt->execute();
+        $result = $check_stmt->get_result();
+        
+        if ($result->num_rows == 0) {
+            add_notification($con, $user_id, $notification['type'], $notification['medicine_id'], $notification['medicine_name'], $notification['message']);
+        }
+        $check_stmt->close();
+    }
+    $_SESSION['last_notification_check'] = $current_time;
+}
+
+// Get unread notification count
+$unread_notifications_count = 0;
+$count_stmt = $con->prepare("SELECT COUNT(*) as count FROM notifications WHERE is_read = 0 AND (user_id = ? OR user_id IS NULL)");
+if ($count_stmt) {
+    $count_stmt->bind_param("i", $user_id);
+    $count_stmt->execute();
+    $result = $count_stmt->get_result();
+    $row = $result->fetch_assoc();
+    $unread_notifications_count = $row['count'] ?? 0;
+    $count_stmt->close();
+}
 
 // --- Audit Trail Logging Function ---
 
@@ -65,8 +162,7 @@ function send_response($is_ajax, $status, $message, $redirect_page = 'Inventory.
 // Determine if the request is AJAX
 $is_ajax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
 
-
-// --- New Dispose Functionality: Set Quantity to 0 and Expiry to NULL ---
+// --- Modified Dispose Functionality: DELETE instead of setting quantity to 0 ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dispose_full'])) {
     $med_id = filter_var($_POST['med_id'], FILTER_VALIDATE_INT);
     $reason_status = trim($_POST['dispose_reason'] ?? 'expired');
@@ -93,17 +189,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dispose_full'])) {
             throw new Exception("Medicine with ID $med_id not found.");
         }
 
-        $update_stmt = $con->prepare("UPDATE medicine SET quantity = 0, expiry_date = NULL WHERE med_id = ?");
-        if (!$update_stmt) {
-            throw new Exception("Prepare UPDATE failed: " . $con->error);
-        }
-        $update_stmt->bind_param("i", $med_id);
-        if (!$update_stmt->execute()) {
-            throw new Exception("Failed to update medicine: " . $update_stmt->error);
-        }
-        $update_stmt->close();
-
-        // Record in disposal log
+        // Record in disposal log FIRST
         $disposal_stmt = $con->prepare("
             INSERT INTO disposed_medicines 
             (med_id, name, status, quantity, description, reason, disposed_by, disposed_at)
@@ -127,8 +213,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dispose_full'])) {
         }
         $disposal_stmt->close();
 
+        // NOW DELETE the medicine from main table
+        $delete_stmt = $con->prepare("DELETE FROM medicine WHERE med_id = ?");
+        if (!$delete_stmt) {
+            throw new Exception("Prepare DELETE failed: " . $con->error);
+        }
+        $delete_stmt->bind_param("i", $med_id);
+        if (!$delete_stmt->execute()) {
+            throw new Exception("Failed to delete medicine: " . $delete_stmt->error);
+        }
+        $delete_stmt->close();
+
         $details = "Disposed ALL of {$medicine['name']} (Qty: {$medicine['quantity']}) | Reason: {$reason_status}";
         log_audit_trail($con, $user_id, 'DISPOSE', 'medicine', $med_id, $details);
+        
+        // Add notification
+        add_notification($con, $user_id, 'dispose', $med_id, $medicine['name'], 
+            "Disposed {$medicine['quantity']} units of {$medicine['name']}. Reason: {$reason_status}");
 
         if (!$con->commit()) {
             throw new Exception("Transaction Commit Failed: " . $con->error);
@@ -140,7 +241,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['dispose_full'])) {
         send_response($is_ajax, 'error', 'Disposal failed! Reason: ' . $e->getMessage());
     }
 }
-
 
 // --- Handle Add Medicine Form Submission ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_medicine_submit'])) {
@@ -170,6 +270,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_medicine_submit']
             
             $details = "Added new medicine: " . $med_name . " (Qty: " . $med_quantity . ", Exp: " . $med_expiry . ", Purposes: " . $med_purposes . ")";
             log_audit_trail($con, $user_id, 'CREATE', 'medicine', $new_med_id, $details);
+            
+            // Add notification
+            add_notification($con, $user_id, 'add', $new_med_id, $med_name, 
+                "Added new medicine: {$med_name} with {$med_quantity} units. Expires: {$med_expiry}");
             
             send_response($is_ajax, 'success', 'Medicine added successfully!');
         } else {
@@ -236,6 +340,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['deduct_items'])) {
             
             $details = "Deducted " . $quantity_to_deduct . " of " . $medicine['name'] . ". New stock: " . $new_stock;
             log_audit_trail($con, $user_id, 'DEDUCT', 'medicine', $med_id, $details);
+            
+            // Add notification
+            add_notification($con, $user_id, 'deduct', $med_id, $medicine['name'], 
+                "Deducted {$quantity_to_deduct} units of {$medicine['name']}. New stock: {$new_stock}");
         }
         
         $con->commit();
@@ -246,7 +354,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['deduct_items'])) {
         send_response($is_ajax, 'error', 'Deduction error: ' . $e->getMessage());
     }
 }
-
 
 // --- Enhanced Restock: Save as new ID if expired or 0 quantity, otherwise update ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['restock_items'])) {
@@ -316,6 +423,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['restock_items'])) {
                 $action = ($is_expired ? "expired" : "zero quantity");
                 $details_log = "Restocked NEW batch of {$medicine['name']} ({$action} old batch) (Qty: {$quantity_to_add}, Exp: {$new_expiry_date})";
                 log_audit_trail($con, $user_id, 'CREATE', 'medicine', $new_med_id, $details_log);
+                
+                // Add notification
+                add_notification($con, $user_id, 'add', $new_med_id, $medicine['name'], 
+                    "Restocked new batch of {$medicine['name']} with {$quantity_to_add} units. Expires: {$new_expiry_date}");
             } else {
                 // Update existing batch
                 $update_stmt = $con->prepare("UPDATE medicine SET quantity = quantity + ?, expiry_date = ? WHERE med_id = ?");
@@ -326,6 +437,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['restock_items'])) {
                 $new_qty = $old_quantity + $quantity_to_add;
                 $details_log = "Updated existing batch of {$medicine['name']} (Qty: {$quantity_to_add}, New Total: {$new_qty}, Exp: {$new_expiry_date})";
                 log_audit_trail($con, $user_id, 'UPDATE', 'medicine', $med_id, $details_log);
+                
+                // Add notification
+                add_notification($con, $user_id, 'update', $med_id, $medicine['name'], 
+                    "Restocked existing batch of {$medicine['name']}. Added {$quantity_to_add} units. New total: {$new_qty}");
             }
         }
 
@@ -338,8 +453,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['restock_items'])) {
     }
 }
 
-
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['single_dispose'])) {
     $med_id = filter_var($_POST['med_id'], FILTER_VALIDATE_INT);
     $quantity_to_dispose = filter_var($_POST['quantity'], FILTER_VALIDATE_INT);
@@ -347,7 +460,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['single_dispose'])) {
     $reason_details = trim($_POST['reason'] ?? '');
     $disposed_by = $_POST['disposed_by'] ?? 'System';
 
-    if ($med_id === false || $quantity_to_dispose === false || $quantity_to_dispose <= 0) {
+    if ($med_id === false || $quantity_to_dispose === false) {
         send_response($is_ajax, 'error', 'Invalid medicine disposal request.');
     }
 
@@ -373,17 +486,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['single_dispose'])) {
             throw new Exception("Not enough stock for disposal. Available: " . $current_stock);
         }
 
-        $new_stock = $current_stock - $quantity_to_dispose;
-
-        $update_stmt = $con->prepare("UPDATE medicine SET quantity = ? WHERE med_id = ?");
-        if (!$update_stmt) {
-            throw new Exception("Prepare UPDATE failed: " . $con->error);
+        // If disposing full quantity, DELETE the record, otherwise UPDATE
+        if ($quantity_to_dispose >= $current_stock) {
+            // DELETE from medicine table
+            $delete_stmt = $con->prepare("DELETE FROM medicine WHERE med_id = ?");
+            if (!$delete_stmt) {
+                throw new Exception("Prepare DELETE failed: " . $con->error);
+            }
+            $delete_stmt->bind_param("i", $med_id);
+            if (!$delete_stmt->execute()) {
+                throw new Exception("Failed to delete medicine: " . $delete_stmt->error);
+            }
+            $delete_stmt->close();
+        } else {
+            // UPDATE quantity
+            $new_stock = $current_stock - $quantity_to_dispose;
+            $update_stmt = $con->prepare("UPDATE medicine SET quantity = ? WHERE med_id = ?");
+            if (!$update_stmt) {
+                throw new Exception("Prepare UPDATE failed: " . $con->error);
+            }
+            $update_stmt->bind_param("ii", $new_stock, $med_id);
+            if (!$update_stmt->execute()) {
+                throw new Exception("Failed to update medicine stock: " . $update_stmt->error);
+            }
+            $update_stmt->close();
         }
-        $update_stmt->bind_param("ii", $new_stock, $med_id);
-        if (!$update_stmt->execute()) {
-            throw new Exception("Failed to update medicine stock: " . $update_stmt->error);
-        }
-        $update_stmt->close();
 
         $disposal_stmt = $con->prepare("
             INSERT INTO disposed_medicines 
@@ -410,6 +537,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['single_dispose'])) {
 
         $details = "Disposed $quantity_to_dispose of {$medicine['name']} | Reason: {$reason_status}";
         log_audit_trail($con, $user_id, 'DISPOSE', 'medicine', $med_id, $details);
+        
+        // Add notification
+        add_notification($con, $user_id, 'dispose', $med_id, $medicine['name'], 
+            "Disposed {$quantity_to_dispose} units of {$medicine['name']}. Reason: {$reason_status}");
 
         if (!$con->commit()) {
             throw new Exception("Transaction Commit Failed: " . $con->error);
@@ -441,7 +572,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['multiple_dispose'])) 
             $quantity_to_dispose = filter_var($dispose_data['quantity'], FILTER_VALIDATE_INT);
 
             // ❌ Skip invalid entries
-            if ($med_id === false || $quantity_to_dispose === false || $quantity_to_dispose <= 0) {
+            if ($med_id === false || $quantity_to_dispose === false) {
                 continue;
             }
 
@@ -465,22 +596,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['multiple_dispose'])) 
                 throw new Exception("Not enough stock for {$medicine['name']}.");
             }
 
-            // ➖ Update stock
-            $new_stock = $current_stock - $quantity_to_dispose;
-
-            $update_stmt = $con->prepare(
-                "UPDATE medicine SET quantity = ? WHERE med_id = ?"
-            );
-            $update_stmt->bind_param("ii", $new_stock, $med_id);
-
-            if (!$update_stmt->execute()) {
-                throw new Exception($update_stmt->error);
+            // If disposing full quantity, DELETE the record
+            if ($quantity_to_dispose >= $current_stock) {
+                $delete_stmt = $con->prepare("DELETE FROM medicine WHERE med_id = ?");
+                $delete_stmt->bind_param("i", $med_id);
+                if (!$delete_stmt->execute()) {
+                    throw new Exception($delete_stmt->error);
+                }
+                $delete_stmt->close();
+            } else {
+                // UPDATE quantity
+                $new_stock = $current_stock - $quantity_to_dispose;
+                $update_stmt = $con->prepare("UPDATE medicine SET quantity = ? WHERE med_id = ?");
+                $update_stmt->bind_param("ii", $new_stock, $med_id);
+                if (!$update_stmt->execute()) {
+                    throw new Exception($update_stmt->error);
+                }
+                $update_stmt->close();
             }
-            $update_stmt->close();
 
             // ➕ Insert disposal record
             $status = 'expired';
-            $reason = 'Bulk disposal';
+            $reason = $dispose_data['reason'] ?? 'Bulk disposal';
 
             $disposal_stmt = $con->prepare("
                 INSERT INTO disposed_medicines
@@ -507,6 +644,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['multiple_dispose'])) 
             // 📝 Audit log
             $details = "Disposed {$quantity_to_dispose} of {$medicine['name']}";
             log_audit_trail($con, $user_id, 'DISPOSE', 'medicine', $med_id, $details);
+            
+            // Add notification
+            add_notification($con, $user_id, 'dispose', $med_id, $medicine['name'], 
+                "Disposed {$quantity_to_dispose} units of {$medicine['name']}. Reason: {$reason}");
 
             $disposedCount++;
         }
@@ -551,6 +692,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_medicine'])) {
         if ($stmt->execute()) {
             $details = "Updated medicine: $med_name (Type: $med_type)";
             log_audit_trail($con, $user_id, 'UPDATE', 'medicine', $med_id, $details);
+            
+            // Add notification
+            add_notification($con, $user_id, 'update', $med_id, $med_name, 
+                "Updated medicine details: {$med_name} (Type: {$med_type})");
+            
             send_response($is_ajax, 'success', 'Medicine updated successfully!');
         } else {
             throw new Exception("Execute statement failed: " . $stmt->error);
@@ -601,6 +747,91 @@ if (isset($_GET['action']) && $_GET['action'] == 'get_usage_data') {
     exit;
 }
 
+// --- Get disposed medicines data ---
+if (isset($_GET['action']) && $_GET['action'] == 'get_disposed_medicines') {
+    $period = $_GET['period'] ?? 'all';
+    $start_date = $_GET['start_date'] ?? '';
+    $end_date = $_GET['end_date'] ?? '';
+    
+    // Build date conditions based on period
+    $date_condition = "";
+    $params = [];
+    $param_types = "";
+    
+    if ($period == 'today') {
+        $date_condition = "DATE(disposed_at) = CURDATE()";
+    } elseif ($period == 'week') {
+        $date_condition = "YEARWEEK(disposed_at) = YEARWEEK(CURDATE())";
+    } elseif ($period == 'month') {
+        $date_condition = "MONTH(disposed_at) = MONTH(CURDATE()) AND YEAR(disposed_at) = YEAR(CURDATE())";
+    } elseif ($period == 'year') {
+        $date_condition = "YEAR(disposed_at) = YEAR(CURDATE())";
+    } elseif ($period == 'custom' && $start_date && $end_date) {
+        $date_condition = "DATE(disposed_at) BETWEEN ? AND ?";
+        $params[] = $start_date;
+        $params[] = $end_date;
+        $param_types .= "ss";
+    }
+    // 'all' period - no date condition
+    
+    $query = "SELECT * FROM disposed_medicines";
+    if ($date_condition) {
+        $query .= " WHERE " . $date_condition;
+    }
+    $query .= " ORDER BY disposed_at DESC";
+    
+    $stmt = $con->prepare($query);
+    if (!empty($params)) {
+        $stmt->bind_param($param_types, ...$params);
+    }
+    
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    $disposed_medicines = [];
+    while ($row = $result->fetch_assoc()) {
+        $disposed_medicines[] = $row;
+    }
+    
+    header('Content-Type: application/json');
+    echo json_encode($disposed_medicines);
+    exit;
+}
+
+// --- Force check notifications ---
+if (isset($_GET['action']) && $_GET['action'] == 'force_check_notifications') {
+    // Clear old stock notifications first
+    $clear_stmt = $con->prepare("DELETE FROM notifications WHERE type IN ('low_stock', 'near_expiry', 'expired') AND created_at < DATE_SUB(NOW(), INTERVAL 24 HOUR)");
+    $clear_stmt->execute();
+    $clear_stmt->close();
+    
+    // Check current stock status
+    $stock_notifications = check_stock_notifications($con);
+    $added_count = 0;
+    
+    foreach ($stock_notifications as $notification) {
+        // Check if similar notification exists in last 1 hour
+        $check_stmt = $con->prepare("SELECT id FROM notifications WHERE medicine_id = ? AND type = ? AND created_at > DATE_SUB(NOW(), INTERVAL 1 HOUR)");
+        $check_stmt->bind_param("is", $notification['medicine_id'], $notification['type']);
+        $check_stmt->execute();
+        $result = $check_stmt->get_result();
+        
+        if ($result->num_rows == 0) {
+            add_notification($con, $user_id, $notification['type'], $notification['medicine_id'], $notification['medicine_name'], $notification['message']);
+            $added_count++;
+        }
+        $check_stmt->close();
+    }
+    
+    $_SESSION['last_notification_check'] = time();
+    
+    echo json_encode([
+        'status' => 'success',
+        'message' => "Notification check completed. Added {$added_count} new notifications.",
+        'added_count' => $added_count
+    ]);
+    exit;
+}
 
 // --- Dashboard Data Queries ---
 $total_meds_query = $con->query("SELECT SUM(quantity) AS total_count FROM medicine WHERE quantity > 0");
@@ -617,6 +848,9 @@ $expired_count = $expired_query->fetch_assoc()['expired_count'] ?? 0;
 
 $monthly_usage_query = $con->query("SELECT SUM(quantity_used) AS total_used FROM medicine_usage WHERE MONTH(usage_date) = MONTH(CURDATE()) AND YEAR(usage_date) = YEAR(CURDATE())");
 $monthly_usage_count = $monthly_usage_query->fetch_assoc()['total_used'] ?? 0;
+
+$disposed_count_query = $con->query("SELECT COUNT(*) AS disposed_count FROM disposed_medicines WHERE DATE(disposed_at) = CURDATE()");
+$disposed_today_count = $disposed_count_query->fetch_assoc()['disposed_count'] ?? 0;
 
 $items_per_page = isset($_GET['items_per_page']) ? max(1, min((int)$_GET['items_per_page'], 100)) : 10;
 $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
@@ -889,7 +1123,6 @@ if (isset($_GET['action']) && $_GET['action'] == 'fetch_medicines') {
     exit; 
 }
 
-
 // --- Initial Page Load Queries ---
 $medicines_query = "SELECT * FROM medicine ORDER BY added_at DESC LIMIT $items_per_page OFFSET $offset";
 $medicines_result = $con->query($medicines_query);
@@ -934,6 +1167,8 @@ sort($categories);
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <style>
         :root {
             --color-nature-green-50: #F0F7FF;
@@ -2037,6 +2272,47 @@ sort($categories);
             background: #dbeafe;
             color: #2563eb;
         }
+
+        /* Notification Bell */
+        .notification-bell {
+            position: relative;
+            margin-left: auto;
+            margin-right: 20px;
+        }
+
+        .notification-icon {
+            position: relative;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: background-color 0.3s;
+        }
+
+        .notification-icon:hover {
+            background-color: rgba(64, 145, 108, 0.1);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: #EF4444;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        /* Disposed Medicines Card */
+        .disposed-highlight {
+            border-left: 6px solid #8b5cf6;
+            background: linear-gradient(to right, #f5f3ff, #ffffff);
+        }
     </style>
 </head>
 <body>
@@ -2049,6 +2325,20 @@ sort($categories);
                     <i class='bx bx-menu'></i>
                 </button>
                 <h1 class="text-2xl font-bold">Inventory Management</h1>
+                
+                <!-- Notification Bell -->
+                <div class="notification-bell">
+                    <div class="notification-icon" onclick="showNotificationModal()">
+                        <i class='bx bx-bell text-2xl text-gray-700'></i>
+                        <?php if ($unread_notifications_count > 0): ?>
+                        <span class="notification-badge"><?= $unread_notifications_count ?></span>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                
+                <button class="ml-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm" onclick="forceCheckNotifications()">
+                    <i class='bx bx-refresh'></i> Check Notifications
+                </button>
             </header>
             <div class="infoguide">
                 <div class="infocontent">
@@ -2058,7 +2348,7 @@ sort($categories);
             </div>
             <div class="content-container pl-6 pr-6 pt-2">
                 <section class="content-section active" id="restockSection">
-                    <div class="status-grid grid grid-cols-2 sm:grid-cols-1  lg:grid-cols-3 xl:grid-cols-5 gap-4 w-full mb-4">
+                    <div class="status-grid grid grid-cols-2 sm:grid-cols-1  lg:grid-cols-3 xl:grid-cols-6 gap-4 w-full mb-4">
                         
                         <div class="stat-card bg-gradient-to-r from-green-500 to-green-600 text-white rounded-2xl shadow-md p-5 flex flex-col justify-between hover:shadow-lg transition" onclick="setFilter('total')">
                             <div class="stat-header flex justify-between items-center">
@@ -2112,6 +2402,18 @@ sort($categories);
                             <div class="stat-content mt-4">
                             <div class="stat-value text-3xl font-bold"><?= $monthly_usage_count ?></div>
                             <p class="text-sm opacity-90">Items dispensed</p>
+                            </div>
+                        </div>
+
+                        <!-- NEW: Disposed Medicines Card -->
+                        <div class="stat-card border-purple-800 border-2 bg-gradient-to-r from-purple-400 to-purple-50 text-white rounded-2xl shadow-md p-5 flex flex-col justify-between hover:shadow-lg transition" onclick="showDisposedMedicinesModal()">
+                            <div class="stat-header flex justify-between items-center">
+                            <h3 class="font-semibold text-purple-800 text-lg">Today's Disposed</h3>
+                            <i class='bx bx-trash-alt text-3xl text-purple-800'></i>
+                            </div>
+                            <div class="stat-content mt-4 text-purple-800">
+                            <div class="stat-value text-3xl font-bold"><?= $disposed_today_count ?></div>
+                            <p class="text-sm opacity-90">Medicines disposed</p>
                             </div>
                         </div>
 
@@ -3182,7 +3484,7 @@ sort($categories);
                             <i class='bx bx-info-circle'></i>
                             <span>Full Stock Disposal</span>
                         </div>
-                        <p class="text-xs text-red-600 mt-1">All <span id="dispose-full-quantity"></span> units will be disposed. Quantity will go to 0.</p>
+                        <p class="text-xs text-red-600 mt-1">All <span id="dispose-full-quantity"></span> units will be disposed. Record will be deleted from inventory.</p>
                     </div>
                 </div>
 
@@ -3226,6 +3528,129 @@ sort($categories);
             </form>
         </div>
     </div>
+    <style>
+        .modal-content::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+    <!-- NEW: Disposed Medicines Modal -->
+    <div id="disposedMedicinesModal" class="modal hidden fixed inset-0 items-center justify-center bg-black bg-opacity-50 z-50 backdrop-blur-sm ml-8" style="z-index: 1000px;">
+        <div class="modal-content bg-white rounded-2xl p-6 shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto">
+            <!-- Header -->
+            <div class="modal-header flex justify-between items-center border-b-2 border-purple-200 pb-4 mb-6">
+                <div class="flex items-center gap-2">
+                    <i class='bx bx-trash-alt text-red-600 text-2xl'></i>
+                    <h2 class="text-lg font-bold text-gray-800">Disposed Medicines History</h2>
+                </div>
+                <span class="close-btn cursor-pointer text-xl font-bold text-gray-400 hover:text-gray-600 transition" onclick="closeDisposedMedicinesModal()">&times;</span>
+            </div>
+            <!-- Summary Stats -->
+            <div class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <h4 class="font-semibold text-gray-700 mb-3">Summary</h4>
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="text-center p-3 bg-white rounded-lg border">
+                        <div class="text-2xl font-bold text-red-600" id="totalDisposed">0</div>
+                        <div class="text-sm text-gray-600">Total Disposed</div>
+                    </div>
+                    <div class="text-center p-3 bg-white rounded-lg border">
+                        <div class="text-2xl font-bold text-red-600" id="expiredDisposed">0</div>
+                        <div class="text-sm text-gray-600">Expired Items</div>
+                    </div>
+                    <div class="text-center p-3 bg-white rounded-lg border">
+                        <div class="text-2xl font-bold text-blue-600" id="uniqueMedicines">0</div>
+                        <div class="text-sm text-gray-600">Unique Medicines</div>
+                    </div>
+                </div>
+            </div>
+            <!-- Date Filters -->
+            <div class="mb-6 p-4 bg-red-50 rounded-lg border border-red-200">
+                <h4 class="font-semibold text-gray-700 mb-3">Filter by Date</h4>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Period</label>
+                        <select id="disposedPeriod" class="w-full px-3 py-2 border border-gray-300 rounded-lg" onchange="updateDisposedPeriod()">
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                            <option value="month">This Month</option>
+                            <option value="year">This Year</option>
+                            <option value="custom">Custom Range</option>
+                            <option value="all">All Time</option>
+                        </select>
+                    </div>
+                    <div id="disposedCustomStart" class="hidden">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Start Date</label>
+                        <input type="date" id="disposedStartDate" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                    </div>
+                    <div id="disposedCustomEnd" class="hidden">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">End Date</label>
+                        <input type="date" id="disposedEndDate" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="loadDisposedMedicines()" class="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                            <i class='bx bx-filter'></i> Apply Filter
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Disposed Medicines Table -->
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h4 class="font-semibold text-gray-700">Disposed Medicines</h4>
+                    <div class="flex gap-2">
+                        <button onclick="printDisposedReport()" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 hidden">
+                            <i class='bx bx-printer'></i> Print
+                        </button>
+                        <button onclick="exportDisposedPDF()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                            <i class='bx bx-file'></i> Export PDF
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-white border border-gray-200 rounded-lg" id="disposedTable">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="py-2 px-4 border-b text-left">Medicine Name</th>
+                                <th class="py-2 px-4 border-b text-left">Quantity</th>
+                                <th class="py-2 px-4 border-b text-left">Status</th>
+                                <th class="py-2 px-4 border-b text-left">Reason</th>
+                                <th class="py-2 px-4 border-b text-left">Disposed By</th>
+                                <th class="py-2 px-4 border-b text-left">Disposed At</th>
+                            </tr>
+                        </thead>
+                        <tbody id="disposedTableBody">
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-gray-500">Loading disposed medicines...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Grouped View -->
+                <div class="mt-6 hidden" id="disposedGroupedView">
+                    <h4 class="font-semibold text-gray-700 mb-3">Grouped by Medicine</h4>
+                    <div id="disposedGroupedContent">
+                        <!-- Grouped cards will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-between pt-4 border-t border-gray-200">
+                <div class="flex gap-2">
+                    <button onclick="toggleDisposedView()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700" id="toggleViewBtn">
+                        <i class='bx bx-grid'></i> Switch to Grouped View
+                    </button>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="closeDisposedMedicinesModal()" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400">
+                        <i class='bx bx-x'></i> Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
     
     <!-- Usage Report Modal -->
     <div id="usageModal" class="modal hidden fixed inset-0 items-center justify-center bg-black bg-opacity-50 z-50 backdrop-blur-sm" style="z-index: 1000px;">
@@ -3265,7 +3690,12 @@ sort($categories);
 
             <!-- Data Table -->
             <div class="mb-6">
-                <h4 class="font-semibold text-gray-700 mb-3">Usage Data</h4>
+                <div class="flex justify-between items-center mb-3">
+                    <h4 class="font-semibold text-gray-700">Usage Data</h4>
+                    <button onclick="exportUsagePDF()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                        <i class='bx bx-file'></i> Export PDF
+                    </button>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full bg-white border border-gray-200 rounded-lg" id="usageTable">
                         <thead>
@@ -3276,7 +3706,9 @@ sort($categories);
                             </tr>
                         </thead>
                         <tbody id="usageTableBody">
-                            <!-- Data will be populated by JavaScript -->
+                            <tr>
+                                <td colspan="3" class="text-center py-4 text-gray-500">Select date range to load data</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -3725,6 +4157,286 @@ sort($categories);
             document.getElementById('dispose_reason').value = '';
         }
         
+        // NEW: Show disposed medicines modal
+        function showDisposedMedicinesModal() {
+            document.getElementById('disposedMedicinesModal').style.display = 'flex';
+            // Set default to today
+            document.getElementById('disposedPeriod').value = 'today';
+            updateDisposedPeriod();
+            loadDisposedMedicines();
+        }
+
+        function closeDisposedMedicinesModal() {
+            document.getElementById('disposedMedicinesModal').style.display = 'none';
+        }
+
+        function updateDisposedPeriod() {
+            const period = document.getElementById('disposedPeriod').value;
+            const startDiv = document.getElementById('disposedCustomStart');
+            const endDiv = document.getElementById('disposedCustomEnd');
+            
+            if (period === 'custom') {
+                startDiv.classList.remove('hidden');
+                endDiv.classList.remove('hidden');
+                
+                // Set default dates (last 30 days)
+                const endDate = new Date();
+                const startDate = new Date();
+                startDate.setDate(startDate.getDate() - 30);
+                
+                document.getElementById('disposedStartDate').value = startDate.toISOString().split('T')[0];
+                document.getElementById('disposedEndDate').value = endDate.toISOString().split('T')[0];
+            } else {
+                startDiv.classList.add('hidden');
+                endDiv.classList.add('hidden');
+            }
+        }
+        
+        async function loadDisposedMedicines() {
+            const period = document.getElementById('disposedPeriod').value;
+            let startDate = '';
+            let endDate = '';
+            
+            if (period === 'custom') {
+                startDate = document.getElementById('disposedStartDate').value;
+                endDate = document.getElementById('disposedEndDate').value;
+            }
+            
+            try {
+                const response = await fetch(`?action=get_disposed_medicines&period=${period}&start_date=${startDate}&end_date=${endDate}`);
+                if (!response.ok) throw new Error('Network error');
+                
+                const data = await response.json();
+                
+                // Update table
+                const tableBody = document.getElementById('disposedTableBody');
+                tableBody.innerHTML = '';
+                
+                let totalDisposed = 0;
+                let expiredCount = 0;
+                const uniqueMedicines = new Set();
+                
+                if (data.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500">No disposed medicines found for the selected period.</td></tr>';
+                } else {
+                    data.forEach(item => {
+                        const row = document.createElement('tr');
+                        row.className = 'hover:bg-gray-50';
+                        row.innerHTML = `
+                            <td class="py-2 px-4 border-b">${item.name}</td>
+                            <td class="py-2 px-4 border-b">${item.quantity}</td>
+                            <td class="py-2 px-4 border-b">
+                                <span class="status-badge ${item.status === 'expired' ? 'status-expired' : 'status-active'}">
+                                    ${item.status}
+                                </span>
+                            </td>
+                            <td class="py-2 px-4 border-b">${item.reason || 'N/A'}</td>
+                            <td class="py-2 px-4 border-b">${item.disposed_by}</td>
+                            <td class="py-2 px-4 border-b">${new Date(item.disposed_at).toLocaleDateString()}</td>
+                        `;
+                        tableBody.appendChild(row);
+                        
+                        totalDisposed += parseInt(item.quantity);
+                        if (item.status === 'expired') expiredCount++;
+                        uniqueMedicines.add(item.name);
+                    });
+                }
+                
+                // Update summary stats
+                document.getElementById('totalDisposed').textContent = totalDisposed;
+                document.getElementById('expiredDisposed').textContent = expiredCount;
+                document.getElementById('uniqueMedicines').textContent = uniqueMedicines.size;
+                
+                // Update grouped view
+                updateDisposedGroupedView(data);
+                
+            } catch (error) {
+                console.error('Error loading disposed medicines:', error);
+                showToast('Error loading disposed medicines', 'error');
+            }
+        }
+
+        function updateDisposedGroupedView(data) {
+            const groupedContent = document.getElementById('disposedGroupedContent');
+            groupedContent.innerHTML = '';
+            
+            if (data.length === 0) return;
+            
+            // Group by medicine name
+            const grouped = {};
+            data.forEach(item => {
+                if (!grouped[item.name]) {
+                    grouped[item.name] = [];
+                }
+                grouped[item.name].push(item);
+            });
+            
+            // Create grouped cards
+            Object.entries(grouped).forEach(([medicineName, batches]) => {
+                const totalQuantity = batches.reduce((sum, batch) => sum + parseInt(batch.quantity), 0);
+                const card = document.createElement('div');
+                card.className = 'medicine-card-group disposed-highlight relative transition-transform hover:scale-101 mt-4 border-2 border-gray-600 rounded-lg min-h-[70px]';
+                
+                card.innerHTML = `
+                    <div class="medicine-header-grouped flex justify-between items-center p-4 cursor-pointer hover:bg-white/50 transition rounded-t-lg" onclick="toggleMedicineGroup(event)">
+                        <div class="flex items-center gap-3 flex-1">
+                            <div class="text-xs font-normal px-3 py-1.5 rounded-full flex items-center gap-1 bg-red-600 text-white">
+                                <i class='bx bx-trash-alt'></i>
+                                Disposed
+                            </div>
+                            <i class='bx bx-chevron-right transition-transform'></i>
+                            <div class="medicine-name font-semibold text-lg text-gray-800 flex items-center gap-2">
+                                <i class='bx bx-capsule text-red-500'></i>
+                                ${medicineName}
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="stock-level font-semibold text-sm text-red-600 flex items-center gap-1">
+                                <i class='bx bx-package'></i>
+                                Total Disposed: ${totalQuantity}
+                            </div>
+                            <div class="batch-count text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">
+                                ${batches.length} disposal${batches.length > 1 ? 's' : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="medicine-details hidden bg-white/30 p-4 border-t border-gray-200 w-full space-y-3">
+                        ${batches.map((batch, index) => `
+                            <div class="batch-item border-2 p-4 rounded-lg bg-red-50 border-red-200 ${index > 0 ? 'pt-3 border-gray-200' : ''}">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-sm font-semibold text-gray-700 flex items-center gap-1">
+                                        <i class='bx bx-layer'></i>
+                                        Disposal ${index + 1}
+                                    </span>
+                                    <span class="text-xs font-semibold px-2 py-1 rounded-full ${batch.status === 'expired' ? 'bg-red-600 text-white' : 'bg-gray-600 text-white'}">
+                                        ${batch.status.toUpperCase()}
+                                    </span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2 mb-3">
+                                    <p class="flex justify-between text-sm"><strong class="flex items-center gap-1"><i class='bx bx-package'></i> Quantity:</strong> ${batch.quantity}</p>
+                                    <p class="flex justify-between text-sm"><strong class="flex items-center gap-1"><i class='bx bx-calendar'></i> Disposed:</strong> ${new Date(batch.disposed_at).toLocaleDateString()}</p>
+                                    <p class="flex justify-between text-sm"><strong class="flex items-center gap-1"><i class='bx bx-user'></i> By:</strong> ${batch.disposed_by}</p>
+                                    <p class="flex justify-between text-sm"><strong class="flex items-center gap-1"><i class='bx bx-info-circle'></i> Reason:</strong> ${batch.reason || 'N/A'}</p>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                
+                groupedContent.appendChild(card);
+            });
+        }
+
+        function toggleDisposedView() {
+            const tableView = document.getElementById('disposedTable').closest('div');
+            const groupedView = document.getElementById('disposedGroupedView');
+            const toggleBtn = document.getElementById('toggleViewBtn');
+            
+            if (groupedView.classList.contains('hidden')) {
+                // Switch to grouped view
+                tableView.style.display = 'none';
+                groupedView.classList.remove('hidden');
+                toggleBtn.innerHTML = '<i class="bx bx-table"></i> Switch to Table View';
+            } else {
+                // Switch to table view
+                tableView.style.display = 'block';
+                groupedView.classList.add('hidden');
+                toggleBtn.innerHTML = '<i class="bx bx-grid"></i> Switch to Grouped View';
+            }
+        }
+
+        function printDisposedReport() {
+            const printWindow = window.open('', '_blank');
+            const period = document.getElementById('disposedPeriod').value;
+            const periodText = period === 'custom' 
+                ? `Custom (${document.getElementById('disposedStartDate').value} to ${document.getElementById('disposedEndDate').value})`
+                : document.getElementById('disposedPeriod').options[document.getElementById('disposedPeriod').selectedIndex].text;
+            
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Disposed Medicines Report</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; }
+                        h1 { color: #333; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        th { background-color: #f5f5f5; }
+                        .summary { margin: 20px 0; padding: 15px; background-color: #f8f9fa; border-radius: 5px; }
+                        .summary-item { display: inline-block; margin-right: 30px; }
+                    </style>
+                </head>
+                <body>
+                    <h1>Disposed Medicines Report</h1>
+                    <p><strong>Period:</strong> ${periodText}</p>
+                    <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
+                    
+                    <div class="summary">
+                        <div class="summary-item">
+                            <strong>Total Disposed:</strong> <span id="printTotalDisposed">0</span>
+                        </div>
+                        <div class="summary-item">
+                            <strong>Expired Items:</strong> <span id="printExpiredDisposed">0</span>
+                        </div>
+                        <div class="summary-item">
+                            <strong>Unique Medicines:</strong> <span id="printUniqueMedicines">0</span>
+                        </div>
+                    </div>
+                    
+                    ${document.getElementById('disposedTable').outerHTML}
+                </body>
+                </html>
+            `);
+            
+            // Copy summary data
+            printWindow.document.getElementById('printTotalDisposed').textContent = document.getElementById('totalDisposed').textContent;
+            printWindow.document.getElementById('printExpiredDisposed').textContent = document.getElementById('expiredDisposed').textContent;
+            printWindow.document.getElementById('printUniqueMedicines').textContent = document.getElementById('uniqueMedicines').textContent;
+            
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        function exportDisposedPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Add title
+            doc.setFontSize(18);
+            doc.text('Disposed Medicines Report', 14, 22);
+            
+            // Add period info
+            const period = document.getElementById('disposedPeriod').value;
+            const periodText = period === 'custom' 
+                ? `Custom (${document.getElementById('disposedStartDate').value} to ${document.getElementById('disposedEndDate').value})`
+                : document.getElementById('disposedPeriod').options[document.getElementById('disposedPeriod').selectedIndex].text;
+            
+            doc.setFontSize(11);
+            doc.text(`Period: ${periodText}`, 14, 32);
+            doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 38);
+            
+            // Add summary
+            doc.setFontSize(12);
+            doc.text('Summary:', 14, 48);
+            
+            doc.setFontSize(11);
+            doc.text(`Total Disposed: ${document.getElementById('totalDisposed').textContent}`, 14, 56);
+            doc.text(`Expired Items: ${document.getElementById('expiredDisposed').textContent}`, 14, 63);
+            doc.text(`Unique Medicines: ${document.getElementById('uniqueMedicines').textContent}`, 14, 70);
+            
+            // Add table
+            doc.autoTable({
+                html: '#disposedTable',
+                startY: 80,
+                theme: 'grid',
+                headStyles: { fillColor: [128, 0, 128] },
+                styles: { fontSize: 9 }
+            });
+            
+            // Save the PDF
+            doc.save(`disposed-medicines-${new Date().toISOString().slice(0, 10)}.pdf`);
+        }
+
         function toggleRestockCard(checkbox) {
             const medId = checkbox.dataset.medId;
             const name = checkbox.dataset.medName;
@@ -4151,6 +4863,30 @@ sort($categories);
             if (nextBtn) nextBtn.disabled = (currentPage >= totalPages);
         }
 
+        // Notification Modal Functions
+        function showNotificationModal() {
+            // This will load the modal from external file
+            // For now, we'll use a simple alert
+            window.location.href = '?show_notifications=1';
+        }
+
+        // Force check notifications
+        async function forceCheckNotifications() {
+            try {
+                const response = await fetch('?action=force_check_notifications');
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    showToast(`Notification check completed. Added ${result.added_count} new notifications.`, 'success');
+                    // Reload page to update notification count
+                    setTimeout(() => location.reload(), 1500);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Error checking notifications', 'error');
+            }
+        }
+
         // Usage Modal Functions
         let usageChart = null;
 
@@ -4227,7 +4963,21 @@ sort($categories);
                 
                 // Update table (simplified version - in real app you'd fetch detailed data)
                 const tableBody = document.getElementById('usageTableBody');
-                tableBody.innerHTML = '<tr><td colspan="3" class="text-center py-4">Loading detailed data...</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-500">Loading detailed data...</td></tr>';
+                
+                // Simulate loading detailed data
+                setTimeout(() => {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td class="py-2 px-4 border-b">${startDate}</td>
+                            <td class="py-2 px-4 border-b">Various Medicines</td>
+                            <td class="py-2 px-4 border-b">${data.datasets[0].data.reduce((a, b) => a + b, 0)}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" class="text-center py-4 text-gray-500">Detailed usage data would be loaded here</td>
+                        </tr>
+                    `;
+                }, 1000);
                 
             } catch (error) {
                 console.error('Error loading usage chart:', error);
@@ -4237,6 +4987,42 @@ sort($categories);
 
         function printUsageReport() {
             window.print();
+        }
+
+        function exportUsagePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Add title
+            doc.setFontSize(18);
+            doc.text('Medicine Usage Report', 14, 22);
+            
+            // Add date range
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            doc.setFontSize(11);
+            doc.text(`Period: ${startDate} to ${endDate}`, 14, 32);
+            doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 38);
+            
+            // Add chart image (would need to convert canvas to image)
+            const canvas = document.getElementById('usageChart');
+            if (canvas) {
+                const canvasImage = canvas.toDataURL('image/png', 1.0);
+                doc.addImage(canvasImage, 'PNG', 14, 45, 180, 80);
+            }
+            
+            // Add table
+            doc.autoTable({
+                html: '#usageTable',
+                startY: 130,
+                theme: 'grid',
+                headStyles: { fillColor: [64, 145, 108] },
+                styles: { fontSize: 9 }
+            });
+            
+            // Save the PDF
+            doc.save(`usage-report-${new Date().toISOString().slice(0, 10)}.pdf`);
         }
 
         // Load initial medicines on page load
@@ -4250,10 +5036,19 @@ sort($categories);
             document.getElementById('typeFilter').addEventListener('change', () => updateMedicineGrid(1));
             document.getElementById('expirySortDropdown').addEventListener('change', () => updateMedicineGrid(1));
             document.getElementById('itemsPerPage').addEventListener('change', changeItemsPerPage);
+            
+            // Check if notifications should be shown
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('show_notifications') === '1') {
+                showNotificationModal();
+            }
         });
     </script>
     
     <!-- Check-in Modal -->
     <?php include '../Modals/Checkin_modal.php'; ?>
+    
+    <!-- Notification Modal -->
+    <?php include '../Modals/notif_modal.php'; ?>
 </body>
 </html>
